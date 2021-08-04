@@ -1,0 +1,32 @@
+1613985299.93 server starting up
+1613986180.85 server starting up
+1613986213.01 nid:2 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1613998307.40 nid:3 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1614001129.10 nid:4 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1614003922.16 nid:5 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1614024365.51 nid:6 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1614027129.41 nid:7 fam:0 mom:0 bb:0 plr:1 eve:0 avAge:0.00
+1614029758.20 nid:8 fam:0 mom:0 bb:0 plr:1 eve:0 avAge:0.00
+1614058812.02 server starting up
+1614058823.93 nid:9 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1614061544.61 nid:10 fam:0 mom:0 bb:0 plr:1 eve:0 avAge:0.00
+1614062903.27 nid:11 fam:0 mom:0 bb:0 plr:1 eve:0 avAge:0.00
+1614157003.67 server starting up
+1614157020.55 nid:12 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1614159796.03 nid:13 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1614250705.36 server starting up
+1614250717.47 nid:14 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1614253377.86 nid:15 fam:0 mom:0 bb:0 plr:1 eve:0 avAge:0.00
+1614763637.51 server starting up
+1614763651.31 nid:33 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1614777048.40 nid:34 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1614777216.13 nid:35 fam:0 mom:0 bb:0 plr:1 eve:0 avAge:0.00
+1615141140.07 nid:36 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1615508775.73 nid:37 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1615755359.68 nid:38 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1615851200.63 nid:39 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1615864706.71 nid:40 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1615868932.79 nid:41 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1616733047.24 nid:42 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
+1628029293.31 server starting up
+1628029314.30 nid:43 fam:0 mom:0 bb:0 plr:0 eve:0 avAge:0.00
