@@ -1,0 +1,178 @@
+
+# Can change flags here
+# See minorGems/game/platforms/SDL/Makefile.common for flags
+DEBUG_FLAG = ${DEBUG_ON_FLAG}
+
+PROFILE_FLAG = ${PROFILE_OFF_FLAG}
+
+LINK_AGAINST_LIBJPEG = no
+LINK_AGAINST_LIBPNG = no
+
+APP_NAME = ../OneLife/gameSource/OneLife
+#ROOT_PATH = ../..
+ROOT_PATH = ..
+
+DIR_SRC_CLIENT = ../OneLife/gameSource
+
+LAYER_SOURCE = \
+${DIR_SRC_CLIENT}/game.cpp \
+${DIR_SRC_CLIENT}/spriteBank.cpp \
+${DIR_SRC_CLIENT}/objectBank.cpp \
+${DIR_SRC_CLIENT}/transitionBank.cpp \
+${DIR_SRC_CLIENT}/animationBank.cpp \
+${DIR_SRC_CLIENT}/whiteSprites.cpp \
+${DIR_SRC_CLIENT}/message.cpp \
+${DIR_SRC_CLIENT}/serialWebRequests.cpp \
+${DIR_SRC_CLIENT}/accountHmac.cpp \
+${DIR_SRC_CLIENT}/PageComponent.cpp \
+${DIR_SRC_CLIENT}/GamePage.cpp \
+${DIR_SRC_CLIENT}/LivingLifePage.cpp \
+${DIR_SRC_CLIENT}/pathFind.cpp \
+${DIR_SRC_CLIENT}/ageControl.cpp \
+${DIR_SRC_CLIENT}/ExtendedMessagePage.cpp \
+${DIR_SRC_CLIENT}/buttonStyle.cpp \
+${DIR_SRC_CLIENT}/Button.cpp \
+${DIR_SRC_CLIENT}/TextButton.cpp \
+${DIR_SRC_CLIENT}/RebirthChoicePage.cpp \
+${DIR_SRC_CLIENT}/TextField.cpp \
+${DIR_SRC_CLIENT}/LoadingPage.cpp \
+${DIR_SRC_CLIENT}/folderCache.cpp \
+${DIR_SRC_CLIENT}/binFolderCache.cpp \
+${DIR_SRC_CLIENT}/liveObjectSet.cpp \
+${DIR_SRC_CLIENT}/../commonSource/fractalNoise.cpp \
+${DIR_SRC_CLIENT}/../commonSource/sayLimit.cpp \
+${DIR_SRC_CLIENT}/ExistingAccountPage.cpp \
+${DIR_SRC_CLIENT}/KeyEquivalentTextButton.cpp \
+${DIR_SRC_CLIENT}/ServerActionPage.cpp \
+${DIR_SRC_CLIENT}/FinalMessagePage.cpp \
+${DIR_SRC_CLIENT}/AutoUpdatePage.cpp \
+${DIR_SRC_CLIENT}/soundBank.cpp \
+${DIR_SRC_CLIENT}/convolution.cpp \
+${DIR_SRC_CLIENT}/fft.cpp \
+${DIR_SRC_CLIENT}/ogg.cpp \
+${DIR_SRC_CLIENT}/musicPlayer2.cpp \
+${DIR_SRC_CLIENT}/groundSprites.cpp \
+${DIR_SRC_CLIENT}/SettingsPage.cpp \
+${DIR_SRC_CLIENT}/CheckboxButton.cpp \
+${DIR_SRC_CLIENT}/ValueSlider.cpp \
+${DIR_SRC_CLIENT}/SpriteButton.cpp \
+${DIR_SRC_CLIENT}/SpriteToggleButton.cpp \
+${DIR_SRC_CLIENT}/categoryBank.cpp \
+${DIR_SRC_CLIENT}/liveAnimationTriggers.cpp \
+${DIR_SRC_CLIENT}/ReviewPage.cpp \
+${DIR_SRC_CLIENT}/TextArea.cpp \
+${DIR_SRC_CLIENT}/RadioButtonSet.cpp \
+${DIR_SRC_CLIENT}/spellCheck.cpp \
+${DIR_SRC_CLIENT}/SoundUsage.cpp \
+${DIR_SRC_CLIENT}/TwinPage.cpp \
+${DIR_SRC_CLIENT}/objectMetadata.cpp \
+${DIR_SRC_CLIENT}/emotion.cpp \
+${DIR_SRC_CLIENT}/Picker.cpp \
+${DIR_SRC_CLIENT}/PickableStatics.cpp \
+${DIR_SRC_CLIENT}/photos.cpp \
+${DIR_SRC_CLIENT}/lifeTokens.cpp \
+${DIR_SRC_CLIENT}/PollPage.cpp \
+${DIR_SRC_CLIENT}/fitnessScore.cpp \
+${DIR_SRC_CLIENT}/GeneticHistoryPage.cpp \
+
+
+
+GAME_GRAPHICS = \
+${DIR_SRC_CLIENT}/graphics/font_32_64.tga \
+${DIR_SRC_CLIENT}/graphics/font_handwriting_32_32.tga \
+${DIR_SRC_CLIENT}/graphics/font_pencil_32_32.tga \
+${DIR_SRC_CLIENT}/graphics/font_pencil_erased_32_32.tga \
+${DIR_SRC_CLIENT}/graphics/hungerBoxes.tga \
+${DIR_SRC_CLIENT}/graphics/hungerBoxFills.tga \
+${DIR_SRC_CLIENT}/graphics/hungerBoxesErased.tga \
+${DIR_SRC_CLIENT}/graphics/hungerBoxFillsErased.tga \
+${DIR_SRC_CLIENT}/graphics/hungerDashes.tga \
+${DIR_SRC_CLIENT}/graphics/hungerDashesErased.tga \
+${DIR_SRC_CLIENT}/graphics/hungerBars.tga \
+${DIR_SRC_CLIENT}/graphics/hungerBarsErased.tga \
+${DIR_SRC_CLIENT}/graphics/chalkBlot.tga \
+${DIR_SRC_CLIENT}/graphics/pathMark.tga \
+${DIR_SRC_CLIENT}/graphics/ground_t0.tga \
+${DIR_SRC_CLIENT}/graphics/ground_t1.tga \
+${DIR_SRC_CLIENT}/graphics/ground_t2.tga \
+${DIR_SRC_CLIENT}/graphics/ground_t3.tga \
+${DIR_SRC_CLIENT}/graphics/guiPanel.tga \
+${DIR_SRC_CLIENT}/graphics/guiBlood.tga \
+${DIR_SRC_CLIENT}/graphics/tempArrows.tga \
+${DIR_SRC_CLIENT}/graphics/tempArrowsErased.tga \
+${DIR_SRC_CLIENT}/graphics/notePaper.tga \
+${DIR_SRC_CLIENT}/graphics/fullSlip.tga \
+${DIR_SRC_CLIENT}/graphics/hungrySlip.tga \
+${DIR_SRC_CLIENT}/graphics/starvingSlip.tga \
+${DIR_SRC_CLIENT}/graphics/instructions.tga \
+${DIR_SRC_CLIENT}/graphics/hintSheet1.tga \
+${DIR_SRC_CLIENT}/graphics/hintSheet2.tga \
+${DIR_SRC_CLIENT}/graphics/hintSheet3.tga \
+${DIR_SRC_CLIENT}/graphics/hintSheet4.tga \
+${DIR_SRC_CLIENT}/graphics/bigPointer.tga \
+${DIR_SRC_CLIENT}/graphics/cellBorder.tga \
+${DIR_SRC_CLIENT}/graphics/cellFill.tga \
+${DIR_SRC_CLIENT}/graphics/homeArrows.tga \
+${DIR_SRC_CLIENT}/graphics/homeArrowsErased.tga \
+${DIR_SRC_CLIENT}/graphics/homeSlip.tga \
+${DIR_SRC_CLIENT}/graphics/homeSlip2.tga \
+${DIR_SRC_CLIENT}/graphics/hiddenFieldTexture.tga \
+${DIR_SRC_CLIENT}/graphics/yumSlip1.tga \
+${DIR_SRC_CLIENT}/graphics/yumSlip2.tga \
+${DIR_SRC_CLIENT}/graphics/yumSlip3.tga \
+${DIR_SRC_CLIENT}/graphics/yumSlip4.tga \
+${DIR_SRC_CLIENT}/graphics/photoBorder.tga \
+${DIR_SRC_CLIENT}/graphics/hintArrow.tga \
+
+
+
+NEEDED_MINOR_GEMS_OBJECTS = \
+ ${SCREEN_GL_SDL_O} \
+ ${SINGLE_TEXTURE_GL_O} \
+ ${TYPE_IO_O} \
+ ${STRING_UTILS_O} \
+ ${STRING_BUFFER_OUTPUT_STREAM_O} \
+ ${BYTE_BUFFER_INPUT_STREAM_O} \
+ ${PATH_O} \
+ ${TIME_O} \
+ ${THREAD_O} \
+ ${MUTEX_LOCK_O} \
+ ${BINARY_SEMAPHORE_O} \
+ ${TRANSLATION_MANAGER_O} \
+ ${SOCKET_O} \
+ ${HOST_ADDRESS_O} \
+ ${SOCKET_CLIENT_O} \
+ ${SOCKET_SERVER_O} \
+ ${NETWORK_FUNCTION_LOCKS_O} \
+ ${LOOKUP_THREAD_O} \
+ ${WEB_REQUEST_O} \
+ ${URL_UTILS_O} \
+ ${SETTINGS_MANAGER_O} \
+ ${FINISHED_SIGNAL_THREAD_O} \
+ ${STOP_SIGNAL_THREAD_O} \
+ ${SHA1_O} \
+ ${ENCODING_UTILS_O} \
+ ${DIRECTORY_O} \
+ ${LOG_O} \
+ ${APP_LOG_O} \
+ ${FILE_LOG_O} \
+ ${PRINT_LOG_O} \
+ ${PRINT_UTILS_O} \
+ ${GAME_SDL_O} \
+ ${GAME_GRAPHICS_GL_O} \
+ ${SPRITE_GL_O} \
+ ${DOUBLE_PAIR_O} \
+ ${FONT_O} \
+ ${DRAW_UTILS_O} \
+ ${DEMO_CODE_CHECKER_O} \
+ ${AIFF_O} \
+ ${AUDIO_NO_CLIP_O} \
+ ${SOUND_SAMPLES_O} \
+ ${REVERB_SOUND_FILTER_O} \
+ ${COEFFICIENT_FILTERS_O} \
+ ${CURVE_25519_O} \
+ ${CRYPTO_RANDOM_O} \
+ ${DIFF_BUNDLE_CLIENT_O} \
+ ${STRING_TREE_O} \
+ ${CRC32_O} \
+
