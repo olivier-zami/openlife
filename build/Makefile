@@ -233,6 +233,9 @@ PLATFORM_BINARY_SEMAPHORE = ${ROOT_PATH}/minorGems/system/${PLATFORM_PATH}/Binar
 # Header, source, and object files.
 ##
 
+MAIN_C = ${ROOT_PATH}/src/client/main.c
+MAIN_O = ${ROOT_PATH}/app/objects/main.o
+
 SIMPLE_VECTOR_H = ${ROOT_PATH}/minorGems/util/SimpleVector.h
 
 OUTPUT_STREAM_H = ${ROOT_PATH}/minorGems/io/OutputStream.h
