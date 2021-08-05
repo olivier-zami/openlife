@@ -6522,9 +6522,16 @@ int getMapBiome( int inX, int inY ) {
 
 
 
-
-// returns properly formatted chunk message for chunk centered
-// around x,y
+/**
+ * @note returns properly formatted chunk message for chunk centered around x,y
+ * @param inStartX
+ * @param inStartY
+ * @param inWidth
+ * @param inHeight
+ * @param inRelativeToPos
+ * @param outMessageLength
+ * @return
+ */
 unsigned char *getChunkMessage( int inStartX, int inStartY, 
                                 int inWidth, int inHeight,
                                 GridPos inRelativeToPos,

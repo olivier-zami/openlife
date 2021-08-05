@@ -5038,9 +5038,10 @@ void checkCustomGlobalMessage() {
 
 
 
-
-// sets lastSentMap in inO if chunk goes through
-// returns result of send, auto-marks error in inO
+/**
+ * @note: sets lastSentMap in inO if chunk goes through
+ * @note: returns result of send, auto-marks error in inO
+ */
 int sendMapChunkMessage( LiveObject *inO, 
                          char inDestOverride = false,
                          int inDestOverrideX = 0, 
