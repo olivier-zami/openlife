@@ -10912,7 +10912,7 @@ void LivingLifePage::draw( doublePair inViewCenter,
         timeMeasures[2] += game_getCurrentTime() - drawStartTime;
         }
     
-}
+    }
 
 
 
@@ -12428,7 +12428,10 @@ static const char *badgeColors[NUM_BADGE_COLORS] = { "#e6194B",
 
 static char justHitTab = false;
 
-        
+/**
+ * @note: probable call a each step for update scene...
+ * @note: line 15076->15086+ update client biomes with server data
+ */
 void LivingLifePage::step() {
     
     if( isAnySignalSet() ) {
@@ -15068,7 +15071,7 @@ void LivingLifePage::step() {
             
                 // for now, binary chunk is actually just ASCII
                 binaryChunk[ binarySize ] = '\0';
-            
+
                 
                 SimpleVector<char *> *tokens = 
                     tokenizeString( (char*)binaryChunk );

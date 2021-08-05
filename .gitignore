@@ -8,6 +8,7 @@ callgrind.out*
 leak.out*
 core*
 
+OneLife/gameSource/log.txt
 OneLife/gameSource/OneLife
 OneLife/gameSource/testUser/*
 OneLife/gameSource/testUser2/*
@@ -25,6 +26,11 @@ OneLife/server/lifeLog/
 OneLife/server/categories
 OneLife/server/objects
 OneLife/server/transitions
+OneLife/server/clientTagLog.txt
+OneLife/server/lastEveLocation.txt
+OneLife/server/log.txt.backup
+OneLife/server/settings
+OneLife/server/mapChangeLogs
 
 #
 var/

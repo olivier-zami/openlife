@@ -1313,7 +1313,9 @@ void ScreenGL::writeEventBatchToFile() {
     }
 
 
-
+/**
+ * @Note: Socket Event are created here ...
+ */
 void ScreenGL::playNextEventBatch() {
     // we get a minimized event every frame that we're minimized
     mLastMinimizedStatus = false;
