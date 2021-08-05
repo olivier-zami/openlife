@@ -8,6 +8,10 @@ callgrind.out*
 leak.out*
 core*
 
+#temporarly ignored
+build/
+test/
+
 OneLife/gameSource/log.txt
 OneLife/gameSource/OneLife
 OneLife/gameSource/testUser/*
