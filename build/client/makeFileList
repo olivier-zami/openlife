@@ -8,14 +8,13 @@ PROFILE_FLAG = ${PROFILE_OFF_FLAG}
 LINK_AGAINST_LIBJPEG = no
 LINK_AGAINST_LIBPNG = no
 
-APP_NAME = ../OneLife/gameSource/OneLife
-#ROOT_PATH = ../..
-ROOT_PATH = ..
+APP_NAME = ../../OneLife/gameSource/OneLife
+ROOT_PATH = ../..
 
-DIR_SRC_CLIENT = ../OneLife/gameSource
+DIR_SRC_CLIENT = ../../OneLife/gameSource
 
 LAYER_SOURCE = \
-../src/client/main.cpp \
+../../src/client/main.cpp \
 ${DIR_SRC_CLIENT}/game.cpp \
 ${DIR_SRC_CLIENT}/spriteBank.cpp \
 ${DIR_SRC_CLIENT}/objectBank.cpp \

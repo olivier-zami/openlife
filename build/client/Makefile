@@ -635,8 +635,7 @@ AUDIO_NO_CLIP_O = ${ROOT_PATH}/minorGems/sound/audioNoClip.o
 # can be overridden by makeFileList
 APP_NAME = gameApp
 
-#ROOT_PATH = ../..
-ROOT_PATH = .
+ROOT_PATH = ../..
 
 
 # extension for generated dependency files
@@ -751,13 +750,13 @@ include ${LAYER_DEPENDS}
 # $@   represents the name.tga file
 # $<   represents the name.png file
 #
-DIR_SRC_CLIENT = ../OneLife/gameSource
+DIR_SRC_CLIENT = ../../OneLife/gameSource
 
-${DIR_SRC_CLIENT}/graphics/%.tga: ../OneLife/gameSource/%.png
+${DIR_SRC_CLIENT}/graphics/%.tga: ../../OneLife/gameSource/%.png
 	convert $< -type truecolormatte $@
-${DIR_SRC_CLIENT}/graphics/%.tga: ../OneLife/gameSource/graphicsSource/%.png
+${DIR_SRC_CLIENT}/graphics/%.tga: ../../OneLife/gameSource/graphicsSource/%.png
 	convert $< -type truecolormatte $@
-${DIR_SRC_CLIENT}/music/%.tga: ../OneLife/gameSource/%.png
+${DIR_SRC_CLIENT}/music/%.tga: ../../OneLife/gameSource/%.png
 	convert $< -type truecolormatte $@
 
 

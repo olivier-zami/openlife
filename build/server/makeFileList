@@ -1,0 +1,106 @@
+
+# Can change flags here
+# See minorGems/game/platforms/SDL/Makefile.common for flags
+#DEBUG_FLAG = ${DEBUG_OFF_FLAG}
+
+PROFILE_FLAG = ${PROFILE_OFF_FLAG}
+
+LINK_AGAINST_LIBJPEG = no
+LINK_AGAINST_LIBPNG = no
+
+LINK_HEADLESS = yes
+
+APP_NAME = ../../OneLife/server/OneLifeServer
+#ROOT_PATH = ../..
+ROOT_PATH = ../..
+
+DIR_APP_SERVER = ../../OneLife/server
+
+# use a different extension here so that we don't interfere with client's
+# generated .dep files, which use different target paths.
+DEP_EXT = dep2
+
+
+CUSTOM_LINUX_LINK_FLAGS =
+
+LAYER_SOURCE = \
+${DIR_APP_SERVER}/server.cpp \
+${DIR_APP_SERVER}/map.cpp \
+${DIR_APP_SERVER}/../gameSource/transitionBank.cpp \
+${DIR_APP_SERVER}/../gameSource/categoryBank.cpp \
+${DIR_APP_SERVER}/../gameSource/objectBank.cpp \
+${DIR_APP_SERVER}/../gameSource/animationBank.cpp \
+${DIR_APP_SERVER}/../gameSource/ageControl.cpp \
+${DIR_APP_SERVER}/../gameSource/folderCache.cpp \
+${DIR_APP_SERVER}/../gameSource/SoundUsage.cpp \
+${DIR_APP_SERVER}/../gameSource/objectMetadata.cpp \
+${DIR_APP_SERVER}/../gameSource/GridPos.cpp \
+${DIR_APP_SERVER}/../commonSource/fractalNoise.cpp \
+${DIR_APP_SERVER}/../commonSource/sayLimit.cpp \
+${DIR_APP_SERVER}/kissdb.cpp \
+${DIR_APP_SERVER}/lineardb3.cpp \
+${DIR_APP_SERVER}/lifeLog.cpp \
+${DIR_APP_SERVER}/foodLog.cpp \
+${DIR_APP_SERVER}/backup.cpp \
+${DIR_APP_SERVER}/triggers.cpp \
+${DIR_APP_SERVER}/dbCommon.cpp \
+${DIR_APP_SERVER}/playerStats.cpp \
+${DIR_APP_SERVER}/lineageLog.cpp \
+${DIR_APP_SERVER}/failureLog.cpp \
+${DIR_APP_SERVER}/names.cpp \
+${DIR_APP_SERVER}/monument.cpp \
+${DIR_APP_SERVER}/lineageLimit.cpp \
+${DIR_APP_SERVER}/curses.cpp \
+${DIR_APP_SERVER}/curseLog.cpp \
+${DIR_APP_SERVER}/spiral.cpp \
+${DIR_APP_SERVER}/objectSurvey.cpp \
+${DIR_APP_SERVER}/language.cpp \
+${DIR_APP_SERVER}/familySkipList.cpp \
+${DIR_APP_SERVER}/lifeTokens.cpp \
+${DIR_APP_SERVER}/fitnessScore.cpp \
+${DIR_APP_SERVER}/CoordinateTimeTracking.cpp \
+${DIR_APP_SERVER}/arcReport.cpp \
+${DIR_APP_SERVER}/curseDB.cpp \
+${DIR_APP_SERVER}/eveMovingGrid.cpp \
+${DIR_APP_SERVER}/specialBiomes.cpp \
+${DIR_APP_SERVER}/cravings.cpp \
+${DIR_APP_SERVER}/offspringTracker.cpp \
+
+
+
+GAME_GRAPHICS = 
+
+
+
+
+NEEDED_MINOR_GEMS_OBJECTS = \
+ ${TYPE_IO_O} \
+ ${STRING_UTILS_O} \
+ ${STRING_BUFFER_OUTPUT_STREAM_O} \
+ ${PATH_O} \
+ ${TIME_O} \
+ ${THREAD_O} \
+ ${MUTEX_LOCK_O} \
+ ${TRANSLATION_MANAGER_O} \
+ ${SOCKET_O} \
+ ${HOST_ADDRESS_O} \
+ ${SOCKET_CLIENT_O} \
+ ${SOCKET_SERVER_O} \
+ ${SOCKET_POLL_O} \
+ ${NETWORK_FUNCTION_LOCKS_O} \
+ ${LOOKUP_THREAD_O} \
+ ${WEB_REQUEST_O} \
+ ${URL_UTILS_O} \
+ ${SETTINGS_MANAGER_O} \
+ ${FINISHED_SIGNAL_THREAD_O} \
+ ${SHA1_O} \
+ ${ENCODING_UTILS_O} \
+ ${DIRECTORY_O} \
+ ${LOG_O} \
+ ${APP_LOG_O} \
+ ${FILE_LOG_O} \
+ ${PRINT_LOG_O} \
+ ${PRINT_UTILS_O} \
+ ${DOUBLE_PAIR_O} \
+ ${STRING_TREE_O} \
+ ${CRC32_O}

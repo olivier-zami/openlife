@@ -9,7 +9,6 @@ leak.out*
 core*
 
 #temporarly ignored
-build/
 test/
 
 OneLife/gameSource/log.txt
@@ -35,6 +34,10 @@ OneLife/server/lastEveLocation.txt
 OneLife/server/log.txt.backup
 OneLife/server/settings
 OneLife/server/mapChangeLogs
+OneLife/server/mapDummyRecall.txt
+OneLife/server/curseLog
+OneLife/server/curseSave.txt
+OneLife/server/familyDataLog.txt
 
 #
 var/
