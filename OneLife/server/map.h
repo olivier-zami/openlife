@@ -10,6 +10,12 @@
 
 #include "minorGems/game/doublePair.h"
 
+extern int* biomes;
+extern char anyBiomesInDB;
+extern int maxBiomeXLoc;
+extern int maxBiomeYLoc;
+extern int minBiomeXLoc;
+extern int minBiomeYLoc;
 
 
 typedef struct ChangePosition {
@@ -369,5 +375,15 @@ int getDeadlyMovingMapObject( int inPosX, int inPosY,
 
 int getSpecialBiomeBandYCenterForRace( int inRace );
 
+int computeMapBiomeIndex( int inX, int inY,
+								 int *outSecondPlaceIndex,
+								 double *outSecondPlaceGap);
+
+
+int biomeDBGet( int inX, int inY,
+					   int *outSecondPlaceBiome,
+					   double *outSecondPlaceGap);
+
+int getBiomeIndex( int inBiome );
 
 #endif
