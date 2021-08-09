@@ -279,7 +279,7 @@ void setResponsiblePlayer( int inPlayerID ) {
 
 
 
-static double gapIntScale = 1000000.0;
+double gapIntScale = 1000000.0;
 
 
 
@@ -362,7 +362,7 @@ static DB timeDB;
 static char timeDBOpen = false;
 
 
-static DB biomeDB;
+DB biomeDB;
 static char biomeDBOpen = false;
 
 
@@ -509,7 +509,6 @@ static MinPriorityQueue<MovementRecord> liveMovements;
 // track all map changes that happened since the last
 // call to stepMap
 static SimpleVector<ChangePosition> mapChangePosSinceLastStep;
-
 
 char anyBiomesInDB = false;//legacy: static char anyBiomesInDB = false;
 int maxBiomeXLoc = -2000000000;//legacy: static int maxBiomeXLoc = -2000000000;
@@ -663,39 +662,6 @@ static char hasPrimaryHomeland( int inLineageEveID ) {
 timeSec_t dbLookTimeGet( int inX, int inY );
 void dbLookTimePut( int inX, int inY, timeSec_t inTime );
 
-
-
-
-// returns -1 if not found
-int biomeDBGet( int inX, int inY,
-                       int *outSecondPlaceBiome = nullptr,
-                       double *outSecondPlaceGap = nullptr) {
-    unsigned char key[8];
-    unsigned char value[12];
-
-    // look for changes to default in database
-    intPairToKey( inX, inY, key );
-    
-    int result = DB_get( &biomeDB, key, value );
-    
-    if( result == 0 ) {
-        // found
-        int biome = valueToInt( &( value[0] ) );
-        
-        if( outSecondPlaceBiome != NULL ) {
-            *outSecondPlaceBiome = valueToInt( &( value[4] ) );
-            }
-        
-        if( outSecondPlaceGap != NULL ) {
-            *outSecondPlaceGap = valueToInt( &( value[8] ) ) / gapIntScale;
-            }
-        
-        return biome;
-        }
-    else {
-        return -1;
-        }
-    }
 
 
 
@@ -1107,7 +1073,7 @@ int computeMapBiomeIndex( int inX, int inY,
         }
 
     return pickedBiome;
-    }
+}
 
 
 
@@ -1333,9 +1299,10 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
             // make sure this biome is on the list for this object
             int secondPlace;
             double secondPlaceGap;
-        
-            int pickedBiome = getMapBiomeIndex( inX, inY, &secondPlace,
-                                                &secondPlaceGap );
+
+            //int pickedBiome = worldMap->select(inX, inY)->getBiome();
+            int pickedBiome = getMapBiomeIndex( inX, inY, &secondPlace, &secondPlaceGap );
+
         
             if( pickedBiome == -1 ) {
                 mapCacheInsert( inX, inY, 0 );
@@ -1379,9 +1346,9 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
         // next step, pick top two biomes
         int secondPlace;
         double secondPlaceGap;
-        
-        int pickedBiome = getMapBiomeIndex( inX, inY, &secondPlace,
-                                            &secondPlaceGap );
+
+        //int pickedBiome = worldMap->select(inX, inY)->getBiome();
+        int pickedBiome = getMapBiomeIndex( inX, inY, &secondPlace, &secondPlaceGap );
         
         if( pickedBiome == -1 ) {
             mapCacheInsert( inX, inY, 0 );
@@ -1665,7 +1632,8 @@ void outputMapImage() {
             
             
             int id = getBaseMap( x - h/2, - ( y - h/2 ) );
-            
+
+            //int biomeInd = worldMap->select(x - h/2, -( y - h/2 ))->getBiome();
             int biomeInd = getMapBiomeIndex( x - h/2, -( y - h/2 ) );
 
             if( id > 0 ) {
@@ -6426,9 +6394,11 @@ char isMapObjectInTransit( int inX, int inY ) {
 
 
 
-int getMapBiome( int inX, int inY ) {
+int getMapBiome( int inX, int inY )
+{
+	//return biomes[worldMap->select(inX, inY)->getBiome()];
     return biomes[getMapBiomeIndex( inX, inY )];
-    }
+}
 
 
 
@@ -6507,7 +6477,8 @@ unsigned char *getChunkMessage( int inStartX, int inStartY,
                 // getMapObject
 
                 // get it ourselves
-                
+
+               // lastCheckedBiome = biomes[worldMap->select(x, y)->getBiome()];
                 lastCheckedBiome = biomes[getMapBiomeIndex( x, y )];
                 }
             chunkBiomes[ cI ] = lastCheckedBiome;

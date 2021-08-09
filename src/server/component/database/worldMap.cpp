@@ -4,33 +4,131 @@
 
 #include "worldMap.h"
 #include "OneLife/server/map.h"
+#include "OneLife/server/dbCommon.h"
+#include "OneLife/server/lineardb3.h"
 
+#include <iostream>
+
+extern LINEARDB3 biomeDB;
+
+/**
+ *
+ * @param width
+ * @param height
+ * @param detail
+ */
+server::component::database::WorldMap::WorldMap(unsigned int width, unsigned int height, unsigned int detail=4)
+{
+	this->width = width;
+	this->height = height;
+	this->center.x = (unsigned int)this->width/2;
+	this->center.y = (unsigned int)this->height/2;
+	this->idxMax = this->width*this->height;
+	this->biome = std::vector<int>(this->idxMax);
+	std::fill(this->biome.begin(), this->biome.end(), -1);
+}
+
+/**
+ *
+ */
+server::component::database::WorldMap::~WorldMap() {}
+
+/**
+ *
+ * @param posX
+ * @param posY
+ * @return
+ */
+server::component::database::WorldMap* server::component::database::WorldMap::select(int posX, int posY)
+{
+	unsigned int x = (unsigned)((signed)this->center.x+posX);
+	if(x<0) x = 0;
+	if(x>=this->width) x = this->width-1;
+	this->query.x = x;
+
+	unsigned int y = ((signed)this->center.y+posY);
+	if(y<0) y = 0;
+	if(y>=this->height) y = this->height-1;
+	this->query.y = y;
+
+	return this;
+}
+
+/**
+ *
+ * @param mapZone
+ */
+void server::component::database::WorldMap::insert(MapZone mapZone)
+{
+	unsigned int i;
+	unsigned int x, y;
+	struct{unsigned int x; unsigned int y;} targetCoord;
+	for(i=0;i<mapZone.coord.max_size();i++)
+	{
+		x = i%mapZone.width;
+		y = i/mapZone.width;
+		if((targetCoord.x=x+this->query.x)>=this->width)continue;
+		if((targetCoord.y=y+this->query.y)>=this->height)continue;
+		this->biome[targetCoord.x+(this->width*targetCoord.y)] = mapZone.coord[i];
+	}
+}
+
+/**
+ *
+ * @return
+ */
+int server::component::database::WorldMap::getBiome()
+{
+	unsigned int idx;
+	idx = this->query.x+(this->query.y*this->width);
+	return this->biome[idx];
+}
+
+//!
+
+void server::component::database::WorldMap::updateSecondPlaceIndex(int *outSecondPlaceIndex)
+{
+	this->outSecondPlaceIndex = outSecondPlaceIndex;
+}
+
+void server::component::database::WorldMap::updateSecondPlaceGap(double *outSecondPlaceGap)
+{
+	this->outSecondPlaceGap = outSecondPlaceGap;
+}
+
+#include <iostream>
 
 int getMapBiomeIndex( int inX, int inY,
 							 int *outSecondPlaceIndex,
-							 double *outSecondPlaceGap) {
-
+							 double *outSecondPlaceGap)
+{
 	int secondPlaceBiome = -1;
 
 	int dbBiome = -1;
 
+	//std::cout << "\nanyBiome ? " << anyBiomesInDB;
 	if( anyBiomesInDB &&
 	inX >= minBiomeXLoc && inX <= maxBiomeXLoc &&
-	inY >= minBiomeYLoc && inY <= maxBiomeYLoc ) {
+	inY >= minBiomeYLoc && inY <= maxBiomeYLoc )
+	{
 		// don't bother with this call unless biome DB has
 		// something in it, and this inX,inY is in the region where biomes
 		// exist in the database (tutorial loading, or test maps)
+
+		std::cout << "\n===================>"<<"get biome in db";
 		dbBiome = biomeDBGet( inX, inY,
 							  &secondPlaceBiome,
 							  outSecondPlaceGap );
 	}
 
 
-	if( dbBiome != -1 ) {
+	if( dbBiome != -1 )
+	{
 
 		int index = getBiomeIndex( dbBiome );
 
-		if( index != -1 ) {
+		if( index != -1 )
+		{
 			// biome still exists!
 
 			char secondPlaceFailed = false;
@@ -59,14 +157,15 @@ int getMapBiomeIndex( int inX, int inY,
 		// ignore it
 	}
 
-
 	int secondPlace = -1;
 
 	double secondPlaceGap = 0;
 
-
+	std::cout << "\nsecond place: " << secondPlace << ", secondePlaceGap: " << secondPlaceGap;
 	int pickedBiome = computeMapBiomeIndex( inX, inY,
 											&secondPlace, &secondPlaceGap );
+
+	std::cout << "\nPicked biome : "<<pickedBiome<<", second place: " << secondPlace << ", secondePlaceGap: " << secondPlaceGap;
 
 
 	if( outSecondPlaceIndex != NULL ) {
@@ -77,7 +176,8 @@ int getMapBiomeIndex( int inX, int inY,
 	}
 
 
-	if( dbBiome == -1 || secondPlaceBiome == -1 ) {
+	if( dbBiome == -1 || secondPlaceBiome == -1 )
+	{
 		// not stored, OR some part of stored stale, re-store it
 
 		secondPlaceBiome = 0;
@@ -89,12 +189,42 @@ int getMapBiomeIndex( int inX, int inY,
 		// huge RAM impact as players explore distant areas of map
 
 		// we still check the biomeDB above for loading test maps
-		/*
-        biomeDBPut( inX, inY, biomes[pickedBiome],
-                    secondPlaceBiome, secondPlaceGap );
-        */
+        //biomeDBPut( inX, inY, biomes[pickedBiome], secondPlaceBiome, secondPlaceGap );
 	}
 
+	int newBiome = worldMap->select(inX,inY)->getBiome();
+	if(newBiome != -1) pickedBiome = newBiome;
 	return pickedBiome;
+}
+
+// returns -1 if not found
+int biomeDBGet( int inX, int inY,
+				int *outSecondPlaceBiome,
+				double *outSecondPlaceGap) {
+	unsigned char key[8];
+	unsigned char value[12];
+
+	// look for changes to default in database
+	intPairToKey( inX, inY, key );
+
+	int result = LINEARDB3_get( &biomeDB, key, value );
+
+	if( result == 0 ) {
+		// found
+		int biome = valueToInt( &( value[0] ) );
+
+		if( outSecondPlaceBiome != NULL ) {
+			*outSecondPlaceBiome = valueToInt( &( value[4] ) );
+		}
+
+		if( outSecondPlaceGap != NULL ) {
+			*outSecondPlaceGap = valueToInt( &( value[8] ) ) / gapIntScale;
+		}
+
+		return biome;
+	}
+	else {
+		return -1;
+	}
 }
 

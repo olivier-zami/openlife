@@ -10,12 +10,18 @@
 
 #include "minorGems/game/doublePair.h"
 
+#include "src/server/component/database/worldMap.h"
+
+extern server::component::database::WorldMap* worldMap;
+
 extern int* biomes;
 extern char anyBiomesInDB;
 extern int maxBiomeXLoc;
 extern int maxBiomeYLoc;
 extern int minBiomeXLoc;
 extern int minBiomeYLoc;
+
+extern double gapIntScale;
 
 
 typedef struct ChangePosition {
@@ -379,10 +385,6 @@ int computeMapBiomeIndex( int inX, int inY,
 								 int *outSecondPlaceIndex,
 								 double *outSecondPlaceGap);
 
-
-int biomeDBGet( int inX, int inY,
-					   int *outSecondPlaceBiome,
-					   double *outSecondPlaceGap);
 
 int getBiomeIndex( int inBiome );
 

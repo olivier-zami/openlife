@@ -2,8 +2,25 @@
 // Created by olivier on 07/08/2021.
 //
 
-int main() {
+#include "src/server/component/database/worldMap.h"
 
+server::component::database::WorldMap* worldMap;
+
+int main()
+{
+	//!new
+
+	//!net map biome around spawning zone
+	MapZone mapZone;
+	mapZone.width = 10;
+	mapZone.height = 10;
+	for(long unsigned int i=0; i<mapZone.coord.max_size(); i++) mapZone.coord[i] = 1;
+
+	worldMap = new server::component::database::WorldMap(20, 20, 0);
+	worldMap->select(-7,-3)->insert(mapZone);
+
+
+	//!old
 	if( checkReadOnly() ) {
 		printf( "File system read-only.  Server exiting.\n" );
 		return 1;
