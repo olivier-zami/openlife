@@ -1,4 +1,5 @@
 #include "map.h"
+#include "src/server/server.h"
 #include "src/server/component/database/worldMap.h"
 #include "HashTable.h"
 #include "monument.h"
@@ -31,6 +32,8 @@
 #include "lineardb3.h"
 
 #include "minorGems/util/crc32.h"
+
+extern Server* realServer;
 
 
 /*
@@ -2723,11 +2726,11 @@ typedef struct GlobalTriggerState {
 static SimpleVector<GlobalTriggerState> globalTriggerStates;
 
 
-static int numSpeechPipes = 0;
+extern int numSpeechPipes;
 
-static SimpleVector<GridPos> *speechPipesIn = NULL;
+extern SimpleVector<GridPos> *speechPipesIn;
 
-static SimpleVector<GridPos> *speechPipesOut = NULL;
+extern SimpleVector<GridPos> *speechPipesOut;
 
 
 
@@ -3066,19 +3069,17 @@ void reseedMap( char inForceFresh ) {
         }
     }
 
+#include "src/server/component/channel/speech.h"
+
+extern server::component::channel::SpeechService* speechService;
+
+char initMap()
+{
+	//!new
+    speechService->init();
 
 
-
-char initMap() {
-
-    
-    
-    numSpeechPipes = getMaxSpeechPipeIndex() + 1;
-    
-    speechPipesIn = new SimpleVector<GridPos>[ numSpeechPipes ];
-    speechPipesOut = new SimpleVector<GridPos>[ numSpeechPipes ];
-    
-
+    //!old
     eveSecondaryLocObjectIDs.deleteAll();
     recentlyUsedPrimaryEvePositionTimes.deleteAll();
     recentlyUsedPrimaryEvePositions.deleteAll();

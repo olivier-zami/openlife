@@ -15,7 +15,6 @@
 # Should not be made manually---used by configure to build Makefiles.
 ##
 
-
 PLATFORM_COMPILE_FLAGS = -DLINUX
 
 

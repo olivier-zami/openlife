@@ -481,7 +481,7 @@ static void setupObjectGlobalTriggers( ObjectRecord *inR ) {
 
 
 
-static int maxSpeechPipeIndex = 0;
+extern int maxSpeechPipeIndex;
 
 
 static void setupObjectSpeechPipe( ObjectRecord *inR ) {
@@ -902,9 +902,7 @@ static void setupVarIsNumeral( ObjectRecord *inR ) {
 
 
 
-int getMaxSpeechPipeIndex() {
-    return maxSpeechPipeIndex;
-    }
+
 
 
 

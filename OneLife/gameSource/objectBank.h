@@ -950,9 +950,6 @@ void prepareToSkipSprites( ObjectRecord *inObject,
 void restoreSkipDrawing( ObjectRecord *inObject );
 
 
-int getMaxSpeechPipeIndex();
-
-
 
 // gets number of global trigger indices
 int getNumGlobalTriggers();

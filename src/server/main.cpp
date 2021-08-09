@@ -2,13 +2,20 @@
 // Created by olivier on 07/08/2021.
 //
 
+#include "server.h"
 #include "src/server/component/database/worldMap.h"
 
 server::component::database::WorldMap* worldMap;
+Server* realServer;
 
 int main()
 {
 	//!new
+
+	extern Server* realServer;//TODO: change socket object name from server to socket and rename realServer to server
+	realServer = new Server();
+	realServer->init();
+
 
 	//!net map biome around spawning zone
 	MapZone mapZone;
@@ -18,6 +25,9 @@ int main()
 
 	worldMap = new server::component::database::WorldMap(20, 20, 0);
 	worldMap->select(-7,-3)->insert(mapZone);
+
+	//realServer->start();
+
 
 
 	//!old

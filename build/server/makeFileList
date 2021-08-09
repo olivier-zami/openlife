@@ -26,6 +26,8 @@ CUSTOM_LINUX_LINK_FLAGS =
 LAYER_SOURCE = \
 ${DIR_APP_SERVER}/server.cpp \
 ${DIR_APP_SERVER}/map.cpp \
+${DIR_APP_SERVER}/../../src/server/server.cpp \
+${DIR_APP_SERVER}/../../src/server/component/channel/speech.cpp \
 ${DIR_APP_SERVER}/../../src/server/component/database/worldMap.cpp \
 ${DIR_APP_SERVER}/../gameSource/transitionBank.cpp \
 ${DIR_APP_SERVER}/../gameSource/categoryBank.cpp \
