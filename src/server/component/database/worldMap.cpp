@@ -84,16 +84,21 @@ int server::component::database::WorldMap::getBiome()
 	return this->biome[idx];
 }
 
+void server::component::database::WorldMap::useBiomeStorehouse(common::object::store::memory::randomAccess::LinearDB* biomeStoreHouse)
+{
+	this->biomeStoreHouse = biomeStoreHouse;
+}
+
 //!
 
 void server::component::database::WorldMap::updateSecondPlaceIndex(int *outSecondPlaceIndex)
 {
-	this->outSecondPlaceIndex = outSecondPlaceIndex;
+	this->tmp.outSecondPlaceIndex = outSecondPlaceIndex;
 }
 
 void server::component::database::WorldMap::updateSecondPlaceGap(double *outSecondPlaceGap)
 {
-	this->outSecondPlaceGap = outSecondPlaceGap;
+	this->tmp.outSecondPlaceGap = outSecondPlaceGap;
 }
 
 #include <iostream>
@@ -102,11 +107,15 @@ int getMapBiomeIndex( int inX, int inY,
 							 int *outSecondPlaceIndex,
 							 double *outSecondPlaceGap)
 {
+	int pickedBiome;
 	int secondPlaceBiome = -1;
 
 	int dbBiome = -1;
 
-	//std::cout << "\nanyBiome ? " << anyBiomesInDB;
+	std::cout << "\nanyBiome ? " << anyBiomesInDB << " && ";
+	std::cout << minBiomeXLoc << "<=" << inX << "<=" << maxBiomeXLoc << " && ";
+	std::cout << minBiomeYLoc << "<=" << inY << "<=" << maxBiomeYLoc << "";
+
 	if( anyBiomesInDB &&
 	inX >= minBiomeXLoc && inX <= maxBiomeXLoc &&
 	inY >= minBiomeYLoc && inY <= maxBiomeYLoc )
@@ -115,10 +124,10 @@ int getMapBiomeIndex( int inX, int inY,
 		// something in it, and this inX,inY is in the region where biomes
 		// exist in the database (tutorial loading, or test maps)
 
-		std::cout << "\n===================>"<<"get biome in db";
 		dbBiome = biomeDBGet( inX, inY,
 							  &secondPlaceBiome,
 							  outSecondPlaceGap );
+		std::cout << "\n===================>"<<"get biome in db : " << dbBiome;
 	}
 
 
@@ -162,7 +171,8 @@ int getMapBiomeIndex( int inX, int inY,
 	double secondPlaceGap = 0;
 
 	std::cout << "\nsecond place: " << secondPlace << ", secondePlaceGap: " << secondPlaceGap;
-	int pickedBiome = computeMapBiomeIndex( inX, inY,
+
+	pickedBiome = computeMapBiomeIndex( inX, inY,
 											&secondPlace, &secondPlaceGap );
 
 	std::cout << "\nPicked biome : "<<pickedBiome<<", second place: " << secondPlace << ", secondePlaceGap: " << secondPlaceGap;
@@ -192,6 +202,7 @@ int getMapBiomeIndex( int inX, int inY,
         //biomeDBPut( inX, inY, biomes[pickedBiome], secondPlaceBiome, secondPlaceGap );
 	}
 
+
 	int newBiome = worldMap->select(inX,inY)->getBiome();
 	if(newBiome != -1) pickedBiome = newBiome;
 	return pickedBiome;
@@ -200,7 +211,8 @@ int getMapBiomeIndex( int inX, int inY,
 // returns -1 if not found
 int biomeDBGet( int inX, int inY,
 				int *outSecondPlaceBiome,
-				double *outSecondPlaceGap) {
+				double *outSecondPlaceGap)
+{
 	unsigned char key[8];
 	unsigned char value[12];
 

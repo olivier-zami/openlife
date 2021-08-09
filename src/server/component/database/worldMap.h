@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <array>
+#include "src/common/object/store/memory/randomAccess/linearDB.h"
 
 typedef struct{
 	unsigned int width;
@@ -26,6 +27,8 @@ namespace server::component::database
 			WorldMap* select(int posX, int posY);
 			int getBiome();
 
+			void useBiomeStorehouse(common::object::store::memory::randomAccess::LinearDB* biomeStoreHouse);
+
 			void updateSecondPlaceIndex(int *outSecondPlaceIndex);
 			void updateSecondPlaceGap(double *outSecondPlaceGap);
 
@@ -37,11 +40,12 @@ namespace server::component::database
 			struct {unsigned int x; unsigned int y;} query;
 			struct {unsigned int x; unsigned int y;} center;
 			std::vector<int> biome;
+			common::object::store::memory::randomAccess::LinearDB* biomeStoreHouse;
 
 			struct{
 				int *outSecondPlaceIndex;
 				double *outSecondPlaceGap;
-			};
+			}tmp;
 	};
 }
 
