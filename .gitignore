@@ -38,6 +38,7 @@ OneLife/server/mapDummyRecall.txt
 OneLife/server/curseLog
 OneLife/server/curseSave.txt
 OneLife/server/familyDataLog.txt
+OneLife/server/myLog.txt
 
 #
 var/
