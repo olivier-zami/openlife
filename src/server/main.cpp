@@ -2,6 +2,7 @@
 // Created by olivier on 07/08/2021.
 //
 
+#include <iostream>
 #include <SDL/SDL.h>
 #include "server.h"
 #include "src/common/system.h"
@@ -46,13 +47,14 @@ int main()
 			case 16776960:	mapZone->p(i) = 5; break;//desert
 			case 32512:		mapZone->p(i) = 4; break;//jungle
 			default:
+				std::cout << "\nConvert biome (default) value " << mapZone->p(i) << " to " << 1;
 				mapZone->p(i) = 1;
 				break;
 		}
 	}
 
 	worldMap = new server::component::database::WorldMap(2048, 2048, 0);
-	worldMap->select(-256,-256)->insert(mapZone);
+	//worldMap->select(-256,-256)->insert(mapZone);
 
 	//realServer->start();
 
