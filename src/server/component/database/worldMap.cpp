@@ -8,7 +8,9 @@
 
 #include "OneLife/server/map.h"
 #include "src/common/object/store/memory/randomAccess/linearDB.h"
+#include "OneLife/server/dbCommon.h"
 
+extern common::object::store::memory::randomAccess::LinearDB *newBiomeDB;
 
 /**
  *
@@ -99,8 +101,6 @@ void server::component::database::WorldMap::updateSecondPlaceGap(double *outSeco
 {
 	this->tmp.outSecondPlaceGap = outSecondPlaceGap;
 }
-
-/**********************************************************************************************************************/
 
 int getMapBiomeIndex( int inX, int inY,
 					  int *outSecondPlaceIndex,
@@ -205,4 +205,45 @@ int getMapBiomeIndex( int inX, int inY,
 	int newBiome = worldMap->select(inX,inY)->getBiome();
 	if(newBiome != -1) pickedBiome = newBiome;
 	return pickedBiome;
-					  }
+}
+
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param outSecondPlaceBiome
+ * @param outSecondPlaceGap
+ * @return
+ */
+// returns -1 if not found
+int biomeDBGet( int inX, int inY,
+			  int *outSecondPlaceBiome,
+			  double *outSecondPlaceGap)
+{
+	unsigned char key[8];
+	unsigned char value[12];
+
+	// look for changes to default in database
+	intPairToKey( inX, inY, key );
+
+	int result = newBiomeDB->get(key, value);
+	//int result = LINEARDB3_get( &biomeDB, key, value );//TODO: search LINEARDB3_get ans replace with newBiomeDB->get(...)
+
+	if( result == 0 ) {
+		// found
+		int biome = valueToInt( &( value[0] ) );
+
+		if( outSecondPlaceBiome != NULL ) {
+			*outSecondPlaceBiome = valueToInt( &( value[4] ) );
+		}
+
+		if( outSecondPlaceGap != NULL ) {
+			*outSecondPlaceGap = valueToInt( &( value[8] ) ) / gapIntScale;
+		}
+
+		return biome;
+	}
+	else {
+		return -1;
+	}
+}
