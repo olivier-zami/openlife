@@ -1538,21 +1538,6 @@ char *getOwnershipString( GridPos inPos ) {
 
 
 
-static char checkReadOnly() {
-    const char *testFileName = "testReadOnly.txt";
-    
-    FILE *testFile = fopen( testFileName, "w" );
-    
-    if( testFile != NULL ) {
-        
-        fclose( testFile );
-        remove( testFileName );
-        return false;
-        }
-    return true;
-    }
-
-
 
 
 // returns a person to their natural state

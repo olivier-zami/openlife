@@ -4,8 +4,10 @@
 
 #include "server.h"
 #include "src/server/component/channel/speech.h"
+#include "src/server/component/database/gameFeatures.h"
 
 server::component::channel::SpeechService* speechService;
+server::component::database::GameFeatures* gameFeatures;
 
 Server::Server() {}
 Server::~Server() {}
@@ -13,6 +15,7 @@ Server::~Server() {}
 void Server::init()
 {
 	speechService = new server::component::channel::SpeechService();
+	gameFeatures = new server::component::database::GameFeatures();
 }
 
 void Server::start()

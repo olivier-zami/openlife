@@ -2,15 +2,25 @@
 // Created by olivier on 07/08/2021.
 //
 
+#include <SDL/SDL.h>
 #include "server.h"
+#include "src/common/system.h"
+#include "src/common/object/entity/mapZone.h"
 #include "src/server/component/database/worldMap.h"
+#include "src/common/process/convert/image.h"
 
 server::component::database::WorldMap* worldMap;
 Server* realServer;
 
 int main()
 {
-	//!new
+	if(!common::system::isFileWritable())
+	{
+		common::system::notice("File system read-only.  Server exiting.");
+		return 1;
+	}
+
+	common::system::notice("Attempt to start the server");
 
 	extern Server* realServer;//TODO: change socket object name from server to socket and rename realServer to server
 	realServer = new Server();
@@ -18,32 +28,47 @@ int main()
 
 
 	//!net map biome around spawning zone
-	MapZone mapZone;
-	mapZone.width = 10;
-	mapZone.height = 10;
-	for(long unsigned int i=0; i<mapZone.coord.max_size(); i++) mapZone.coord[i] = 1;
+	common::object::entity::MapZone* mapZone;
+	mapZone = common::process::convert::image::getMapZoneFromBitmap("/home/olivier/Projets/OpenLife/data/images/maps/mini_map.bmp");
+	for(long unsigned int i=0; i<mapZone->getSize(); i++)
+	{
+		switch(mapZone->p(i))
+		{
 
-	worldMap = new server::component::database::WorldMap(20, 20, 0);
-	worldMap->select(-7,-3)->insert(mapZone);
+			case 16777215:	mapZone->p(i) = 6; break;//polar
+			/*
+			case 255:		mapZone->p(i) = -1; break;//water
+			 */
+			case 8355711:	mapZone->p(i) = 3; break;//montain/taiga/toundra
+			case 65280:		mapZone->p(i) = 1; break;//grassland
+			case 32639:		mapZone->p(i) = 0; break;//swamp
+			case 16744192:	mapZone->p(i) = 2; break;//savannah mediterranean
+			case 16776960:	mapZone->p(i) = 5; break;//desert
+			case 32512:		mapZone->p(i) = 4; break;//jungle
+			default:
+				mapZone->p(i) = 1;
+				break;
+		}
+	}
+
+	worldMap = new server::component::database::WorldMap(2048, 2048, 0);
+	worldMap->select(-256,-256)->insert(mapZone);
 
 	//realServer->start();
 
 
 
 	//!old
-	if( checkReadOnly() ) {
-		printf( "File system read-only.  Server exiting.\n" );
-		return 1;
-	}
 
+	//feature family stuff
 	familyDataLogFile = fopen( "familyDataLog.txt", "a" );
-
 	if( familyDataLogFile != NULL ) {
 		fprintf( familyDataLogFile, "%.2f server starting up\n",
 				 Time::getCurrentTime() );
 	}
 
 
+	//feature allowedSayChars
 	memset( allowedSayCharMap, false, 256 );
 
 	int numAllowed = strlen( allowedSayChars );
@@ -486,7 +511,7 @@ int main()
 			forceShutdownMode =
 					SettingsManager::getIntSetting( "forceShutdownMode", 0 );
 
-			if( checkReadOnly() ) {
+			if(!common::system::isFileWritable()) {
 				// read-only file system causes all kinds of weird
 				// behavior
 				// shut this server down NOW

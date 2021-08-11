@@ -215,14 +215,14 @@ static GridPos eveStartSpiralPos = { 0, 0 };
 static int evePrimaryLocSpacingX = 0;
 static int evePrimaryLocSpacingY = 0;
 static int evePrimaryLocObjectID = -1;
-static SimpleVector<int> eveSecondaryLocObjectIDs;
+extern SimpleVector<int> eveSecondaryLocObjectIDs;
 
 static GridPos lastEvePrimaryLocation = {0,0};
 
-static SimpleVector<GridPos> recentlyUsedPrimaryEvePositions;
-static SimpleVector<int> recentlyUsedPrimaryEvePositionPlayerIDs;
+extern SimpleVector<GridPos> recentlyUsedPrimaryEvePositions;
+extern SimpleVector<int> recentlyUsedPrimaryEvePositionPlayerIDs;
 // when they were place, so they can time out
-static SimpleVector<double> recentlyUsedPrimaryEvePositionTimes;
+extern SimpleVector<double> recentlyUsedPrimaryEvePositionTimes;
 // one hour
 static double recentlyUsedPrimaryEvePositionTimeout = 3600;
 
@@ -3070,22 +3070,19 @@ void reseedMap( char inForceFresh ) {
     }
 
 #include "src/server/component/channel/speech.h"
+#include "src/server/component/database/gameFeatures.h"
 
 extern server::component::channel::SpeechService* speechService;
+extern server::component::database::GameFeatures* gameFeatures;
 
 char initMap()
 {
 	//!new
     speechService->init();
+    gameFeatures->deleteEveFeatures1();
 
 
     //!old
-    eveSecondaryLocObjectIDs.deleteAll();
-    recentlyUsedPrimaryEvePositionTimes.deleteAll();
-    recentlyUsedPrimaryEvePositions.deleteAll();
-    recentlyUsedPrimaryEvePositionPlayerIDs.deleteAll();
-    
-
     initDBCaches();
     initBiomeCache();
 

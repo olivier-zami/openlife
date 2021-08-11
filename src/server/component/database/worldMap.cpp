@@ -58,18 +58,18 @@ server::component::database::WorldMap* server::component::database::WorldMap::se
  *
  * @param mapZone
  */
-void server::component::database::WorldMap::insert(MapZone mapZone)
+void server::component::database::WorldMap::insert(common::object::entity::MapZone* mapZone)
 {
 	unsigned int i;
 	unsigned int x, y;
 	struct{unsigned int x; unsigned int y;} targetCoord;
-	for(i=0;i<mapZone.coord.max_size();i++)
+	for(i=0;i<mapZone->getSize();i++)
 	{
-		x = i%mapZone.width;
-		y = i/mapZone.width;
+		x = i%mapZone->getWidth();
+		y = i/mapZone->getWidth();
 		if((targetCoord.x=x+this->query.x)>=this->width)continue;
 		if((targetCoord.y=y+this->query.y)>=this->height)continue;
-		this->biome[targetCoord.x+(this->width*targetCoord.y)] = mapZone.coord[i];
+		this->biome[targetCoord.x+(this->width*targetCoord.y)] = mapZone->p(i);
 	}
 }
 

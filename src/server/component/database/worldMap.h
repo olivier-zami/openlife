@@ -8,12 +8,7 @@
 #include <vector>
 #include <array>
 #include "src/common/object/store/memory/randomAccess/linearDB.h"
-
-typedef struct{
-	unsigned int width;
-	unsigned int height;
-	std::array<int, 100> coord;
-}MapZone;
+#include "src/common/object/entity/mapZone.h"
 
 namespace server::component::database
 {
@@ -23,7 +18,7 @@ namespace server::component::database
 			WorldMap(unsigned int width, unsigned int height, unsigned int detail);
 			~WorldMap();
 
-			void insert(MapZone mapZone);
+			void insert(common::object::entity::MapZone* mapZone);
 			WorldMap* select(int posX, int posY);
 			int getBiome();
 
