@@ -43,13 +43,4 @@ namespace server::component::database
 			}tmp;
 	};
 }
-
-int getMapBiomeIndex( int inX, int inY,
-							 int *outSecondPlaceIndex = nullptr,
-							 double *outSecondPlaceGap = nullptr);
-
-int biomeDBGet( int inX, int inY,
-				int *outSecondPlaceBiome = nullptr,
-				double *outSecondPlaceGap = nullptr);
-
 #endif //OPENLIFE_WORLDMAP_H

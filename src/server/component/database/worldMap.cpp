@@ -3,13 +3,12 @@
 //
 
 #include "worldMap.h"
-#include "OneLife/server/map.h"
-#include "OneLife/server/dbCommon.h"
-#include "OneLife/server/lineardb3.h"
 
 #include <iostream>
 
-extern LINEARDB3 biomeDB;
+#include "OneLife/server/map.h"
+#include "src/common/object/store/memory/randomAccess/linearDB.h"
+
 
 /**
  *
@@ -101,12 +100,12 @@ void server::component::database::WorldMap::updateSecondPlaceGap(double *outSeco
 	this->tmp.outSecondPlaceGap = outSecondPlaceGap;
 }
 
-#include <iostream>
+/**********************************************************************************************************************/
 
 int getMapBiomeIndex( int inX, int inY,
-							 int *outSecondPlaceIndex,
-							 double *outSecondPlaceGap)
-{
+					  int *outSecondPlaceIndex,
+					  double *outSecondPlaceGap)
+					  {
 	int pickedBiome;
 	int secondPlaceBiome = -1;
 
@@ -173,7 +172,7 @@ int getMapBiomeIndex( int inX, int inY,
 	std::cout << "\nsecond place: " << secondPlace << ", secondePlaceGap: " << secondPlaceGap;
 
 	pickedBiome = computeMapBiomeIndex( inX, inY,
-											&secondPlace, &secondPlaceGap );
+										&secondPlace, &secondPlaceGap );
 
 	std::cout << "\nPicked biome : "<<pickedBiome<<", second place: " << secondPlace << ", secondePlaceGap: " << secondPlaceGap;
 
@@ -199,44 +198,11 @@ int getMapBiomeIndex( int inX, int inY,
 		// huge RAM impact as players explore distant areas of map
 
 		// we still check the biomeDB above for loading test maps
-        //biomeDBPut( inX, inY, biomes[pickedBiome], secondPlaceBiome, secondPlaceGap );
+		//biomeDBPut( inX, inY, biomes[pickedBiome], secondPlaceBiome, secondPlaceGap );
 	}
 
 
 	int newBiome = worldMap->select(inX,inY)->getBiome();
 	if(newBiome != -1) pickedBiome = newBiome;
 	return pickedBiome;
-}
-
-// returns -1 if not found
-int biomeDBGet( int inX, int inY,
-				int *outSecondPlaceBiome,
-				double *outSecondPlaceGap)
-{
-	unsigned char key[8];
-	unsigned char value[12];
-
-	// look for changes to default in database
-	intPairToKey( inX, inY, key );
-
-	int result = LINEARDB3_get( &biomeDB, key, value );
-
-	if( result == 0 ) {
-		// found
-		int biome = valueToInt( &( value[0] ) );
-
-		if( outSecondPlaceBiome != NULL ) {
-			*outSecondPlaceBiome = valueToInt( &( value[4] ) );
-		}
-
-		if( outSecondPlaceGap != NULL ) {
-			*outSecondPlaceGap = valueToInt( &( value[8] ) ) / gapIntScale;
-		}
-
-		return biome;
-	}
-	else {
-		return -1;
-	}
-}
-
+					  }

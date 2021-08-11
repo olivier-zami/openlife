@@ -29,6 +29,7 @@ ${DIR_APP_SERVER}/map.cpp \
 ${DIR_APP_SERVER}/../../src/common/object/entity/mapZone.cpp \
 ${DIR_APP_SERVER}/../../src/common/system.cpp \
 ${DIR_APP_SERVER}/../../src/common/system/time.cpp \
+${DIR_APP_SERVER}/../../src/common/object/store/memory/randomAccess/linearDB.cpp \
 ${DIR_APP_SERVER}/../../src/common/process/convert/image.cpp \
 ${DIR_APP_SERVER}/../../src/server/server.cpp \
 ${DIR_APP_SERVER}/../../src/server/component/channel/speech.cpp \

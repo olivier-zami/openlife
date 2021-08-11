@@ -9,9 +9,22 @@
 #include "src/common/object/entity/mapZone.h"
 #include "src/server/component/database/worldMap.h"
 #include "src/common/process/convert/image.h"
+#include "src/common/type/database/lineardb3.h"
+
+Server* realServer;
 
 server::component::database::WorldMap* worldMap;
-Server* realServer;
+char anyBiomesInDB = false;//legacy: static char anyBiomesInDB = false;
+int maxBiomeXLoc = -2000000000;//legacy: static int maxBiomeXLoc = -2000000000;
+int maxBiomeYLoc = -2000000000;//legacy: static int maxBiomeYLoc = -2000000000;
+int minBiomeXLoc = 2000000000;//legacy: static int minBiomeXLoc = 2000000000;
+int minBiomeYLoc = 2000000000;//legacy: static int minBiomeYLoc = 2000000000;
+
+LINEARDB3 biomeDB;
+char biomeDBOpen = false;
+
+
+common::object::store::memory::randomAccess::LinearDB *newBiomeDB;
 
 int main()
 {
@@ -21,7 +34,9 @@ int main()
 		return 1;
 	}
 
-	common::system::notice("Attempt to start the server");
+	common::system::notice("Attempt to start the server ...");
+
+	newBiomeDB = new common::object::store::memory::randomAccess::LinearDB(&biomeDB);
 
 	extern Server* realServer;//TODO: change socket object name from server to socket and rename realServer to server
 	realServer = new Server();

@@ -282,7 +282,7 @@ void setResponsiblePlayer( int inPlayerID ) {
 
 
 
-double gapIntScale = 1000000.0;
+
 
 
 
@@ -365,8 +365,8 @@ static DB timeDB;
 static char timeDBOpen = false;
 
 
-DB biomeDB;
-static char biomeDBOpen = false;
+extern DB biomeDB;
+extern char biomeDBOpen;
 
 
 static DB floorDB;
@@ -513,11 +513,11 @@ static MinPriorityQueue<MovementRecord> liveMovements;
 // call to stepMap
 static SimpleVector<ChangePosition> mapChangePosSinceLastStep;
 
-char anyBiomesInDB = false;//legacy: static char anyBiomesInDB = false;
-int maxBiomeXLoc = -2000000000;//legacy: static int maxBiomeXLoc = -2000000000;
-int maxBiomeYLoc = -2000000000;//legacy: static int maxBiomeYLoc = -2000000000;
-int minBiomeXLoc = 2000000000;//legacy: static int minBiomeXLoc = 2000000000;
-int minBiomeYLoc = 2000000000;//legacy: static int minBiomeYLoc = 2000000000;
+extern char anyBiomesInDB;//legacy: static char anyBiomesInDB = false;
+extern int maxBiomeXLoc;//legacy: static int maxBiomeXLoc = -2000000000;
+extern int maxBiomeYLoc;//legacy: static int maxBiomeYLoc = -2000000000;
+extern int minBiomeXLoc;//legacy: static int minBiomeXLoc = 2000000000;
+extern int minBiomeYLoc;//legacy: static int minBiomeYLoc = 2000000000;
 
 
 
