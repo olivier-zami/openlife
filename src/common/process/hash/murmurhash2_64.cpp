@@ -8,6 +8,8 @@
 
 // Microsoft Visual Studio
 
+
+
 #if defined(_MSC_VER) && (_MSC_VER < 1600)
 
 typedef unsigned char uint8_t;
@@ -131,11 +133,12 @@ static uint64_t MurmurHash64A ( const void * key, int len, uint64_t seed )
 #else
 
 #define MurmurHash64 MurmurHash64B
+#include "murmurhash2_64.h"
 
 
 // 64-bit hash for 32-bit platforms
-
-static uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed )
+uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed );
+uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed )
 {
   const uint32_t m = 0x5bd1e995;
   const int r = 24;
