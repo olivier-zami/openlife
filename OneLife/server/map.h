@@ -388,4 +388,7 @@ int computeMapBiomeIndex( int inX, int inY,
 
 int getBiomeIndex( int inBiome );
 
+void dbLookTimePut( int inX, int inY, timeSec_t inTime );
+
+timeSec_t dbLookTimeGet( int inX, int inY );
 #endif
