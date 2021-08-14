@@ -1,5 +1,5 @@
 master
-	!common
-		!linearDB => require the creation of the common branch
+	!system
+		!linearDB => require the creation of the system branch
 	!server => can't create a File object (minorGems/io/file/File.h) in order to create new linearDB class
 	!client
