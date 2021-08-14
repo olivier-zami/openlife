@@ -11,6 +11,8 @@ core*
 #temporarly ignored
 test/
 
+build/server/Makefile.minorGems_dependencies
+
 OneLife/gameSource/log.txt
 OneLife/gameSource/OneLife
 OneLife/gameSource/testUser/*
