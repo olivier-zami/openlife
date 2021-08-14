@@ -3,13 +3,14 @@
 //
 
 #include "worldMap.h"
-#include "OneLife/server/map.h"
-#include "OneLife/server/dbCommon.h"
-#include "OneLife/server/lineardb3.h"
 
 #include <iostream>
 
-extern LINEARDB3 biomeDB;
+#include "OneLife/server/map.h"
+#include "src/common/object/store/memory/randomAccess/linearDB.h"
+#include "OneLife/server/dbCommon.h"
+
+extern common::object::store::memory::randomAccess::LinearDB *newBiomeDB;
 
 /**
  *
@@ -101,12 +102,10 @@ void server::component::database::WorldMap::updateSecondPlaceGap(double *outSeco
 	this->tmp.outSecondPlaceGap = outSecondPlaceGap;
 }
 
-#include <iostream>
-
 int getMapBiomeIndex( int inX, int inY,
-							 int *outSecondPlaceIndex,
-							 double *outSecondPlaceGap)
-{
+					  int *outSecondPlaceIndex,
+					  double *outSecondPlaceGap)
+					  {
 	int pickedBiome;
 	int secondPlaceBiome = -1;
 
@@ -173,7 +172,7 @@ int getMapBiomeIndex( int inX, int inY,
 	std::cout << "\nsecond place: " << secondPlace << ", secondePlaceGap: " << secondPlaceGap;
 
 	pickedBiome = computeMapBiomeIndex( inX, inY,
-											&secondPlace, &secondPlaceGap );
+										&secondPlace, &secondPlaceGap );
 
 	std::cout << "\nPicked biome : "<<pickedBiome<<", second place: " << secondPlace << ", secondePlaceGap: " << secondPlaceGap;
 
@@ -199,7 +198,7 @@ int getMapBiomeIndex( int inX, int inY,
 		// huge RAM impact as players explore distant areas of map
 
 		// we still check the biomeDB above for loading test maps
-        //biomeDBPut( inX, inY, biomes[pickedBiome], secondPlaceBiome, secondPlaceGap );
+		//biomeDBPut( inX, inY, biomes[pickedBiome], secondPlaceBiome, secondPlaceGap );
 	}
 
 
@@ -208,10 +207,18 @@ int getMapBiomeIndex( int inX, int inY,
 	return pickedBiome;
 }
 
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param outSecondPlaceBiome
+ * @param outSecondPlaceGap
+ * @return
+ */
 // returns -1 if not found
 int biomeDBGet( int inX, int inY,
-				int *outSecondPlaceBiome,
-				double *outSecondPlaceGap)
+			  int *outSecondPlaceBiome,
+			  double *outSecondPlaceGap)
 {
 	unsigned char key[8];
 	unsigned char value[12];
@@ -219,7 +226,8 @@ int biomeDBGet( int inX, int inY,
 	// look for changes to default in database
 	intPairToKey( inX, inY, key );
 
-	int result = LINEARDB3_get( &biomeDB, key, value );
+	int result = newBiomeDB->get(key, value);
+	//int result = LINEARDB3_get( &biomeDB, key, value );//TODO: search LINEARDB3_get ans replace with newBiomeDB->get(...)
 
 	if( result == 0 ) {
 		// found
@@ -239,4 +247,3 @@ int biomeDBGet( int inX, int inY,
 		return -1;
 	}
 }
-

@@ -15,6 +15,13 @@ void common::system::notice(const char *message)
 	std::cout <<"\n"<< date <<" => notice : " << message <<"";
 }
 
+void common::system::notice(std::string message)
+{
+	std::string date;
+	date = common::system::Time::getCurrentDate();
+	std::cout <<"\n"<< date << " => notice : "<< message.c_str();
+}
+
 int common::system::isFileWritable()
 {
 	const char *testFileName = "testReadOnly.txt";

@@ -9,9 +9,29 @@
 #include "src/common/object/entity/mapZone.h"
 #include "src/server/component/database/worldMap.h"
 #include "src/common/process/convert/image.h"
+#include "src/common/type/settings/linearDB.h"
+#include "src/common/type/database/lineardb3.h"
+
+Server* realServer;
 
 server::component::database::WorldMap* worldMap;
-Server* realServer;
+char anyBiomesInDB = false;//legacy: static char anyBiomesInDB = false;
+int maxBiomeXLoc = -2000000000;//legacy: static int maxBiomeXLoc = -2000000000;
+int maxBiomeYLoc = -2000000000;//legacy: static int maxBiomeYLoc = -2000000000;
+int minBiomeXLoc = 2000000000;//legacy: static int minBiomeXLoc = 2000000000;
+int minBiomeYLoc = 2000000000;//legacy: static int minBiomeYLoc = 2000000000;
+
+char lookTimeDBEmpty = false;
+char skipLookTimeCleanup = 0;
+
+// if lookTimeDBEmpty, then we init all map cell look times to NOW
+int cellsLookedAtToInit = 0;
+
+LINEARDB3 biomeDB;
+char biomeDBOpen = false;
+
+
+common::object::store::memory::randomAccess::LinearDB *newBiomeDB;
 
 int main()
 {
@@ -21,7 +41,13 @@ int main()
 		return 1;
 	}
 
-	common::system::notice("Attempt to start the server");
+	common::system::notice("Attempt to start the server ...");
+
+	/*******/
+	common::type::settings::LinearDB biomeDBSettings;
+
+	newBiomeDB = new common::object::store::memory::randomAccess::LinearDB(biomeDBSettings);
+	newBiomeDB->init(&biomeDB);
 
 	extern Server* realServer;//TODO: change socket object name from server to socket and rename realServer to server
 	realServer = new Server();
@@ -55,7 +81,7 @@ int main()
 
 	worldMap = new server::component::database::WorldMap(2048, 2048, 0);
 	//worldMap->select(-256,-256)->insert(mapZone);
-
+	/*******/
 	//realServer->start();
 
 

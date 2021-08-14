@@ -285,7 +285,7 @@ void setResponsiblePlayer( int inPlayerID ) {
 
 
 
-double gapIntScale = 1000000.0;
+
 
 
 
@@ -368,8 +368,8 @@ static DB timeDB;
 static char timeDBOpen = false;
 
 
-DB biomeDB;
-static char biomeDBOpen = false;
+extern DB biomeDB;
+extern char biomeDBOpen;
 
 
 static DB floorDB;
@@ -516,11 +516,11 @@ static MinPriorityQueue<MovementRecord> liveMovements;
 // call to stepMap
 static SimpleVector<ChangePosition> mapChangePosSinceLastStep;
 
-char anyBiomesInDB = false;//legacy: static char anyBiomesInDB = false;
-int maxBiomeXLoc = -2000000000;//legacy: static int maxBiomeXLoc = -2000000000;
-int maxBiomeYLoc = -2000000000;//legacy: static int maxBiomeYLoc = -2000000000;
-int minBiomeXLoc = 2000000000;//legacy: static int minBiomeXLoc = 2000000000;
-int minBiomeYLoc = 2000000000;//legacy: static int minBiomeYLoc = 2000000000;
+extern char anyBiomesInDB;//legacy: static char anyBiomesInDB = false;
+extern int maxBiomeXLoc;//legacy: static int maxBiomeXLoc = -2000000000;
+extern int maxBiomeYLoc;//legacy: static int maxBiomeYLoc = -2000000000;
+extern int minBiomeXLoc;//legacy: static int minBiomeXLoc = 2000000000;
+extern int minBiomeYLoc;//legacy: static int minBiomeYLoc = 2000000000;
 
 
 
@@ -665,8 +665,8 @@ static char hasPrimaryHomeland( int inLineageEveID ) {
 
 
 
-timeSec_t dbLookTimeGet( int inX, int inY );
-void dbLookTimePut( int inX, int inY, timeSec_t inTime );
+
+
 
 
 
@@ -2089,218 +2089,16 @@ static void blockingClearCached( int inX, int inY ) {
 
 
 
-char lookTimeDBEmpty = false;
-char skipLookTimeCleanup = 0;
+extern char lookTimeDBEmpty;
+extern char skipLookTimeCleanup;
 char skipRemovedObjectCleanup = 0;
 
 // if lookTimeDBEmpty, then we init all map cell look times to NOW
-int cellsLookedAtToInit = 0;
+extern int cellsLookedAtToInit;
 
 
 
-// version of open call that checks whether look time exists in lookTimeDB
-// for each record in opened DB, and clears any entries that are not
-// rebuilding file storage for DB in the process
-// lookTimeDB MUST be open before calling this
-//
-// If lookTimeDBEmpty, this call just opens the target DB normally without
-// shrinking it.
-//
-// Can handle max key and value size of 16 and 12 bytes
-// Assumes that first 8 bytes of key are xy as 32-bit ints
-int DB_open_timeShrunk(
-	DB *db,
-	const char *path,
-	int mode,
-	unsigned long hash_table_size,
-	unsigned long key_size,
-	unsigned long value_size) {
 
-    File dbFile( NULL, path );
-    
-    if( ! dbFile.exists() || lookTimeDBEmpty || skipLookTimeCleanup ) {
-
-        if( lookTimeDBEmpty ) {
-            AppLog::infoF( "No lookTimes present, not cleaning %s", path );
-            }
-        
-        int error = DB_open( db, 
-                                 path, 
-                                 mode,
-                                 hash_table_size,
-                                 key_size,
-                                 value_size );
-
-        if( ! error && ! skipLookTimeCleanup ) {
-            // add look time for cells in this DB to present
-            // essentially resetting all look times to NOW
-            
-            DB_Iterator dbi;
-    
-    
-            DB_Iterator_init( db, &dbi );
-    
-            // key and value size that are big enough to handle all of our DB
-            unsigned char key[16];
-    
-            unsigned char value[12];
-    
-            while( DB_Iterator_next( &dbi, key, value ) > 0 ) {
-                int x = valueToInt( key );
-                int y = valueToInt( &( key[4] ) );
-
-                cellsLookedAtToInit++;
-                
-                dbLookTimePut( x, y, MAP_TIMESEC );
-                }
-            }
-        return error;
-        }
-    
-    char *dbTempName = autoSprintf( "%s.temp", path );
-    File dbTempFile( NULL, dbTempName );
-    
-    if( dbTempFile.exists() ) {
-        dbTempFile.remove();
-        }
-    
-    if( dbTempFile.exists() ) {
-        AppLog::errorF( "Failed to remove temp DB file %s", dbTempName );
-
-        delete [] dbTempName;
-
-        return DB_open( db, 
-                            path, 
-                            mode,
-                            hash_table_size,
-                            key_size,
-                            value_size );
-        }
-    
-    DB oldDB;
-    
-    int error = DB_open( &oldDB, 
-                             path, 
-                             mode,
-                             hash_table_size,
-                             key_size,
-                             value_size );
-    if( error ) {
-        AppLog::errorF( "Failed to open DB file %s in DB_open_timeShrunk",
-                        path );
-        delete [] dbTempName;
-
-        return error;
-        }
-
-    
-
-    
-
-    
-    DB_Iterator dbi;
-    
-    
-    DB_Iterator_init( &oldDB, &dbi );
-    
-    // key and value size that are big enough to handle all of our DB
-    unsigned char key[16];
-    
-    unsigned char value[12];
-    
-    int total = 0;
-    int stale = 0;
-    int nonStale = 0;
-    
-    // first, just count
-    while( DB_Iterator_next( &dbi, key, value ) > 0 ) {
-        total++;
-
-        int x = valueToInt( key );
-        int y = valueToInt( &( key[4] ) );
-
-        if( dbLookTimeGet( x, y ) > 0 ) {
-            // keep
-            nonStale++;
-            }
-        else {
-            // stale
-            // ignore
-            stale++;
-            }
-        }
-
-
-
-    // optimial size for DB of remaining elements
-    unsigned int newSize = DB_getShrinkSize( &oldDB, nonStale );
-
-    AppLog::infoF( "Shrinking hash table in %s from %d down to %d", 
-                   path, 
-                   DB_getCurrentSize( &oldDB ), 
-                   newSize );
-
-
-    DB tempDB;
-    
-    error = DB_open( &tempDB, 
-                         dbTempName, 
-                         mode,
-                         newSize,
-                         key_size,
-                         value_size );
-    if( error ) {
-        AppLog::errorF( "Failed to open DB file %s in DB_open_timeShrunk",
-                        dbTempName );
-        delete [] dbTempName;
-        DB_close( &oldDB );
-        return error;
-        }
-
-
-    // now that we have new temp db properly sized,
-    // iterate again and insert, but don't count
-    DB_Iterator_init( &oldDB, &dbi );
-
-    while( DB_Iterator_next( &dbi, key, value ) > 0 ) {
-        int x = valueToInt( key );
-        int y = valueToInt( &( key[4] ) );
-
-        if( dbLookTimeGet( x, y ) > 0 ) {
-            // keep
-            // insert it in temp
-            DB_put_new( &tempDB, key, value );
-            }
-        else {
-            // stale
-            // ignore
-            }
-        }
-
-
-    
-    AppLog::infoF( "Cleaned %d / %d stale map cells from %s", stale, total,
-                   path );
-
-    printf( "\n" );
-    
-    
-    DB_close( &tempDB );
-    DB_close( &oldDB );
-
-    dbTempFile.copy( &dbFile );
-    dbTempFile.remove();
-
-    delete [] dbTempName;
-
-    // now open new, shrunk file
-    return DB_open( db, 
-                        path, 
-                        mode,
-                        hash_table_size,
-                        key_size,
-                        value_size );
-    }
 
 
 
