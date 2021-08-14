@@ -26,6 +26,7 @@ CUSTOM_LINUX_LINK_FLAGS =
 LAYER_SOURCE = \
 ${DIR_APP_SERVER}/server.cpp \
 ${DIR_APP_SERVER}/map.cpp \
+${DIR_APP_SERVER}/../../minorGems/io/file/File.cpp \
 ${DIR_APP_SERVER}/../../src/common/object/entity/mapZone.cpp \
 ${DIR_APP_SERVER}/../../src/common/system.cpp \
 ${DIR_APP_SERVER}/../../src/common/system/time.cpp \

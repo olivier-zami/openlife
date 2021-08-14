@@ -619,7 +619,7 @@ char *SettingsManager::getSettingsFileName( const char *inSettingName,
 
     sprintf( fileName, "%s.%s", inSettingName, inExtension );
     
-    File *settingsFile = new File( new Path( pathSteps, 1, false ),
+    File *settingsFile = new File( new openLife::system::Path( pathSteps, 1, false ),
                                    fileName );
 
     delete [] fileName;

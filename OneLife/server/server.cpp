@@ -8,7 +8,7 @@
 
 #include "src/server/main.h"
 
-
+#include "minorGems/io/file/Directory.h"
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/util/SettingsManager.h"
 #include "minorGems/util/SimpleVector.h"

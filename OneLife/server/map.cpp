@@ -1,4 +1,7 @@
 #include "map.h"
+
+#include "minorGems/io/file/FileOutputStream.h"
+
 #include "src/server/server.h"
 #include "src/server/component/database/worldMap.h"
 #include "HashTable.h"

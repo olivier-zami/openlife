@@ -10,7 +10,7 @@
 // strips off the first step of a path
 // converts dirA/dirB/test.txt to dirB/test.txt
 static char *getSubdirPath( char *inFullFilePath ) {
-    char delim = Path::getDelimeter();
+    char delim = openLife::system::Path::getDelimeter();
     
     // skip very first, to avoid stopping at root
     int firstDelimPosition = 1;

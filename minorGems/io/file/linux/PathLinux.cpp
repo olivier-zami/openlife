@@ -14,7 +14,12 @@
  * String parameters as const to fix warnings.
  */
 
-#include "minorGems/io/file/Path.h"
+#if defined __linux__
+	#include "minorGems/io/file/Path.h"
+	#define Linux system
+#else
+#endif
+
 #include "minorGems/util/stringUtils.h"
 
 
@@ -26,13 +31,13 @@
 
 
 
-char Path::getDelimeter() {
+char openLife::Linux::Path::getDelimeter() {
 	return '/';
 	}
 	
 		
 		
-char *Path::getAbsoluteRoot( int *outLength ) {
+char *openLife::Linux::Path::getAbsoluteRoot( int *outLength ) {
 	char *returnString = new char[1];
 	returnString[0] = '/';
 
@@ -43,7 +48,7 @@ char *Path::getAbsoluteRoot( int *outLength ) {
 
 
 
-char Path::isAbsolute( const char *inPathString ) {
+char openLife::Linux::Path::isAbsolute( const char *inPathString ) {
     if( inPathString[0] == '/' ) {
         return true;
         }
@@ -54,7 +59,7 @@ char Path::isAbsolute( const char *inPathString ) {
 
 
 
-char *Path::extractRoot( const char *inPathString ) {
+char *openLife::Linux::Path::extractRoot( const char *inPathString ) {
     if( isAbsolute( inPathString )  ){
         return stringDuplicate( "/" );
         }
@@ -65,7 +70,7 @@ char *Path::extractRoot( const char *inPathString ) {
 
 
 
-char Path::isRoot( const char *inPathString ) {
+char openLife::Linux::Path::isRoot( const char *inPathString ) {
     if( strcmp( inPathString, "/" ) == 0 ) {
         return true;
         }

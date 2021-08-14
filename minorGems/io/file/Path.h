@@ -86,8 +86,11 @@
  *   temp/files/test.txt
  *
  * @author Jason Rohrer
- */ 
-class Path {
+ */
+
+namespace openLife::system
+{
+	class Path {
 
 	public:
 		
@@ -110,17 +113,17 @@ class Path {
          *   Must be destroyed by caller if non-NULL.
 		 */
 		Path( char **inPathSteps, int inNumSteps, char inAbsolute,
-              char *inRootString = NULL );
+			  char *inRootString = NULL );
 
 
 
-        /**
+		/**
          * Constructs a path by parsing a platform-dependent path string.
          *
          * @param inPathSteps a \0-terminated string representing the path.
          *   Must be destroyed by caller.
          */
-        Path( const char *inPathString );
+		Path( const char *inPathString );
 
         
 		
@@ -180,7 +183,7 @@ class Path {
 
 
 
-        /**
+		/**
          * Gets whether a path string is absolute.
 		 *
 		 * Note that this function is implemented separately for
@@ -191,11 +194,11 @@ class Path {
          *
          * @return true if the string is absolute, or false otherwise.
          */
-        static char isAbsolute( const char *inPathString );
+		static char isAbsolute( const char *inPathString );
 
 
 
-        /**
+		/**
          * Extracts the root string from a path string.
          *
 		 *
@@ -205,11 +208,11 @@ class Path {
          * @return the root string, or NULL if inPathString is not
          *   absolute.  Must be destroyed by caller if non-NULL.
          */
-        static char *extractRoot( const char *inPathString );
+		static char *extractRoot( const char *inPathString );
 
 
         
-        /**
+		/**
          * Gets whether a path string is a root path.
 		 *
 		 * Note that this function is implemented separately for
@@ -222,11 +225,11 @@ class Path {
          *
          * @return true if the string is a root string, or false otherwise.
          */
-        static char isRoot( const char *inPathString );
+		static char isRoot( const char *inPathString );
 
         
 
-        /**
+		/**
 		 * Gets start string for an absolute path.
 		 *
 		 * @return the absolute path start string in \0-terminated form.
@@ -259,7 +262,7 @@ class Path {
 
         
         
-        /**
+		/**
          * Constructs a new path by removing the last step from this path.
 		 *
          * @return a new path, or NULL if there is only one step in this path.
@@ -269,12 +272,12 @@ class Path {
 
 
 
-        /**
+		/**
          * Gets the last step in this path.
          *
          * @return the last step.  Must be destroyed by caller.
          */
-        char *getLastStep();
+		char *getLastStep();
 
 
         
@@ -284,13 +287,13 @@ class Path {
 		int *mStepLength;
 		char mAbsolute;
 
-        // the root string of this path, if it is absolute
-        char *mRootString;
+		// the root string of this path, if it is absolute
+		char *mRootString;
 	};		
+}
 
 
-
-inline Path::Path( char **inPathSteps, int inNumSteps,
+inline openLife::system::Path::Path( char **inPathSteps, int inNumSteps,
 				   char inAbsolute, char *inRootString ) 
 	: mNumSteps( inNumSteps ), mAbsolute( inAbsolute ),
       mRootString( NULL ) {
@@ -317,7 +320,7 @@ inline Path::Path( char **inPathSteps, int inNumSteps,
 
 
 
-inline Path::Path( const char *inPathString ) {
+inline openLife::system::Path::Path( const char *inPathString ) {
     mAbsolute = isAbsolute( inPathString );
 
     
@@ -430,7 +433,7 @@ inline Path::Path( const char *inPathString ) {
 
 
 		
-inline Path::~Path() {
+inline openLife::system::Path::~Path() {
 	// delete each step
 	for( int i=0; i<mNumSteps; i++ ) {
 		delete [] mPathSteps[i];
@@ -446,7 +449,7 @@ inline Path::~Path() {
 	
 
 
-inline char *Path::getPathString( int *outLength ) {
+inline char *openLife::system::Path::getPathString( int *outLength ) {
 	int length = 0;
 	// length = sum( length each step string + 1 )
 	// ( + 1 is for the delimeter that occurs after each step string )
@@ -496,7 +499,7 @@ inline char *Path::getPathString( int *outLength ) {
 	
 
 
-inline char *Path::getPathStringTerminated() {
+inline char *openLife::system::Path::getPathStringTerminated() {
 	int length;
 
 	char *pathString = getPathString( &length );
@@ -514,7 +517,7 @@ inline char *Path::getPathStringTerminated() {
 
 
 
-inline Path *Path::copy() {
+inline openLife::system::Path *openLife::system::Path::copy() {
 
 	// the steps will be copied internally
 	return new Path( mPathSteps, mNumSteps, mAbsolute, mRootString );
@@ -522,7 +525,7 @@ inline Path *Path::copy() {
 
 
 
-inline Path *Path::append( const char *inStepString ) {
+inline openLife::system::Path *openLife::system::Path::append( const char *inStepString ) {
 	char **newPathSteps = new char*[ mNumSteps + 1 ];
 
 	// shallow copy, since the strings themselves
@@ -546,7 +549,7 @@ inline Path *Path::append( const char *inStepString ) {
 
 
 
-inline Path *Path::truncate() {
+inline openLife::system::Path *openLife::system::Path::truncate() {
 
     if( mNumSteps < 2 && !mAbsolute ) {
         return NULL;
@@ -575,7 +578,7 @@ inline Path *Path::truncate() {
 
 
 
-inline char *Path::getLastStep() {
+inline char *openLife::system::Path::getLastStep() {
     if( mNumSteps >= 1 ) {
         return stringDuplicate( mPathSteps[ mNumSteps - 1 ] );
         }
@@ -597,7 +600,7 @@ inline char *Path::getLastStep() {
 
 
 
-inline char *Path::getAbsoluteRootString() {
+inline char *openLife::system::Path::getAbsoluteRootString() {
     int rootLength;
     char *root = getAbsoluteRoot( &rootLength );
     

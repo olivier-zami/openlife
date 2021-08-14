@@ -1,3 +1,4 @@
+#include "minorGems/io/file/Directory.h"
 #include "minorGems/system/Time.h"
 #include "minorGems/util/SimpleVector.h"
 #include "minorGems/util/SettingsManager.h"

@@ -17,7 +17,13 @@
  * String parameters as const to fix warnings.
  */
 
-#include "minorGems/io/file/Path.h"
+#if defined __linux__
+	#include "minorGems/io/file/Path.h"
+	#define Win32 system
+#else
+#endif
+
+
 #include "minorGems/util/stringUtils.h"
 
 
@@ -27,13 +33,13 @@
 
 
 
-char Path::getDelimeter() {
+char openLife::Win32::Path::getDelimeter() {
 	return '\\';
 	}
 	
 		
 		
-char *Path::getAbsoluteRoot( int *outLength) {
+char *openLife::Win32::Path::getAbsoluteRoot( int *outLength) {
 	// C:\ is the only root we can generically return
 	
 	char *returnString = new char[3];
@@ -49,7 +55,7 @@ char *Path::getAbsoluteRoot( int *outLength) {
 
 
 
-char Path::isAbsolute( const char *inPathString ) {
+char openLife::Win32::Path::isAbsolute( const char *inPathString ) {
     // ignore first character, which will be drive letter
     if( inPathString[1] == ':' && inPathString[2] == '\\' ) {
         return true;
@@ -61,7 +67,7 @@ char Path::isAbsolute( const char *inPathString ) {
 
 
 
-char *Path::extractRoot( const char *inPathString ) {
+char *openLife::Win32::Path::extractRoot( const char *inPathString ) {
     if( isAbsolute( inPathString )  ){
         // copy path, then trim to only three characters
 
@@ -80,7 +86,7 @@ char *Path::extractRoot( const char *inPathString ) {
 
 
 
-char Path::isRoot( const char *inPathString ) {
+char openLife::Win32::Path::isRoot( const char *inPathString ) {
     // must be of form "c:\"
     if( strlen( inPathString ) == 3 &&
         inPathString[1] == ':' &&
