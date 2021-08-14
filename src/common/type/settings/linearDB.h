@@ -11,6 +11,8 @@ namespace common::type::settings
 {
 	typedef struct{
 		std::string filename;
+		unsigned char keySize;
+		unsigned char valueSize;
 	}LinearDB;
 }
 
