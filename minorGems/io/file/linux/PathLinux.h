@@ -5,16 +5,7 @@
 #ifndef ONELIFETEST_PATHLINUX_H
 #define ONELIFETEST_PATHLINUX_H
 
-#if defined __linux__
-	#define system system
-#elif defined _WIN32
-	#define system Linux
-#endif
-
-#include "minorGems/io/file/Path.h"
-
-#if defined system
-	#undef system
-#endif
+#define INCLUDED_FILE "minorGems/io/file/Path.h"
+#include "src/system/_macro/linux_code_declaration.h"
 
 #endif //ONELIFETEST_PATHLINUX_H

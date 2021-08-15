@@ -15,12 +15,8 @@
  */
 
 #include "PathLinux.h"
+#include "src/system/_macro/code_implementation.h"
 
-#if defined(__linux__)
-	#define Linux system
-#else
-	#define Linux Linux
-#endif
 
 #include "minorGems/util/stringUtils.h"
 

@@ -18,12 +18,7 @@
  */
 
 #include "PathWin32.h"
-
-#if defined(_WIN32)
-	#define Win32 system
-#else
-	#define Win32 Win32
-#endif
+#include "src/system/_macro/code_implementation.h"
 
 
 #include "minorGems/util/stringUtils.h"
