@@ -54,18 +54,37 @@
  * Removed Fortify inclusion.
  */
 
-#include "minorGems/common.h"
 
+/*
+#if (!defined(OPENLIFE_LEGACY_PATH_WIN32)&&(NS_SYSTEM==WIN32)) || (!defined(OPENLIFE_LEGACY_PATH_LINUX)&&(NS_SYSTEM==LINUX)) || (!defined(OPENLIFE_LEGACY_PATH))
 
+#if (!defined(OPENLIFE_LEGACY_PATH_WIN32)&&(NS_SYSTEM==WIN32))
+#define OPENLIFE_LEGACY_PATH_WIN32
+#define system Win32
 
-#ifndef PATH_CLASS_INCLUDED
-#define PATH_CLASS_INCLUDED
+#elif (!defined(OPENLIFE_LEGACY_PATH_LINUX)&&(NS_SYSTEM==LINUX))
+#define OPENLIFE_LEGACY_PATH_LINUX
+#define system Linux
+
+#elif (!defined(OPENLIFE_LEGACY_PATH))
+#define OPENLIFE_LEGACY_PATH
+#define system system
+#endif
+*/
+
+#if !defined(system)
+	#define system system
+#endif
+
+#if (system!=system)||!defined(ONELIFE_LEGACY_PATH_H)
+	#if system==system
+		#define ONELIFE_LEGACY_PATH_H
+	#endif
+
 
 
 #include <string.h>
-
-
-
+#include "minorGems/common.h"
 #include "minorGems/util/stringUtils.h"
 
 
@@ -520,7 +539,7 @@ inline char *openLife::system::Path::getPathStringTerminated() {
 inline openLife::system::Path *openLife::system::Path::copy() {
 
 	// the steps will be copied internally
-	return new Path( mPathSteps, mNumSteps, mAbsolute, mRootString );
+	return new openLife::system::Path( mPathSteps, mNumSteps, mAbsolute, mRootString );
 	}
 
 
@@ -612,7 +631,6 @@ inline char *openLife::system::Path::getAbsoluteRootString() {
     delete [] root;
     return rootString;
     }
-
 
 
 #endif

@@ -97,7 +97,7 @@
  * Function for getting alphabetically sorted child files.
  */
 
-
+#include "Path.h"
 
 #include "minorGems/common.h"
 
@@ -113,7 +113,7 @@
 
 #include <dirent.h>
 
-#include "Path.h"
+
 
 #include "minorGems/util/SimpleVector.h"
 #include "minorGems/util/stringUtils.h"

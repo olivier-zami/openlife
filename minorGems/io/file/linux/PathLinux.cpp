@@ -14,10 +14,12 @@
  * String parameters as const to fix warnings.
  */
 
-#if defined __linux__
-	#include "minorGems/io/file/Path.h"
+#include "PathLinux.h"
+
+#if defined(__linux__)
 	#define Linux system
 #else
+	#define Linux Linux
 #endif
 
 #include "minorGems/util/stringUtils.h"

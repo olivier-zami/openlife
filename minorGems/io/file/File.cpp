@@ -364,7 +364,11 @@ File *File::getParentDirectory() {
 }
 
 
-
+/**
+ *
+ * @return bool
+ * @note test for the existence of a file
+ */
 char File::exists() {
 	struct stat fileInfo;
 

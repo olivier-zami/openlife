@@ -17,10 +17,12 @@
  * String parameters as const to fix warnings.
  */
 
-#if defined __linux__
-	#include "minorGems/io/file/Path.h"
+#include "PathWin32.h"
+
+#if defined(_WIN32)
 	#define Win32 system
 #else
+	#define Win32 Win32
 #endif
 
 
