@@ -1,8 +1,0 @@
-//
-// Created by olivier on 12/08/2021.
-//
-
-#ifndef ONELIFETEST_MURMURHASH2_64_H
-#define ONELIFETEST_MURMURHASH2_64_H
-
-#endif //ONELIFETEST_MURMURHASH2_64_H

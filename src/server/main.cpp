@@ -35,13 +35,13 @@ openLife::system::object::store::device::random::LinearDB *newBiomeDB;
 
 int main()
 {
-	if(!common::system::isFileWritable())
+	if(!openLife::system::isFileWritable())
 	{
-		common::system::notice("File system read-only.  Server exiting.");
+		openLife::system::notice("File system read-only.  Server exiting.");
 		return 1;
 	}
 
-	common::system::notice("Attempt to start the server ...");
+	openLife::system::notice("Attempt to start the server ...");
 
 	/*******/
 	openLife::system::settings::LinearDB biomeDBSettings;
@@ -539,7 +539,7 @@ int main()
 			forceShutdownMode =
 					SettingsManager::getIntSetting( "forceShutdownMode", 0 );
 
-			if(!common::system::isFileWritable()) {
+			if(!openLife::system::isFileWritable()) {
 				// read-only file system causes all kinds of weird
 				// behavior
 				// shut this server down NOW

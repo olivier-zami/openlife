@@ -2,12 +2,12 @@
 // Created by olivier on 10/08/2021.
 //
 
-#ifndef ONELIFETEST_ENVIRONMENT_H
-#define ONELIFETEST_ENVIRONMENT_H
+#ifndef OPENLIFE_SYSTEM_H
+#define OPENLIFE_SYSTEM_H
 
 #include <string>
 
-namespace common::system
+namespace openLife::system
 {
 	void notice(const char *message);
 	void notice(std::string message);
@@ -18,4 +18,4 @@ namespace common::system
 	int isFileWritable();
 }
 
-#endif //ONELIFETEST_ENVIRONMENT_H
+#endif //OPENLIFE_SYSTEM_H

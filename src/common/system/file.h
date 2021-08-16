@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace common::system
+namespace openLife::system
 {
 	class File
 	{

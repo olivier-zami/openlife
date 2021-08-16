@@ -8,7 +8,7 @@
 #include <cstdio>
 #include <vector>
 
-int common::system::File::exists(const char *filename)
+int openLife::system::File::exists(const char *filename)
 {
 	int exists;
 	if(FILE *file = fopen(filename, "r"))
@@ -20,18 +20,18 @@ int common::system::File::exists(const char *filename)
 	return exists;
 }
 
-int common::system::File::remove(const char *filename)
+int openLife::system::File::remove(const char *filename)
 {
 	return ::remove(filename);
 }
 
-std::vector<std::string> common::system::File::find(const char *filename)
+std::vector<std::string> openLife::system::File::find(const char *filename)
 {
 	std::vector<std::string> found;
 	return found;
 }
 
-std::string common::system::File::absoluteName(const char *filename)
+std::string openLife::system::File::absoluteName(const char *filename)
 {
 	std::string fullname;
 	return fullname;

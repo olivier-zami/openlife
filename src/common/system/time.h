@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace common::system
+namespace openLife::system
 {
 	class Time
 	{

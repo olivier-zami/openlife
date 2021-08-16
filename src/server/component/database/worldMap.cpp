@@ -10,6 +10,7 @@
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "OneLife/server/dbCommon.h"
 
+extern LINEARDB3 biomeDB;
 extern openLife::system::object::store::device::random::LinearDB *newBiomeDB;
 
 /**
@@ -226,8 +227,8 @@ int biomeDBGet( int inX, int inY,
 	// look for changes to default in database
 	intPairToKey( inX, inY, key );
 
-	int result = newBiomeDB->get(key, value);
-	//int result = LINEARDB3_get( &biomeDB, key, value );//TODO: search LINEARDB3_get ans replace with newBiomeDB->get(...)
+	//int result = newBiomeDB->get(key);
+	int result = LINEARDB3_get( &biomeDB, key, value );//TODO: search LINEARDB3_get ans replace with newBiomeDB->get(...)
 
 	if( result == 0 ) {
 		// found

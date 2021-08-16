@@ -1,0 +1,10 @@
+//
+// Created by olivier on 16/08/2021.
+//
+
+#ifndef ONELIFETEST_ENVIRONMENT_H
+#define ONELIFETEST_ENVIRONMENT_H
+
+//#define OPENLIFE_UNIT_TEST 1
+
+#endif //ONELIFETEST_ENVIRONMENT_H

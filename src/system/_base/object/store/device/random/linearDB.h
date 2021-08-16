@@ -11,9 +11,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "src/system/_base/_macro/environment.h"
+
 #include "src/system/_base/settings/linearDB.h"
 #include "src/common/type/database/lineardb3.h"
-#include "src/common/process/hash/murmurhash2_64.h"
 #include "minorGems/io/file/File.h"
 #include "minorGems/util/log/AppLog.h"
 //#include "src/common/process/hash.h"
@@ -42,7 +43,7 @@ namespace openLife::system::object::store::device::random
 			~LinearDB();
 
 			void put(int idx, int value);
-			int get(unsigned char idx[8], unsigned char value[12]);
+			int get(void* key);
 
 			int isResourceExist();
 
@@ -54,6 +55,11 @@ namespace openLife::system::object::store::device::random
 			void createResource();
 
 			std::string filename;
+			unsigned int keySize;
+			unsigned int valueSize;
+
+
+
 			FILE *file;
 			LINEARDB3* dbState;
 			double maxLoad;// load above this causes table to expand incrementally
@@ -67,8 +73,7 @@ namespace openLife::system::object::store::device::random
 			// hash table is done with a full round of expansion
 			// and hashTableSizeA is set to hashTableSizeB at that point
 			uint32_t hashTableSizeB;
-			unsigned int keySize;
-			unsigned int valueSize;
+
 			// for deciding when fseek is needed between reads and writes
 			LastFileOp lastOp;
 			// equal to the largest possible 32-bit table size, given
@@ -84,6 +89,8 @@ namespace openLife::system::object::store::device::random
 	};
 }
 
-#include "draft.h"
+#if !defined(OPENLIFE_UNIT_TEST)
+	#include "draft.h"
+#endif
 
 #endif //OPENLIFE_COMMON_OBJECT_STORE_MEMORY_RANDOMACCESS_LINEARDB_H
