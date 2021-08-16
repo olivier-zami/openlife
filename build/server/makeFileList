@@ -28,8 +28,8 @@ ${DIR_APP_SERVER}/server.cpp \
 ${DIR_APP_SERVER}/map.cpp \
 ${DIR_APP_SERVER}/../../minorGems/io/file/File.cpp \
 ${DIR_APP_SERVER}/../../src/common/object/entity/mapZone.cpp \
-${DIR_APP_SERVER}/../../src/common/object/store/memory/randomAccess/linearDB.cpp \
-${DIR_APP_SERVER}/../../src/common/object/store/memory/randomAccess/draft.cpp \
+${DIR_APP_SERVER}/../../src/system/_base/object/store/device/random/linearDB.cpp \
+${DIR_APP_SERVER}/../../src/system/_base/object/store/device/random/draft.cpp \
 ${DIR_APP_SERVER}/../../src/common/process/convert/image.cpp \
 ${DIR_APP_SERVER}/../../src/common/process/hash/murmurhash2_64.cpp \
 ${DIR_APP_SERVER}/../../src/common/system.cpp \

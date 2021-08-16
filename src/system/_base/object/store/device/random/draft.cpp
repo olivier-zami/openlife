@@ -2,7 +2,7 @@
 // Created by olivier on 14/08/2021.
 //
 
-#include "src/common/object/store/memory/randomAccess/linearDB.h"
+#include "src/system/_base/object/store/device/random/linearDB.h"
 
 #include <iostream>
 #include <cstring>

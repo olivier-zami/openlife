@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <array>
-#include "src/common/object/store/memory/randomAccess/linearDB.h"
+#include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/common/object/entity/mapZone.h"
 
 namespace server::component::database
@@ -22,7 +22,7 @@ namespace server::component::database
 			WorldMap* select(int posX, int posY);
 			int getBiome();
 
-			void useBiomeStorehouse(common::object::store::memory::randomAccess::LinearDB* biomeStoreHouse);
+			void useBiomeStorehouse(openLife::system::object::store::device::random::LinearDB* biomeStoreHouse);
 
 			void updateSecondPlaceIndex(int *outSecondPlaceIndex);
 			void updateSecondPlaceGap(double *outSecondPlaceGap);
@@ -35,7 +35,7 @@ namespace server::component::database
 			struct {unsigned int x; unsigned int y;} query;
 			struct {unsigned int x; unsigned int y;} center;
 			std::vector<int> biome;
-			common::object::store::memory::randomAccess::LinearDB* biomeStoreHouse;
+			openLife::system::object::store::device::random::LinearDB* biomeStoreHouse;
 
 			struct{
 				int *outSecondPlaceIndex;

@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "src/common/type/settings/linearDB.h"
+#include "src/system/_base/settings/linearDB.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/common/process/hash/murmurhash2_64.h"
 #include "minorGems/io/file/File.h"
@@ -33,12 +33,12 @@ uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed );
 #define BUCKETS_PER_PAGE LINEARDB3_BUCKETS_PER_PAGE
 #define BucketPage LINEARDB3_BucketPage
 
-namespace common::object::store::memory::randomAccess
+namespace openLife::system::object::store::device::random
 {
 	class LinearDB
 	{
 		public:
-			LinearDB(common::type::settings::LinearDB settings);
+			LinearDB(openLife::system::settings::LinearDB settings);
 			~LinearDB();
 
 			void put(int idx, int value);

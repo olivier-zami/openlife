@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace common::type::settings
+namespace openLife::system::settings
 {
 	typedef struct{
 		std::string filename;

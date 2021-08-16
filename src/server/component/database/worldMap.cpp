@@ -7,10 +7,10 @@
 #include <iostream>
 
 #include "OneLife/server/map.h"
-#include "src/common/object/store/memory/randomAccess/linearDB.h"
+#include "src/system/_base/object/store/device/random/linearDB.h"
 #include "OneLife/server/dbCommon.h"
 
-extern common::object::store::memory::randomAccess::LinearDB *newBiomeDB;
+extern openLife::system::object::store::device::random::LinearDB *newBiomeDB;
 
 /**
  *
@@ -85,7 +85,7 @@ int server::component::database::WorldMap::getBiome()
 	return this->biome[idx];
 }
 
-void server::component::database::WorldMap::useBiomeStorehouse(common::object::store::memory::randomAccess::LinearDB* biomeStoreHouse)
+void server::component::database::WorldMap::useBiomeStorehouse(openLife::system::object::store::device::random::LinearDB* biomeStoreHouse)
 {
 	this->biomeStoreHouse = biomeStoreHouse;
 }

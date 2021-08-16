@@ -25,13 +25,13 @@ extern char skipLookTimeCleanup;
 // if lookTimeDBEmpty, then we init all map cell look times to NOW
 extern int cellsLookedAtToInit ;
 
-const double common::object::store::memory::randomAccess::LinearDB::MAX_LOAD_FOR_OPEN_CALLS = 0.5;
+const double openLife::system::object::store::device::random::LinearDB::MAX_LOAD_FOR_OPEN_CALLS = 0.5;
 
 /**
  *
  * @param settings
  */
-common::object::store::memory::randomAccess::LinearDB::LinearDB(common::type::settings::LinearDB settings)
+openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::system::settings::LinearDB settings)
 {
 	this->filename = settings.filename;
 	this->recordBuffer = nullptr;
@@ -44,7 +44,7 @@ common::object::store::memory::randomAccess::LinearDB::LinearDB(common::type::se
 	}
 }
 
-common::object::store::memory::randomAccess::LinearDB::~LinearDB() {}
+openLife::system::object::store::device::random::LinearDB::~LinearDB() {}
 
 /**
  *
@@ -52,14 +52,15 @@ common::object::store::memory::randomAccess::LinearDB::~LinearDB() {}
  * @param value
  * @return
  */
-int common::object::store::memory::randomAccess::LinearDB::get(unsigned char idx[8], unsigned char value[12])
+int openLife::system::object::store::device::random::LinearDB::get(unsigned char idx[8], unsigned char value[12])
 {
-	return LINEARDB3_get(this->dbState, idx, value);
+	//return LINEARDB3_get(this->dbState, idx, value);
+	return 0;
 }
 
-void common::object::store::memory::randomAccess::LinearDB::put(int idx, int value) {}
+void openLife::system::object::store::device::random::LinearDB::put(int idx, int value) {}
 
-int common::object::store::memory::randomAccess::LinearDB::isResourceExist()
+int openLife::system::object::store::device::random::LinearDB::isResourceExist()
 {
 	int response = false;
 	if((this->file = fopen(this->filename.c_str(), "r")))
@@ -74,7 +75,7 @@ int common::object::store::memory::randomAccess::LinearDB::isResourceExist()
  *
  * @param dbState
  */
-void common::object::store::memory::randomAccess::LinearDB::init(LINEARDB3 *dbState)
+void openLife::system::object::store::device::random::LinearDB::init(LINEARDB3 *dbState)
 {
 	this->dbState = dbState;
 }
@@ -82,7 +83,7 @@ void common::object::store::memory::randomAccess::LinearDB::init(LINEARDB3 *dbSt
 /**
  *
  */
-void common::object::store::memory::randomAccess::LinearDB::createResource()
+void openLife::system::object::store::device::random::LinearDB::createResource()
 {
 	this->file = fopen(this->filename.c_str(), "w+b");
 }
@@ -110,6 +111,7 @@ DB_open_timeShrunk( &biomeDB,
 //
 // Can handle max key and value size of 16 and 12 bytes
 // Assumes that first 8 bytes of key are xy as 32-bit ints
+/****/
 int DB_open_timeShrunk(
 		LINEARDB3* db,
 		const char *path,
@@ -304,3 +306,4 @@ int DB_open_timeShrunk(
 					key_size,
 					value_size );
 }
+/****/
