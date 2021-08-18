@@ -36,6 +36,19 @@ uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed );
 
 namespace openLife::system::object::store::device::random
 {
+	class LinearDBPageManager
+	{
+		public:
+			uint32_t numBuckets;
+			// number of allocated pages
+			uint32_t numPages;
+			// number of slots in pages pointer array
+			// beyond numPages, there are NULL pointers
+			uint32_t pageAreaSize;
+			struct BucketPageState **pages;
+			uint32_t firstEmptyBucket;
+	};
+
 	class LinearDB
 	{
 		public:
@@ -50,17 +63,24 @@ namespace openLife::system::object::store::device::random
 			void init(LINEARDB3 *dbState);
 
 			static const double MAX_LOAD_FOR_OPEN_CALLS;
+			static const int HEADER_SIZE;
 
 		private:
 			void createResource();
+			int createResourceHeader();
+			uint64_t getBinNumber(uint32_t *outFingerprint);
+			int get1();
 
 			std::string filename;
+			std::string magicString;
 			unsigned int keySize;
 			unsigned int valueSize;
-
-
-
+			struct{
+				unsigned char key[8];//TODO: unsigned char* + malloc with system::settings::linearDB
+				unsigned char value[12];//TODO: unsigned char* + malloc with system::settings::linearDB
+			}currentRecord;
 			FILE *file;
+
 			LINEARDB3* dbState;
 			double maxLoad;// load above this causes table to expand incrementally
 			// number of inserted records in database
@@ -84,8 +104,8 @@ namespace openLife::system::object::store::device::random
 			uint8_t *recordBuffer;
 			unsigned int maxOverflowDepth;
 			// sized to hashTableSizeB buckets
-			struct PageManagerState *hashTable;
-			struct PageManagerState *overflowBuckets;
+			struct openLife::system::object::store::device::random::LinearDBPageManager* hashTable;
+			struct openLife::system::object::store::device::random::LinearDBPageManager* overflowBuckets;
 	};
 }
 

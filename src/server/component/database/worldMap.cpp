@@ -217,10 +217,7 @@ int getMapBiomeIndex( int inX, int inY,
  * @return
  */
 // returns -1 if not found
-int biomeDBGet( int inX, int inY,
-			  int *outSecondPlaceBiome,
-			  double *outSecondPlaceGap)
-{
+int biomeDBGet( int inX, int inY, int *outSecondPlaceBiome, double *outSecondPlaceGap) {
 	unsigned char key[8];
 	unsigned char value[12];
 

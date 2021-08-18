@@ -230,7 +230,7 @@ int LINEARDB3_open(
 		unsigned int inHashTableStartSize,
 		unsigned int inKeySize,
 		unsigned int inValueSize )
-		{
+{
 	inDB->recordBuffer = NULL;
 	inDB->maxOverflowDepth = 0;
 	inDB->numRecords = 0;
@@ -503,14 +503,17 @@ int LINEARDB3_open(
 	}
 
 	return 0;
-		}
+}
 
-
-
-
-
-
-		int LINEARDB3_get( LINEARDB3 *inDB, const void *inKey, void *outValue ) {
+/**
+ *
+ * @param inDB
+ * @param inKey
+ * @param outValue
+ * @return
+ */
+int LINEARDB3_get( LINEARDB3 *inDB, const void *inKey, void *outValue )
+{
 	return LINEARDB3_getOrPut( inDB, inKey, outValue, false, false );
 }
 
@@ -714,8 +717,7 @@ uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed )
  * @param outFingerprint
  * @return
  */
-uint64_t getBinNumber( LINEARDB3 *inDB, const void *inKey,
-					   uint32_t *outFingerprint ) {
+uint64_t getBinNumber( LINEARDB3 *inDB, const void *inKey, uint32_t *outFingerprint ) {
 
 	uint64_t hashVal = LINEARDB3_hash( inKey, inDB->keySize );
 

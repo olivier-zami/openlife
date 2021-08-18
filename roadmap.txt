@@ -3,3 +3,10 @@ master
 		!linearDB => require the creation of the system branch
 	!server => can't create a File object (minorGems/io/file/File.h) in order to create new linearDB class
 	!client
+
+
+TODO:
+	in int openLife::system::object::store::device::random::LinearDB::isResourceExist()
+	=> use openLife::system::File::find(filename)
+	in openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::system::settings::LinearDB settings)
+	=> create exception class and use them instread of -1

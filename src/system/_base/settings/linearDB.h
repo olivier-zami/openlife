@@ -11,10 +11,14 @@ namespace openLife::system::settings
 {
 	typedef struct{
 		std::string filename;
+		std::string magicString;
 		struct{
 			unsigned int keySize;
 			unsigned int valueSize;
 		}record;
+		struct{
+			unsigned int size;
+		}hashTable;
 	}LinearDB;
 }
 
