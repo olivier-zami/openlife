@@ -2,7 +2,12 @@
 // Created by olivier on 14/08/2021.
 //
 
+//<<<<<<< Updated upstream:src/common/object/store/memory/randomAccess/draft.cpp
 #include "src/common/object/store/memory/randomAccess/linearDB.h"
+//=======
+//#include "draft.h"
+//#include "src/system/_base/object/store/device/random/linearDB.h"
+//>>>>>>> Stashed changes:src/system/_base/object/store/device/random/draft.cpp
 
 #include <iostream>
 #include <cstring>
@@ -10,6 +15,7 @@
 
 #include "src/common/process/hash.h"
 #include "OneLife/server/lineardb3.h"
+#include "src/common/type/database/lineardb3.h"
 #include "OneLife/server/dbCommon.h"
 #include "OneLife/server/map.h"
 
@@ -68,8 +74,8 @@ int LINEARDB3_open(
 
 	recomputeFingerprintMod( inDB );
 
-	inDB->hashTable = new PageManager;
-	inDB->overflowBuckets = new PageManager;
+	inDB->hashTable = new LINEARDB3_PageManager;
+	inDB->overflowBuckets = new LINEARDB3_PageManager;
 
 
 	// does the file already contain a header
@@ -405,7 +411,7 @@ int LINEARDB3_getOrPut( LINEARDB3 *inDB, const void *inKey, void *inOutValue,
 			thisBucket->overflowIndex =
 					getFirstEmptyBucketIndex( inDB->overflowBuckets );
 
-			FingerprintBucket *newBucket = getBucket( inDB->overflowBuckets,
+			LINEARDB3_FingerprintBucket *newBucket = getBucket( inDB->overflowBuckets,
 													  thisBucket->overflowIndex );
 			newBucket->fingerprints[0] = fingerprint;
 
@@ -541,7 +547,7 @@ uint64_t getBinNumber( LINEARDB3 *inDB, const void *inKey,
 	return getBinNumberFromHash( inDB, hashVal );
 }
 
-LINEARDB3_FingerprintBucket *getBucket( PageManager *inPM,
+LINEARDB3_FingerprintBucket *getBucket( LINEARDB3_PageManager *inPM,
 										uint32_t inBucketIndex ) {
 	uint32_t pageNumber = inBucketIndex / BUCKETS_PER_PAGE;
 	uint32_t bucketNumber = inBucketIndex % BUCKETS_PER_PAGE;
@@ -562,7 +568,7 @@ int LINEARDB3_considerFingerprintBucket( LINEARDB3 *inDB,
 										 uint32_t inFingerprint,
 										 char inPut,
 										 char inIgnoreDataFile,
-										 FingerprintBucket *inBucket,
+										 LINEARDB3_FingerprintBucket *inBucket,
 										 int inRecIndex ) {
 	int i = inRecIndex;
 
@@ -708,7 +714,7 @@ int LINEARDB3_considerFingerprintBucket( LINEARDB3 *inDB,
 	return 2;
 }
 
-uint32_t getFirstEmptyBucketIndex( PageManager *inPM ) {
+uint32_t getFirstEmptyBucketIndex( LINEARDB3_PageManager *inPM ) {
 
 	uint32_t firstPage = inPM->firstEmptyBucket / BUCKETS_PER_PAGE;
 
@@ -789,7 +795,7 @@ inline char keyComp( int inKeySize, const void *inKeyA, const void *inKeyB ) {
 	return true;
 }
 
-FingerprintBucket *addBucket( PageManager *inPM ) {
+LINEARDB3_FingerprintBucket *addBucket( LINEARDB3_PageManager *inPM ) {
 	if( inPM->numPages * BUCKETS_PER_PAGE == inPM->numBuckets ) {
 		// need to allocate a new page
 
@@ -829,7 +835,7 @@ FingerprintBucket *addBucket( PageManager *inPM ) {
 
 
 	// room exists, return the empty bucket at end
-	FingerprintBucket *newBucket = getBucket( inPM, inPM->numBuckets );
+	LINEARDB3_FingerprintBucket *newBucket = getBucket( inPM, inPM->numBuckets );
 
 	inPM->numBuckets++;
 
@@ -856,11 +862,11 @@ int expandTable( LINEARDB3 *inDB ) {
 
 
 		// we only need to redistribute records from this bucket
-		FingerprintBucket *oldBucket =
+		LINEARDB3_FingerprintBucket *oldBucket =
 				getBucket( inDB->hashTable, oldSplitPoint );
 
 		// add one bucket to end of of table
-		FingerprintBucket *newBucket = addBucket( inDB->hashTable );
+		LINEARDB3_FingerprintBucket *newBucket = addBucket( inDB->hashTable );
 
 		uint32_t oldBucketIndex = oldSplitPoint;
 		uint32_t newBucketIndex = inDB->hashTableSizeB;
@@ -875,16 +881,16 @@ int expandTable( LINEARDB3 *inDB ) {
 		// re-hash all cells at old split point, all the way down any
 		// overflow chain that's there
 
-		FingerprintBucket *nextOldBucket = oldBucket;
+		LINEARDB3_FingerprintBucket *nextOldBucket = oldBucket;
 
 		while( nextOldBucket != NULL ) {
 			// make a working copy
-			FingerprintBucket tempBucket;
-			memcpy( &tempBucket, nextOldBucket, sizeof( FingerprintBucket ) );
+			LINEARDB3_FingerprintBucket tempBucket;
+			memcpy( &tempBucket, nextOldBucket, sizeof( LINEARDB3_FingerprintBucket ) );
 
 			// clear the real bucket to make room for new inserts
 			// this clears the overflow index as well
-			memset( nextOldBucket, 0, sizeof( FingerprintBucket ) );
+			memset( nextOldBucket, 0, sizeof( LINEARDB3_FingerprintBucket ) );
 
 
 			for( int r=0; r<RECORDS_PER_BUCKET; r++ ) {
@@ -973,7 +979,7 @@ void insertIntoBucket( LINEARDB3 *inDB,
 	inBucketIterator->nextRecord++;
 }
 
-void markBucketEmpty( PageManager *inPM, uint32_t inBucketIndex ) {
+void markBucketEmpty( LINEARDB3_PageManager *inPM, uint32_t inBucketIndex ) {
 	if( inBucketIndex < inPM->firstEmptyBucket ) {
 		inPM->firstEmptyBucket = inBucketIndex;
 	}
@@ -985,7 +991,7 @@ uint64_t getBinNumber( LINEARDB3 *inDB, uint32_t inFingerprint ) {
 	return getBinNumberFromHash( inDB, inFingerprint );
 }
 
-void initPageManager( PageManager *inPM,
+void initPageManager( LINEARDB3_PageManager *inPM,
 					  uint32_t inNumStartingBuckets ) {
 	inPM->numPages = 1 + inNumStartingBuckets / BUCKETS_PER_PAGE;
 
@@ -1009,7 +1015,7 @@ void initPageManager( PageManager *inPM,
 	inPM->firstEmptyBucket = 0;
 }
 
-void freePageManager( PageManager *inPM ) {
+void freePageManager( LINEARDB3_PageManager *inPM ) {
 	for( uint32_t i=0; i<inPM->numPages; i++ ) {
 		delete inPM->pages[i];
 	}

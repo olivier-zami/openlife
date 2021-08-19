@@ -8,10 +8,17 @@
 // some compilers require this to access UINT64_MAX
 #define __STDC_LIMIT_MACROS
 
+#include "src/system/_base/_macro/environment.h"
+#include "src/system/_base/object/store/device/random/linearDB/pageManager.h"
+
 #include <stdint.h>
 #include <stdio.h>
 
+//<<<<<<< Updated upstream:src/common/object/store/memory/randomAccess/linearDB.h
 #include "src/common/type/settings/linearDB.h"
+//=======
+//#include "src/system/_base/settings/linearDB.h"
+//>>>>>>> Stashed changes:src/system/_base/object/store/device/random/linearDB.h
 #include "src/common/type/database/lineardb3.h"
 #include "src/common/process/hash/murmurhash2_64.h"
 #include "minorGems/io/file/File.h"
@@ -23,14 +30,8 @@ uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed );
 #define MurmurHash64 MurmurHash64B
 #define LINEARDB3_hash(inB, inLen) MurmurHash64( inB, inLen, 0xb9115a39 )
 
-
-
-
 #define FingerprintBucket LINEARDB3_FingerprintBucket
-#define RECORDS_PER_BUCKET LINEARDB3_RECORDS_PER_BUCKET
-#define PageManager LINEARDB3_PageManager
 #define LINEARDB3_HEADER_SIZE 11
-#define BUCKETS_PER_PAGE LINEARDB3_BUCKETS_PER_PAGE
 #define BucketPage LINEARDB3_BucketPage
 
 namespace common::object::store::memory::randomAccess
@@ -52,6 +53,14 @@ namespace common::object::store::memory::randomAccess
 
 		private:
 			void createResource();
+<<<<<<< Updated upstream:src/common/object/store/memory/randomAccess/linearDB.h
+=======
+			int createResourceHeader();
+			uint32_t getComputedTableSize(uint32_t inNumRecords);
+			uint64_t getBinNumber(uint32_t *outFingerprint);
+			void recomputeFingerprintMod();
+			int get1();
+>>>>>>> Stashed changes:src/system/_base/object/store/device/random/linearDB.h
 
 			std::string filename;
 			FILE *file;
@@ -79,8 +88,13 @@ namespace common::object::store::memory::randomAccess
 			uint8_t *recordBuffer;
 			unsigned int maxOverflowDepth;
 			// sized to hashTableSizeB buckets
+<<<<<<< Updated upstream:src/common/object/store/memory/randomAccess/linearDB.h
 			struct PageManagerState *hashTable;
 			struct PageManagerState *overflowBuckets;
+=======
+			openLife::system::object::store::device::random::linearDB::PageManager* hashTable;
+			openLife::system::object::store::device::random::linearDB::PageManager* overflowBuckets;
+>>>>>>> Stashed changes:src/system/_base/object/store/device/random/linearDB.h
 	};
 }
 

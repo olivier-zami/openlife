@@ -5,6 +5,8 @@
 #ifndef ONELIFETEST_DRAFT_H
 #define ONELIFETEST_DRAFT_H
 
+#include "src/common/type/database/lineardb3.h"
+
 int DB_open_timeShrunk(
 		LINEARDB3 *db,
 		const char *path,
@@ -182,7 +184,7 @@ uint64_t getBinNumber( LINEARDB3 *inDB, const void *inKey,
 							  uint32_t *outFingerprint );
 
 // no bounds checking
-LINEARDB3_FingerprintBucket *getBucket( PageManager *inPM,
+LINEARDB3_FingerprintBucket *getBucket( LINEARDB3_PageManager *inPM,
 									 uint32_t inBucketIndex );
 
 int LINEARDB3_considerFingerprintBucket( LINEARDB3 *inDB,
@@ -191,25 +193,25 @@ int LINEARDB3_considerFingerprintBucket( LINEARDB3 *inDB,
 									 uint32_t inFingerprint,
 									 char inPut,
 									 char inIgnoreDataFile,
-									 FingerprintBucket *inBucket,
+									 LINEARDB3_FingerprintBucket *inBucket,
 									 int inRecIndex );
 
 // always skips bucket at index 0
 // assuming that this call is used for overflowBuckets only, where
 // index 0 is used to mark buckets with no further overflow
-uint32_t getFirstEmptyBucketIndex( PageManager *inPM );
+uint32_t getFirstEmptyBucketIndex( LINEARDB3_PageManager *inPM );
 
 uint64_t getBinNumberFromHash( LINEARDB3 *inDB, uint64_t inHashVal );
 
 inline char keyComp( int inKeySize, const void *inKeyA, const void *inKeyB );
 
 //  returns pointer to newly created bucket
-FingerprintBucket *addBucket( PageManager *inPM );
+LINEARDB3_FingerprintBucket *addBucket( LINEARDB3_PageManager *inPM );
 
 int expandTable( LINEARDB3 *inDB );
 
 typedef struct {
-	FingerprintBucket *nextBucket;
+	LINEARDB3_FingerprintBucket *nextBucket;
 	int nextRecord;
 } BucketIterator;
 
@@ -218,13 +220,13 @@ void insertIntoBucket( LINEARDB3 *inDB,
 					   uint32_t inFingerprint,
 					   uint32_t inFileIndex );
 
-void markBucketEmpty( PageManager *inPM, uint32_t inBucketIndex );
+void markBucketEmpty( LINEARDB3_PageManager *inPM, uint32_t inBucketIndex );
 
 uint64_t getBinNumber( LINEARDB3 *inDB, uint32_t inFingerprint );
 
-void initPageManager( PageManager *inPM, uint32_t inNumStartingBuckets );
+void initPageManager( LINEARDB3_PageManager *inPM, uint32_t inNumStartingBuckets );
 
-void freePageManager( PageManager *inPM );
+void freePageManager( LINEARDB3_PageManager *inPM );
 
 int getRecordSizeBytes( int inKeySize, int inValueSize );
 
