@@ -8,8 +8,6 @@
 #include <cstring>
 #include <cmath>
 
-#include "src/system/_base/object/entity/exception.h"
-#include "src/system/_base/file.h"
 #include "src/system/_base/hash/murmurhash.h"
 
 #include "src/common/process/hash.h"
@@ -30,9 +28,6 @@ extern char skipLookTimeCleanup;
 extern int cellsLookedAtToInit ;
 
 const double openLife::system::object::store::device::random::LinearDB::MAX_LOAD_FOR_OPEN_CALLS = 0.5;
-const int openLife::system::object::store::device::random::LinearDB::HEADER_SIZE = 11;
-
-openLife::system::object::entity::Exception exception;
 
 /**
  *
@@ -41,16 +36,16 @@ openLife::system::object::entity::Exception exception;
 openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::system::settings::LinearDB settings)
 {
 	this->filename = settings.filename;
-	this->magicString = settings.magicString;
-	this->keySize = settings.record.keySize; //inKeySize
-	this->valueSize = settings.record.valueSize; //inValueSize
-	this->recordBuffer = nullptr; //inDB->recordBuffer = NULL;
-	this->maxOverflowDepth = 0; //inDB->maxOverflowDepth = 0;
-	this->numRecords = 0; //inDB->numRecords = 0;
-	this->maxLoad = MAX_LOAD_FOR_OPEN_CALLS; //inDB->maxLoad = maxLoadForOpenCalls;
-
+	this->keySize = settings.record.keySize;
+	this->valueSize = settings.record.valueSize;
+	this->recordBuffer = nullptr;
+	this->maxOverflowDepth = 0;
+	this->numRecords = 0;
+	this->maxLoad = MAX_LOAD_FOR_OPEN_CALLS;
 	if(!this->isResourceExist())
 	{
+//<<<<<<< Updated upstream
+/*
 		openLife::system::File::create(settings.filename.c_str());
 	}
 	if(!(this->file = fopen(this->filename.c_str(), "w+b"))) throw exception("db file creation failed");//this->file = inDB->file
@@ -68,8 +63,13 @@ openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::sy
 	//test reached 32-bit limit
 	for(uint32_t newMod=this->fingerprintMod*2;newMod>this->fingerprintMod;newMod=this->fingerprintMod*2)this->fingerprintMod=newMod;//recomputeFingerprintMod();
 
+//<<<<<<< HEAD
 	this->hashTable = new openLife::system::object::store::device::random::linearDB::PageManager(); // new PageManager() inPM
 	this->overflowBuckets = new openLife::system::object::store::device::random::linearDB::PageManager(); //new PageManager() inPM
+//=======
+//	this->hashTable = new openLife::system::object::store::device::random::LinearDBPageManager(); // new PageManager() inPM
+//	this->overflowBuckets = new openLife::system::object::store::device::random::LinearDBPageManager(); //new PageManager() inPM
+//>>>>>>> master
 
 	// does the file already contain a header
 
@@ -83,13 +83,12 @@ openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::sy
 		// rewrite header
 		if(!this->createResourceHeader()) throw exception("Fail to create Header in ...");
 		this->lastOp = opWrite;
-
 		this->hashTable->init(this->hashTableSizeA);
 		this->overflowBuckets->init(2);
 	}
 	else
 	{
-		/*isFileHeaderValid()*/
+		//isFileHeaderValid()
 		// read header
 		if( fseeko(this->file, 0, SEEK_SET)) throw exception("Fail to read Header in ...");
 		int numRead;
@@ -97,17 +96,17 @@ openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::sy
 		numRead = fread(magicBuffer, 3, 1, this->file );
 		if( numRead != 1 ) throw exception("Fail to read magic string in dbFile...");
 	   	magicBuffer[3] = '\0';
-	   	/*end isFileHeaderValid()*/
-	   	if(strcmp(magicBuffer, this->magicString.c_str()) != 0)throw exception("lineardb3 magic string '%s' not found at start of file header in %s"/*this->magicString, this->filename*/);
+	   	//end isFileHeaderValid()
+	   	if(strcmp(magicBuffer, this->magicString.c_str()) != 0)throw exception("lineardb3 magic string '%s' not found at start of file header in %s"/ *this->magicString, this->filename* /);
 
 	   	uint32_t val32;
 	   	numRead = fread(&val32, sizeof(uint32_t), 1, this->file);
-	   	if( numRead != 1 )throw exception("Failed to read key size"/*this->magicString, this->inPath*/);
-	   	if( val32 != this->keySize ) throw exception("Requested lineardb3 key size of %u does not match size of %u in file header in %s"/*this->keySize, val32, this->filename*/);
+	   	if( numRead != 1 )throw exception("Failed to read key size"/ *this->magicString, this->inPath* /);
+	   	if( val32 != this->keySize ) throw exception("Requested lineardb3 key size of %u does not match size of %u in file header in %s"/ *this->keySize, val32, this->filename* /);
 
 	   	numRead = fread(&val32, sizeof(uint32_t), 1, this->file);
-	   	if( numRead != 1 )throw exception("Failed to read value size"/*this->magicString, this->inPath*/);
-	   	if( val32 != this->valueSize ) throw exception("Requested lineardb3 value size of %u does not match size of %u in file header in %s"/*this->keyValue, val32, this->filename*/);
+	   	if( numRead != 1 )throw exception("Failed to read value size"/ *this->magicString, this->inPath* /);
+	   	if( val32 != this->valueSize ) throw exception("Requested lineardb3 value size of %u does not match size of %u in file header in %s"/ *this->keyValue, val32, this->filename* /);
 
 	   	// got here, header matches
 
@@ -126,31 +125,31 @@ openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::sy
 		   char tempPath[200];
 		   sprintf( tempPath, "%.190s%s", this->filename.c_str(), ".trunc" );
 		   FILE *tempFile = fopen( tempPath, "wb" );
-		   if( tempFile == NULL ) throw exception("Failed to open temp file %s for truncation"/*, tempPath*/);
+		   if( tempFile == NULL ) throw exception("Failed to open temp file %s for truncation"/ *, tempPath* /);
 
 		   if( fseeko( this->file, 0, SEEK_SET ) ) throw exception("File seek operation failed");
 
 		   unsigned char headerBuffer[HEADER_SIZE];
 
 		   int numRead = fread( headerBuffer, HEADER_SIZE, 1, this->file );
-		   if( numRead != 1 )throw exception("Failed to read header from lineardb3 file %s"/*, this->filename.c_str()*/);
+		   if( numRead != 1 )throw exception("Failed to read header from lineardb3 file %s"/ *, this->filename.c_str()* /);
 
 		   int numWritten = fwrite( headerBuffer, HEADER_SIZE, 1, tempFile );
-		   if( numWritten != 1 ) throw exception ("Failed to write header to temp lineardb3 truncation file %s"/*, tempPath*/);
+		   if( numWritten != 1 ) throw exception ("Failed to write header to temp lineardb3 truncation file %s"/ *, tempPath* /);
 
 		   for( uint64_t i=0; i<numRecordsInFile; i++ )
 		   {
 				numRead = fread( this->recordBuffer, this->recordSizeBytes, 1, this->file );
-				if( numRead != 1 ) throw exception("Failed to read record from lineardb3 file %s"/*, this->filename.c_str()*/);
+				if( numRead != 1 ) throw exception("Failed to read record from lineardb3 file %s"/ *, this->filename.c_str()* /);
 
 				numWritten = fwrite( this->recordBuffer, this->recordSizeBytes, 1, tempFile );
-				if( numWritten != 1 ) throw exception("Failed to record to temp lineardb3 truncation file %s"/*, tempPath*/);
+				if( numWritten != 1 ) throw exception("Failed to record to temp lineardb3 truncation file %s"/ *, tempPath* /);
 		   }
 		   fclose( this->file );
 		   fclose( tempFile );
-		   if( rename( tempPath, this->filename.c_str() ) != 0 )throw exception("Failed overwrite lineardb3 file %s with truncation file %s"/*, this->filename.c_str(), tempPath*/);
+		   if( rename( tempPath, this->filename.c_str() ) != 0 )throw exception("Failed overwrite lineardb3 file %s with truncation file %s"/ *, this->filename.c_str(), tempPath* /);
 		   this->file = fopen( this->filename.c_str(), "r+b" );
-		   if( this->file == NULL ) throw exception("Failed to re-open lineardb3 file %s after trunctation"/*, this->filename.c_str()*/);
+		   if( this->file == NULL ) throw exception("Failed to re-open lineardb3 file %s after trunctation"/ *, this->filename.c_str()* /);
 		}
 
 		// now populate hash table
@@ -171,7 +170,7 @@ openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::sy
 			// note that this assumes that each key in the file is unique
 			// (it should be, because we generated the file on a previous run)
 			int result = 0;//TODO: a virer
-			/*
+			/ *
 			int result = LINEARDB3_getOrPut( inDB,
 										   &( inDB->recordBuffer[0] ),
 										   &( inDB->recordBuffer[inDB->keySize] ),
@@ -181,12 +180,17 @@ openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::sy
 										   // don't even verify keys in data file
 										   // this preserves our fread position
 										   true );//mode_put && ignoreDataFile
-										   */
+										   * /
 
 			if( result != 0 ) throw new openLife::system::object::entity::Exception("Putting lineardb record in RAM hash table failed");
 		}
 		   this->lastOp = opRead;
 	}
+ */
+//=======
+
+	}
+//>>>>>>> Stashed changes
 }
 
 openLife::system::object::store::device::random::LinearDB::~LinearDB() {}
@@ -199,155 +203,17 @@ openLife::system::object::store::device::random::LinearDB::~LinearDB() {}
  */
 int openLife::system::object::store::device::random::LinearDB::get(void* key)
 {
-	/* already done
-	unsigned char key[8];
-	unsigned char value[12];
-	int *outSecondPlaceBiome;
-	double *outSecondPlaceGap;
-	intPairToKey( inX, inY, key );// look for changes to default in database
-	*/
-	memcpy(this->currentRecord.key, key, sizeof(this->currentRecord.key));
-	std::cout << "\nSizeof key :" << sizeof(this->currentRecord.key);
-	int afterPosX = valueToInt( this->currentRecord.key );
-	int afterPosY = valueToInt( &( this->currentRecord.key[4] ) );
-	std::cout << "\nRecherche du biome ("<<afterPosX<<","<<afterPosY<<")";
-
-	//int result = LINEARDB3_get( &biomeDB, key, value );//TODO: search LINEARDB3_get ans replace with newBiomeDB->get(...)
-	//int result = this->get1();
-
-	int biome = -1;
-	/*
-	if( result == 0 )
-	{
-		// found
-		int biome = valueToInt( &( value[0] ) );
-
-		if( outSecondPlaceBiome != NULL ) {
-			*outSecondPlaceBiome = valueToInt( &( value[4] ) );
-		}
-
-		if( outSecondPlaceGap != NULL ) {
-			*outSecondPlaceGap = valueToInt( &( value[8] ) ) / gapIntScale;
-		}
-	}
-	*/
-
+	std::cout << "\ncall LinearDB::get",
+	std::cout << "\nget value from " << this->filename << "";
+	//uint64_t hashVal = openLife::system::hash::MurmurHash(inKey, inDB->keySize, MURMURHASH64_LINEARDB_SEED1);
 	/*
 	 => int biomeDBGet( int inX, int inY, int *outSecondPlaceBiome, double *outSecondPlaceGap)
 	 	=> int LINEARDB3_get( LINEARDB3 *inDB, const void *inKey, void *outValue );
 	 		=> int LINEARDB3_getOrPut( LINEARDB3 *inDB, const void *inKey, void *inOutValue, char inPut, char inIgnoreDataFile = false );
-	 			X=> uint64_t getBinNumber( LINEARDB3 *inDB, uint32_t inFingerprint );
-	 			=> uint64_t getBinNumber( LINEARDB3 *inDB, const void *inKey, uint32_t *outFingerprint );*
-	 				=> uint64_t getBinNumberFromHash( LINEARDB3 *inDB, uint64_t inHashVal );
-	 */
-	return biome;
-}
-
-int openLife::system::object::store::device::random::LinearDB::get1()
-{
-
-	uint32_t fingerprint;
-	//uint64_t binNumber = getBinNumber( inDB, inKey, &fingerprint );
-	uint64_t binNumber = this->getBinNumber(&fingerprint);
-	std::cout << "\nbin number : " << binNumber;
-
-	/*
-	unsigned int overflowDepth = 0;
-	LINEARDB3_FingerprintBucket *thisBucket = getBucket( inDB->hashTable, binNumber );
-	char skipToOverflow = false;
-	if( inPut && inIgnoreDataFile ) {
-		skipToOverflow = true;
-	}
-	if( !skipToOverflow || thisBucket->overflowIndex == 0 )
-		for( int i=0; i<RECORDS_PER_BUCKET; i++ ) {
-			int result = LINEARDB3_considerFingerprintBucket(
-					inDB, inKey, inOutValue,
-					fingerprint,
-					inPut, inIgnoreDataFile,
-					thisBucket,
-					i );
-			if( result < 2 ) {
-				return result;
-			}
-			// 2 means record didn't match, keep going
-		}
-
-	uint32_t thisBucketIndex = 0;
-		while( thisBucket->overflowIndex > 0 ) {
-			// consider overflow
-			overflowDepth++;
-			if( overflowDepth > inDB->maxOverflowDepth ) {
-				inDB->maxOverflowDepth = overflowDepth;
-			}
-			thisBucketIndex = thisBucket->overflowIndex;
-			thisBucket = getBucket( inDB->overflowBuckets, thisBucketIndex );
-			if( !skipToOverflow || thisBucket->overflowIndex == 0 )
-				for( int i=0; i<RECORDS_PER_BUCKET; i++ ) {
-
-					int result = LINEARDB3_considerFingerprintBucket(
-							inDB, inKey, inOutValue,
-							fingerprint,
-							inPut, inIgnoreDataFile,
-							thisBucket,
-							i );
-
-					if( result < 2 ) {
-						return result;
-					}
-					// 2 means record didn't match, keep going
-				}
-		}
-		if( inPut &&
-		thisBucket->overflowIndex == 0 ) {
-			// reached end of overflow chain without finding place to put value
-			// need to make a new overflow bucket
-			overflowDepth++;
-			if( overflowDepth > inDB->maxOverflowDepth ) {
-				inDB->maxOverflowDepth = overflowDepth;
-			}
-			thisBucket->overflowIndex =
-					getFirstEmptyBucketIndex( inDB->overflowBuckets );
-			FingerprintBucket *newBucket = getBucket( inDB->overflowBuckets,
-													  thisBucket->overflowIndex );
-			newBucket->fingerprints[0] = fingerprint;
-			// will go at end of file
-			newBucket->fileIndex[0] = inDB->numRecords;
-			inDB->numRecords++;
-			if( ! inIgnoreDataFile ) {
-				uint64_t filePosRec =
-						LINEARDB3_HEADER_SIZE +
-						newBucket->fileIndex[0] *
-						inDB->recordSizeBytes;
-				// don't seek unless we have to
-				if( inDB->lastOp == opRead ||
-				ftello( inDB->file ) != (signed)filePosRec ) {
-					// go to end of file
-					if( fseeko( inDB->file, 0, SEEK_END ) ) {
-						return -1;
-					}
-					// make sure it matches where we've documented that
-					// the record should go
-					if( ftello( inDB->file ) != (signed)filePosRec ) {
-						return -1;
-					}
-				}
-				int numWritten = fwrite( inKey, inDB->keySize, 1, inDB->file );
-				inDB->lastOp = opWrite;
-				numWritten += fwrite( inOutValue, inDB->valueSize, 1, inDB->file );
-				if( numWritten != 2 ) {
-					return -1;
-				}
-				return 0;
-			}
-			return 0;
-		}
-		// not found
-		return 1;
+	 			=> getBinNumber( inDB, inKey, &fingerprint );
 	 */
 	return 0;
 }
-
-//return LINEARDB3_getOrPut( inDB, inKey, outValue, false, false );
 
 void openLife::system::object::store::device::random::LinearDB::put(int idx, int value) {}
 
@@ -383,11 +249,9 @@ void openLife::system::object::store::device::random::LinearDB::createResource()
 	this->file = fopen(this->filename.c_str(), "w+b");
 }
 
-/**
- *
- * @return bool
- * @note return false on fail
- */
+//<<<<<<< Updated upstream
+/*
+
 int openLife::system::object::store::device::random::LinearDB::createResourceHeader()
 {
 	// returns 0 on success, -1 on error
@@ -398,12 +262,7 @@ int openLife::system::object::store::device::random::LinearDB::createResourceHea
 	return true;
 }
 
-/**
- *
- * @return
- * @note same as => uint64_t getBinNumber( LINEARDB3 *inDB, const void *inKey, uint32_t *outFingerprint );
- * => uint64_t getBinNumberFromHash( LINEARDB3 *inDB, uint64_t inHashVal );
- */
+
 uint64_t openLife::system::object::store::device::random::LinearDB::getBinNumber(uint32_t *outFingerprint)
 {
 	//uint32_t *outFingerprint;//fingerprint;
@@ -448,18 +307,40 @@ uint64_t openLife::system::object::store::device::random::LinearDB::getBinNumber
 		return binNumberB;
 	//}
 }
+*/
 
-/**
- *
- * @param inNumRecords
- * @return
- */
 uint32_t openLife::system::object::store::device::random::LinearDB::getComputedTableSize(uint32_t inNumRecords)
 {
 	uint32_t minTableRecords = (uint32_t)ceil( inNumRecords / this->maxLoad );
 
 	uint32_t minTableBuckets =(uint32_t)ceil( (double)minTableRecords /
 			(double)RECORDS_PER_BUCKET );
+//=======
+/*
+DB_open_timeShrunk( &biomeDB,
+                         "biome.db",
+                         KISSDB_OPEN_MODE_RWCREAT,
+                         80000,
+                         8, // two 32-bit ints, xy
+                         12 // three ints,
+                         // 1: biome number at x,y
+                         // 2: second place biome number at x,y
+                         // 3: second place biome gap as int (float gap
+                         //    multiplied by 1,000,000)
+                         )
+ */
+// version of open call that checks whether look time exists in lookTimeDB
+// for each record in opened DB, and clears any entries that are not
+// rebuilding file storage for DB in the process
+// lookTimeDB MUST be open before calling this
+//
+// If lookTimeDBEmpty, this call just opens the target DB normally without
+// shrinking it.
+//
+// Can handle max key and value size of 16 and 12 bytes
+// Assumes that first 8 bytes of key are xy as 32-bit ints
+/****/
+//>>>>>>> Stashed changes
 
 	// even if file contains no inserted records
 	// use 2 buckets minimum

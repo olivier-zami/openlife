@@ -6,6 +6,6 @@
 #define ONELIFETEST_PATHLINUX_H
 
 #define INCLUDED_FILE "minorGems/io/file/Path.h"
-#include "src/system/_macro/linux_code_declaration.h"
+#include "src/system/_base/_macro/linux_code_declaration.h"
 
 #endif //ONELIFETEST_PATHLINUX_H

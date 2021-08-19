@@ -9,7 +9,7 @@
 #include "src/common/object/entity/mapZone.h"
 #include "src/server/component/database/worldMap.h"
 #include "src/common/process/convert/image.h"
-#include "src/common/type/settings/linearDB.h"
+#include "src/system/_base/settings/linearDB.h"
 #include "src/common/type/database/lineardb3.h"
 
 Server* realServer;
@@ -31,22 +31,22 @@ LINEARDB3 biomeDB;
 char biomeDBOpen = false;
 
 
-common::object::store::memory::randomAccess::LinearDB *newBiomeDB;
+openLife::system::object::store::device::random::LinearDB *newBiomeDB;
 
 int main()
 {
-	if(!common::system::isFileWritable())
+	if(!openLife::system::isFileWritable())
 	{
-		common::system::notice("File system read-only.  Server exiting.");
+		openLife::system::notice("File system read-only.  Server exiting.");
 		return 1;
 	}
 
-	common::system::notice("Attempt to start the server ...");
+	openLife::system::notice("Attempt to start the server ...");
 
 	/*******/
-	common::type::settings::LinearDB biomeDBSettings;
+	openLife::system::settings::LinearDB biomeDBSettings;
 
-	newBiomeDB = new common::object::store::memory::randomAccess::LinearDB(biomeDBSettings);
+	newBiomeDB = new openLife::system::object::store::device::random::LinearDB(biomeDBSettings);
 	newBiomeDB->init(&biomeDB);
 
 	extern Server* realServer;//TODO: change socket object name from server to socket and rename realServer to server
@@ -539,7 +539,7 @@ int main()
 			forceShutdownMode =
 					SettingsManager::getIntSetting( "forceShutdownMode", 0 );
 
-			if(!common::system::isFileWritable()) {
+			if(!openLife::system::isFileWritable()) {
 				// read-only file system causes all kinds of weird
 				// behavior
 				// shut this server down NOW

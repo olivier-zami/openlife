@@ -5,7 +5,7 @@
 #include "time.h"
 #include <ctime>
 
-std::string common::system::Time::getCurrentDate(const char* format)
+std::string openLife::system::Time::getCurrentDate(const char* format)
 {
 	char date[100];
 	time_t tick = std::time(0);

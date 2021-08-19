@@ -3,11 +3,13 @@
 //
 
 //<<<<<<< Updated upstream:src/common/object/store/memory/randomAccess/draft.cpp
-#include "src/common/object/store/memory/randomAccess/linearDB.h"
+//#include "src/common/object/store/memory/randomAccess/linearDB.h"
 //=======
 //#include "draft.h"
 //#include "src/system/_base/object/store/device/random/linearDB.h"
 //>>>>>>> Stashed changes:src/system/_base/object/store/device/random/draft.cpp
+#include "src/system/_base/object/store/device/random/linearDB.h"
+
 
 #include <iostream>
 #include <cstring>
@@ -33,6 +35,201 @@ extern int cellsLookedAtToInit ;
 static const char *magicString = "Ld2";
 static double maxLoadForOpenCalls = 0.5;
 double gapIntScale = 1000000.0;
+
+int DB_open_timeShrunk(
+		LINEARDB3* db,
+		const char *path,
+		int mode,
+		unsigned long hash_table_size,
+		unsigned long key_size,
+		unsigned long value_size)
+		{
+	File dbFile( NULL, path );
+
+	if( ! dbFile.exists() || lookTimeDBEmpty || skipLookTimeCleanup )
+	{
+
+		if( lookTimeDBEmpty ) {
+			AppLog::infoF( "No lookTimes present, not cleaning %s", path );
+		}
+
+		int error = LINEARDB3_open( db,
+									path,
+									mode,
+									hash_table_size,
+									key_size,
+									value_size );
+
+		if( ! error && ! skipLookTimeCleanup ) {
+			// add look time for cells in this DB to present
+			// essentially resetting all look times to NOW
+
+			LINEARDB3_Iterator dbi;
+
+
+			LINEARDB3_Iterator_init( db, &dbi );
+
+			// key and value size that are big enough to handle all of our DB
+			unsigned char key[16];
+
+			unsigned char value[12];
+
+			while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 ) {
+				int x = valueToInt( key );
+				int y = valueToInt( &( key[4] ) );
+
+				cellsLookedAtToInit++;
+
+				dbLookTimePut( x, y, Time::timeSec() );
+			}
+		}
+		return error;
+	}
+
+	char *dbTempName = autoSprintf( "%s.temp", path );
+	File dbTempFile( NULL, dbTempName );
+
+	if( dbTempFile.exists() ) {
+		dbTempFile.remove();
+	}
+
+	if( dbTempFile.exists() ) {
+		AppLog::errorF( "Failed to remove temp DB file %s", dbTempName );
+
+		delete [] dbTempName;
+
+		return LINEARDB3_open( db,
+							   path,
+							   mode,
+							   hash_table_size,
+							   key_size,
+							   value_size );
+	}
+
+	LINEARDB3 oldDB;
+
+	int error = LINEARDB3_open( &oldDB,
+								path,
+								mode,
+								hash_table_size,
+								key_size,
+								value_size );
+	if( error ) {
+		AppLog::errorF( "Failed to open DB file %s in DB_open_timeShrunk",
+						path );
+		delete [] dbTempName;
+
+		return error;
+	}
+
+
+
+
+
+
+	LINEARDB3_Iterator dbi;
+
+
+	LINEARDB3_Iterator_init( &oldDB, &dbi );
+
+	// key and value size that are big enough to handle all of our DB
+	unsigned char key[16];
+
+	unsigned char value[12];
+
+	int total = 0;
+	int stale = 0;
+	int nonStale = 0;
+
+	// first, just count
+	while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 ) {
+		total++;
+
+		int x = valueToInt( key );
+		int y = valueToInt( &( key[4] ) );
+
+		if( dbLookTimeGet( x, y ) > 0 ) {
+			// keep
+			nonStale++;
+		}
+		else {
+			// stale
+			// ignore
+			stale++;
+		}
+	}
+
+
+
+	// optimial size for DB of remaining elements
+	unsigned int newSize = LINEARDB3_getShrinkSize( &oldDB, nonStale );
+
+	AppLog::infoF( "Shrinking hash table in %s from %d down to %d",
+				   path,
+				   LINEARDB3_getCurrentSize( &oldDB ),
+				   newSize );
+
+
+	LINEARDB3 tempDB;
+
+	error = LINEARDB3_open( &tempDB,
+							dbTempName,
+							mode,
+							newSize,
+							key_size,
+							value_size );
+	if( error ) {
+		AppLog::errorF( "Failed to open DB file %s in DB_open_timeShrunk",
+						dbTempName );
+		delete [] dbTempName;
+		LINEARDB3_close( &oldDB );
+		return error;
+	}
+
+
+	// now that we have new temp db properly sized,
+	// iterate again and insert, but don't count
+	LINEARDB3_Iterator_init( &oldDB, &dbi );
+
+	while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 ) {
+		int x = valueToInt( key );
+		int y = valueToInt( &( key[4] ) );
+
+		if( dbLookTimeGet( x, y ) > 0 ) {
+			// keep
+			// insert it in temp
+			LINEARDB3_put( &tempDB, key, value );
+		}
+		else {
+			// stale
+			// ignore
+		}
+	}
+
+
+
+	AppLog::infoF( "Cleaned %d / %d stale map cells from %s", stale, total,
+				   path );
+
+	printf( "\n" );
+
+
+	LINEARDB3_close( &tempDB );
+	LINEARDB3_close( &oldDB );
+
+	dbTempFile.copy( &dbFile );
+	dbTempFile.remove();
+
+	delete [] dbTempName;
+
+	// now open new, shrunk file
+	return LINEARDB3_open( db,
+						   path,
+						   mode,
+						   hash_table_size,
+						   key_size,
+						   value_size );
+		}
 
 int LINEARDB3_open(
 		LINEARDB3 *inDB,
@@ -518,6 +715,13 @@ uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed )
 	return h;
 }
 
+/**
+ *
+ * @param inDB
+ * @param inKey
+ * @param outFingerprint
+ * @return
+ */
 uint64_t getBinNumber( LINEARDB3 *inDB, const void *inKey,
 					   uint32_t *outFingerprint ) {
 

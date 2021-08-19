@@ -11,7 +11,6 @@ openLife::system::object::entity::Exception::Exception(const char *message)
 		this->message = message;
 	}
 }
-
 openLife::system::object::entity::Exception::~Exception() {}
 
 openLife::system::object::entity::Exception *openLife::system::object::entity::Exception::operator()(const char *message)

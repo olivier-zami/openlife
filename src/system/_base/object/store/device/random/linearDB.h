@@ -8,19 +8,21 @@
 // some compilers require this to access UINT64_MAX
 #define __STDC_LIMIT_MACROS
 
-#include "src/system/_base/_macro/environment.h"
+//#include "src/system/_base/_macro/environment.h"
 #include "src/system/_base/object/store/device/random/linearDB/pageManager.h"
 
 #include <stdint.h>
 #include <stdio.h>
 
 //<<<<<<< Updated upstream:src/common/object/store/memory/randomAccess/linearDB.h
-#include "src/common/type/settings/linearDB.h"
+
 //=======
 //#include "src/system/_base/settings/linearDB.h"
 //>>>>>>> Stashed changes:src/system/_base/object/store/device/random/linearDB.h
+
+#include "src/system/_base/settings/linearDB.h"
+
 #include "src/common/type/database/lineardb3.h"
-#include "src/common/process/hash/murmurhash2_64.h"
 #include "minorGems/io/file/File.h"
 #include "minorGems/util/log/AppLog.h"
 //#include "src/common/process/hash.h"
@@ -34,16 +36,16 @@ uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed );
 #define LINEARDB3_HEADER_SIZE 11
 #define BucketPage LINEARDB3_BucketPage
 
-namespace common::object::store::memory::randomAccess
+namespace openLife::system::object::store::device::random
 {
 	class LinearDB
 	{
 		public:
-			LinearDB(common::type::settings::LinearDB settings);
+			LinearDB(openLife::system::settings::LinearDB settings);
 			~LinearDB();
 
 			void put(int idx, int value);
-			int get(unsigned char idx[8], unsigned char value[12]);
+			int get(void* key);
 
 			int isResourceExist();
 
@@ -53,16 +55,19 @@ namespace common::object::store::memory::randomAccess
 
 		private:
 			void createResource();
-<<<<<<< Updated upstream:src/common/object/store/memory/randomAccess/linearDB.h
-=======
-			int createResourceHeader();
+			//TODO: to restore
+			//int createResourceHeader();
 			uint32_t getComputedTableSize(uint32_t inNumRecords);
-			uint64_t getBinNumber(uint32_t *outFingerprint);
+			//uint64_t getBinNumber(uint32_t *outFingerprint);
 			void recomputeFingerprintMod();
-			int get1();
->>>>>>> Stashed changes:src/system/_base/object/store/device/random/linearDB.h
+			//int get1();
 
 			std::string filename;
+			unsigned int keySize;
+			unsigned int valueSize;
+
+
+
 			FILE *file;
 			LINEARDB3* dbState;
 			double maxLoad;// load above this causes table to expand incrementally
@@ -76,8 +81,7 @@ namespace common::object::store::memory::randomAccess
 			// hash table is done with a full round of expansion
 			// and hashTableSizeA is set to hashTableSizeB at that point
 			uint32_t hashTableSizeB;
-			unsigned int keySize;
-			unsigned int valueSize;
+
 			// for deciding when fseek is needed between reads and writes
 			LastFileOp lastOp;
 			// equal to the largest possible 32-bit table size, given
@@ -88,16 +92,17 @@ namespace common::object::store::memory::randomAccess
 			uint8_t *recordBuffer;
 			unsigned int maxOverflowDepth;
 			// sized to hashTableSizeB buckets
-<<<<<<< Updated upstream:src/common/object/store/memory/randomAccess/linearDB.h
-			struct PageManagerState *hashTable;
-			struct PageManagerState *overflowBuckets;
-=======
+			/*TODO: to restore
 			openLife::system::object::store::device::random::linearDB::PageManager* hashTable;
 			openLife::system::object::store::device::random::linearDB::PageManager* overflowBuckets;
->>>>>>> Stashed changes:src/system/_base/object/store/device/random/linearDB.h
+			*/
+			struct PageManagerState *hashTable;
+			struct PageManagerState *overflowBuckets;
 	};
 }
 
-#include "draft.h"
+#if !defined(OPENLIFE_UNIT_TEST)
+	#include "draft.h"
+#endif
 
 #endif //OPENLIFE_COMMON_OBJECT_STORE_MEMORY_RANDOMACCESS_LINEARDB_H

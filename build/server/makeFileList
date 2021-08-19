@@ -28,7 +28,6 @@ ${DIR_APP_SERVER}/server.cpp \
 ${DIR_APP_SERVER}/map.cpp \
 ${DIR_APP_SERVER}/../../minorGems/io/file/File.cpp \
 ${DIR_APP_SERVER}/../../src/common/object/entity/mapZone.cpp \
-${DIR_APP_SERVER}/../../src/system/_base/_macro/environment.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/file.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/hash/murmurhash.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/object/entity/exception.cpp \

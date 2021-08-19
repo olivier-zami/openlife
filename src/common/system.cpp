@@ -8,21 +8,21 @@
 #include <string>
 #include "src/common/system/time.h"
 
-void common::system::notice(const char *message)
+void openLife::system::notice(const char *message)
 {
 	std::string date;
-	date = common::system::Time::getCurrentDate();
+	date = openLife::system::Time::getCurrentDate();
 	std::cout <<"\n"<< date <<" => notice : " << message <<"";
 }
 
-void common::system::notice(std::string message)
+void openLife::system::notice(std::string message)
 {
 	std::string date;
-	date = common::system::Time::getCurrentDate();
+	date = openLife::system::Time::getCurrentDate();
 	std::cout <<"\n"<< date << " => notice : "<< message.c_str();
 }
 
-int common::system::isFileWritable()
+int openLife::system::isFileWritable()
 {
 	const char *testFileName = "testReadOnly.txt";
 
