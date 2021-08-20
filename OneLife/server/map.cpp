@@ -36,7 +36,7 @@
 
 #include "minorGems/util/crc32.h"
 
-extern Server* realServer;
+extern openLife::Server* server;
 
 
 /*
@@ -2873,8 +2873,8 @@ void reseedMap( char inForceFresh ) {
 #include "src/server/component/channel/speech.h"
 #include "src/server/component/database/gameFeatures.h"
 
-extern server::component::channel::SpeechService* speechService;
-extern server::component::database::GameFeatures* gameFeatures;
+extern openLife::server::component::channel::SpeechService* speechService;
+extern openLife::server::component::database::GameFeatures* gameFeatures;
 
 char initMap()
 {

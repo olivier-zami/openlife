@@ -5,7 +5,7 @@
 #ifndef ONELIFETEST_FEATURE_H
 #define ONELIFETEST_FEATURE_H
 
-namespace server::component::database
+namespace openLife::server::component::database
 {
 	class GameFeatures
 	{

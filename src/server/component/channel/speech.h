@@ -5,7 +5,7 @@
 #ifndef ONELIFETEST_SPEECH_H
 #define ONELIFETEST_SPEECH_H
 
-namespace server::component::channel
+namespace openLife::server::component::channel
 {
 	class SpeechService
 	{

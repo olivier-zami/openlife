@@ -19,7 +19,7 @@ extern openLife::system::object::store::device::random::LinearDB *newBiomeDB;
  * @param height
  * @param detail
  */
-server::component::database::WorldMap::WorldMap(unsigned int width, unsigned int height, unsigned int detail=4)
+openLife::server::component::database::WorldMap::WorldMap(unsigned int width, unsigned int height, unsigned int detail=4)
 {
 	this->width = width;
 	this->height = height;
@@ -33,7 +33,7 @@ server::component::database::WorldMap::WorldMap(unsigned int width, unsigned int
 /**
  *
  */
-server::component::database::WorldMap::~WorldMap() {}
+openLife::server::component::database::WorldMap::~WorldMap() {}
 
 /**
  *
@@ -41,7 +41,7 @@ server::component::database::WorldMap::~WorldMap() {}
  * @param posY
  * @return
  */
-server::component::database::WorldMap* server::component::database::WorldMap::select(int posX, int posY)
+openLife::server::component::database::WorldMap* openLife::server::component::database::WorldMap::select(int posX, int posY)
 {
 	unsigned int x = (unsigned)((signed)this->center.x+posX);
 	if(x<0) x = 0;
@@ -60,7 +60,7 @@ server::component::database::WorldMap* server::component::database::WorldMap::se
  *
  * @param mapZone
  */
-void server::component::database::WorldMap::insert(common::object::entity::MapZone* mapZone)
+void openLife::server::component::database::WorldMap::insert(common::object::entity::MapZone* mapZone)
 {
 	unsigned int i;
 	unsigned int x, y;
@@ -79,26 +79,26 @@ void server::component::database::WorldMap::insert(common::object::entity::MapZo
  *
  * @return
  */
-int server::component::database::WorldMap::getBiome()
+int openLife::server::component::database::WorldMap::getBiome()
 {
 	unsigned int idx;
 	idx = this->query.x+(this->query.y*this->width);
 	return this->biome[idx];
 }
 
-void server::component::database::WorldMap::useBiomeStorehouse(openLife::system::object::store::device::random::LinearDB* biomeStoreHouse)
+void openLife::server::component::database::WorldMap::useBiomeStorehouse(openLife::system::object::store::device::random::LinearDB* biomeStoreHouse)
 {
 	this->biomeStoreHouse = biomeStoreHouse;
 }
 
 //!
 
-void server::component::database::WorldMap::updateSecondPlaceIndex(int *outSecondPlaceIndex)
+void openLife::server::component::database::WorldMap::updateSecondPlaceIndex(int *outSecondPlaceIndex)
 {
 	this->tmp.outSecondPlaceIndex = outSecondPlaceIndex;
 }
 
-void server::component::database::WorldMap::updateSecondPlaceGap(double *outSecondPlaceGap)
+void openLife::server::component::database::WorldMap::updateSecondPlaceGap(double *outSecondPlaceGap)
 {
 	this->tmp.outSecondPlaceGap = outSecondPlaceGap;
 }

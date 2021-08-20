@@ -13,9 +13,9 @@
 #include "src/common/type/database/lineardb3.h"
 #include "src/system/_base/object/entity/exception.h"
 
-Server* realServer;
+openLife::Server* server;
 
-server::component::database::WorldMap* worldMap;
+openLife::server::component::database::WorldMap* worldMap;
 char anyBiomesInDB = false;//legacy: static char anyBiomesInDB = false;
 int maxBiomeXLoc = -2000000000;//legacy: static int maxBiomeXLoc = -2000000000;
 int maxBiomeYLoc = -2000000000;//legacy: static int maxBiomeYLoc = -2000000000;
@@ -50,9 +50,8 @@ int main()
 	newBiomeDB = new openLife::system::object::store::device::random::LinearDB(biomeDBSettings);
 	newBiomeDB->init(&biomeDB);
 
-	extern Server* realServer;//TODO: change socket object name from server to socket and rename realServer to server
-	realServer = new Server();
-	realServer->init();
+	server = new openLife::Server();
+	server->init();
 
 
 	//!net map biome around spawning zone
@@ -80,10 +79,10 @@ int main()
 		}
 	}
 
-	worldMap = new server::component::database::WorldMap(2048, 2048, 0);
+	worldMap = new openLife::server::component::database::WorldMap(2048, 2048, 0);
 	//worldMap->select(-256,-256)->insert(mapZone);
 	/*******/
-	//realServer->start();
+	//server->start();
 
 	try
 	{

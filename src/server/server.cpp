@@ -6,27 +6,27 @@
 #include "src/server/component/channel/speech.h"
 #include "src/server/component/database/gameFeatures.h"
 
-server::component::channel::SpeechService* speechService;
-server::component::database::GameFeatures* gameFeatures;
+openLife::server::component::channel::SpeechService* speechService;
+openLife::server::component::database::GameFeatures* gameFeatures;
 
-Server::Server() {}
-Server::~Server() {}
+openLife::Server::Server() {}
+openLife::Server::~Server() {}
 
-void Server::init()
+void openLife::Server::init()
 {
-	speechService = new server::component::channel::SpeechService();
-	gameFeatures = new server::component::database::GameFeatures();
+	speechService = new openLife::server::component::channel::SpeechService();
+	gameFeatures = new openLife::server::component::database::GameFeatures();
 }
 
-void Server::start()
+void openLife::Server::start()
 {}
 
-int Server::initMap()
+int openLife::Server::initMap()
 {
 	return 0;
 }
 
-void Server::initSpeechService()
+void openLife::Server::initSpeechService()
 {
 
 }

@@ -11,10 +11,10 @@ int maxSpeechPipeIndex = 0;
 SimpleVector<GridPos> *speechPipesIn = NULL;
 SimpleVector<GridPos> *speechPipesOut = NULL;
 
-server::component::channel::SpeechService::SpeechService() {}
-server::component::channel::SpeechService::~SpeechService() {}
+openLife::server::component::channel::SpeechService::SpeechService() {}
+openLife::server::component::channel::SpeechService::~SpeechService() {}
 
-void server::component::channel::SpeechService::init()
+void openLife::server::component::channel::SpeechService::init()
 {
 	numSpeechPipes = this->getMaxSpeechPipeIndex() + 1;
 
@@ -22,7 +22,7 @@ void server::component::channel::SpeechService::init()
 	speechPipesOut = new SimpleVector<GridPos>[ numSpeechPipes ];
 }
 
-int server::component::channel::SpeechService::getMaxSpeechPipeIndex()
+int openLife::server::component::channel::SpeechService::getMaxSpeechPipeIndex()
 {
 	return maxSpeechPipeIndex;
 }

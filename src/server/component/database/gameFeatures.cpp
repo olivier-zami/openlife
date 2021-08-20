@@ -11,10 +11,10 @@ SimpleVector<double> recentlyUsedPrimaryEvePositionTimes;
 SimpleVector<GridPos> recentlyUsedPrimaryEvePositions;
 SimpleVector<int> recentlyUsedPrimaryEvePositionPlayerIDs;
 
-server::component::database::GameFeatures::GameFeatures() {}
-server::component::database::GameFeatures::~GameFeatures() {}
+openLife::server::component::database::GameFeatures::GameFeatures() {}
+openLife::server::component::database::GameFeatures::~GameFeatures() {}
 
-void server::component::database::GameFeatures::deleteEveFeatures1()
+void openLife::server::component::database::GameFeatures::deleteEveFeatures1()
 {
 	eveSecondaryLocObjectIDs.deleteAll();
 	recentlyUsedPrimaryEvePositionTimes.deleteAll();

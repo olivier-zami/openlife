@@ -12,7 +12,7 @@
 
 #include "src/server/component/database/worldMap.h"
 
-extern server::component::database::WorldMap* worldMap;
+extern openLife::server::component::database::WorldMap* worldMap;
 
 extern int* biomes;
 extern char anyBiomesInDB;

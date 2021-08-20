@@ -5,20 +5,21 @@
 #ifndef OPENLIFE_SERVER_H
 #define OPENLIFE_SERVER_H
 
-
-class Server
+namespace openLife
 {
-	public:
-		Server();
-		~Server();
+	class Server
+	{
+		public:
+			Server();
+			~Server();
 
-		void init();
-		void start();
+			void init();
+			void start();
 
-	//private:
-		int initMap();
-		void initSpeechService();
-};
-
+			//private:
+			int initMap();
+			void initSpeechService();
+	};
+}
 
 #endif //OPENLIFE_SERVER_H
