@@ -31,18 +31,18 @@ int main( int inNumArgs, char **inArgs ) {
         usage( inArgs[0] );
         }
 
-    SocketServer *server = new SocketServer( port, 100 );
+    SocketServer *socketServer = new SocketServer( port, 100 );
 
     char timedOut;
     Socket *sock;
 
     printf( "waiting for connection on port %d\n", port );
-    sock = server->acceptConnection( 5000, &timedOut );
+    sock = socketServer->acceptConnection( 5000, &timedOut );
 
     if( timedOut ) {
 
         printf( "timed out after 5 seconds, waiting again\n" );
-        sock = server->acceptConnection( 5000, &timedOut );
+        sock = socketServer->acceptConnection( 5000, &timedOut );
 
         }
 
@@ -56,7 +56,7 @@ int main( int inNumArgs, char **inArgs ) {
         }
     
 
-    delete server;
+    delete socketServer;
     
 
     return 1;

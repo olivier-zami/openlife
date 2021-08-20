@@ -38,11 +38,11 @@ int main( int inNumArgs, char **inArgs ) {
 		usage( inArgs[0] );
 		}
 	
-	SocketServer *server = new SocketServer( port, 100 );
+	SocketServer *socketServer = new SocketServer( port, 100 );
 
 	while( true ) {
 		printf( "waiting for a connection on port %d\n", port );
-		Socket *sock = server->acceptConnection();
+		Socket *sock = socketServer->acceptConnection();
 
 		printf( "connection received\n" );
 		
@@ -125,7 +125,7 @@ int main( int inNumArgs, char **inArgs ) {
 		delete stream;
 		}
 
-	delete server;
+	delete socketServer;
 
 	return 1;
 	}

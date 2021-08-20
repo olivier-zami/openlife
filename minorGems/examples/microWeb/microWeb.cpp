@@ -43,11 +43,11 @@ int main( char inNumArgs, char **inArgs ) {
 
 	delete [] fileNameBuffer;
 	
-	WebServer *server = new WebServer( configFile );
+	WebServer *webServer = new WebServer( configFile );
 
-	server->runServer();
+	webServer->runServer();
 
-	delete server;
+	delete webServer;
 	}
 
 

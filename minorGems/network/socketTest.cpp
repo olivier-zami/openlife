@@ -41,10 +41,10 @@ int main() {
 
 	int port = 5158;
     
-	SocketServer *server = new SocketServer( port, 100 );
+	SocketServer *socketServer = new SocketServer( port, 100 );
 	
 	printf( "Waiting for a connection on port %d\n", port );
-	Socket *receiveSocket = server->acceptConnection();
+	Socket *receiveSocket = socketServer->acceptConnection();
 	
 	if( receiveSocket == NULL ) {
 		return 1;
@@ -97,7 +97,7 @@ int main() {
 
     delete receiveStream;
 	delete receiveSocket;
-	delete server;
+	delete socketServer;
 	
 	return 0;
 	} 

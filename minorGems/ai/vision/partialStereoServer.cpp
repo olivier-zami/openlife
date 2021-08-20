@@ -50,10 +50,10 @@ int main( int inNumArgs, char **inArgs ) {
 		windowSize, randSource );
 	
 	
-	SocketServer *server = new SocketServer( port, 50 );
+	SocketServer *socketServer = new SocketServer( port, 50 );
 	
 	printf( "waiting for a connection\n" );
-	Socket *sock = server->acceptConnection();
+	Socket *sock = socketServer->acceptConnection();
 	printf( "connection received.\n" );
 	
 	SocketStream *stream = new SocketStream( sock );
@@ -100,7 +100,7 @@ int main( int inNumArgs, char **inArgs ) {
 	
 	delete stereo;
 	delete randSource;
-	delete server;
+	delete socketServer;
 	delete stream;
 	
 	return 0;

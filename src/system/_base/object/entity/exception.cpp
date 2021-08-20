@@ -49,6 +49,7 @@ openLife::system::object::entity::Exception::Exception(const char *message, ...)
 	}
 	else this->message = "Throw of an exception without description";
 }
+
 openLife::system::object::entity::Exception::~Exception() {}
 
 openLife::system::object::entity::Exception *openLife::system::object::entity::Exception::operator()(const char *message)

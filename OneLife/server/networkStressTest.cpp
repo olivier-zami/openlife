@@ -9,9 +9,9 @@
 int main() {
     printf( "Listening on port 9000\n" );
     
-    SocketServer server( 9000, 10 );
+    SocketServer socketServer( 9000, 10 );
     
-    Socket *sock = server.acceptConnection( -1 );
+    Socket *sock = socketServer.acceptConnection( -1 );
     
     if( sock != NULL ) {
         
