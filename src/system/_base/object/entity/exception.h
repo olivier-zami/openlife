@@ -12,7 +12,7 @@ namespace openLife::system::object::entity
 	class Exception
 	{
 		public:
-			Exception(const char* message = nullptr);
+			Exception(const char* message = nullptr, ...);
 			~Exception();
 
 			openLife::system::object::entity::Exception* operator()(const char* message);
