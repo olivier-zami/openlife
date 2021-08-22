@@ -10,9 +10,9 @@
 
 #include "minorGems/game/doublePair.h"
 
-#include "src/server/component/database/worldMap.h"
+#include "src/server/service/database/worldMap.h"
 
-extern openLife::server::component::database::WorldMap* worldMap;
+extern openLife::server::service::database::WorldMap* worldMap;
 
 extern int* biomes;
 extern char anyBiomesInDB;

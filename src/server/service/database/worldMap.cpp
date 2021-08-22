@@ -19,7 +19,7 @@ extern openLife::system::object::store::device::random::LinearDB *newBiomeDB;
  * @param height
  * @param detail
  */
-openLife::server::component::database::WorldMap::WorldMap(unsigned int width, unsigned int height, unsigned int detail=4)
+openLife::server::service::database::WorldMap::WorldMap(unsigned int width, unsigned int height, unsigned int detail=4)
 {
 	this->width = width;
 	this->height = height;
@@ -33,7 +33,7 @@ openLife::server::component::database::WorldMap::WorldMap(unsigned int width, un
 /**
  *
  */
-openLife::server::component::database::WorldMap::~WorldMap() {}
+openLife::server::service::database::WorldMap::~WorldMap() {}
 
 /**
  *
@@ -41,7 +41,7 @@ openLife::server::component::database::WorldMap::~WorldMap() {}
  * @param posY
  * @return
  */
-openLife::server::component::database::WorldMap* openLife::server::component::database::WorldMap::select(int posX, int posY)
+openLife::server::service::database::WorldMap* openLife::server::service::database::WorldMap::select(int posX, int posY)
 {
 	unsigned int x = (unsigned)((signed)this->center.x+posX);
 	if(x<0) x = 0;
@@ -60,7 +60,7 @@ openLife::server::component::database::WorldMap* openLife::server::component::da
  *
  * @param mapZone
  */
-void openLife::server::component::database::WorldMap::insert(common::object::entity::MapZone* mapZone)
+void openLife::server::service::database::WorldMap::insert(common::object::entity::MapZone* mapZone)
 {
 	unsigned int i;
 	unsigned int x, y;
@@ -79,29 +79,31 @@ void openLife::server::component::database::WorldMap::insert(common::object::ent
  *
  * @return
  */
-int openLife::server::component::database::WorldMap::getBiome()
+int openLife::server::service::database::WorldMap::getBiome()
 {
 	unsigned int idx;
 	idx = this->query.x+(this->query.y*this->width);
 	return this->biome[idx];
 }
 
-void openLife::server::component::database::WorldMap::useBiomeStorehouse(openLife::system::object::store::device::random::LinearDB* biomeStoreHouse)
+void openLife::server::service::database::WorldMap::useBiomeStorehouse(openLife::system::object::store::device::random::LinearDB* biomeStoreHouse)
 {
 	this->biomeStoreHouse = biomeStoreHouse;
 }
 
 //!
 
-void openLife::server::component::database::WorldMap::updateSecondPlaceIndex(int *outSecondPlaceIndex)
+void openLife::server::service::database::WorldMap::updateSecondPlaceIndex(int *outSecondPlaceIndex)
 {
 	this->tmp.outSecondPlaceIndex = outSecondPlaceIndex;
 }
 
-void openLife::server::component::database::WorldMap::updateSecondPlaceGap(double *outSecondPlaceGap)
+void openLife::server::service::database::WorldMap::updateSecondPlaceGap(double *outSecondPlaceGap)
 {
 	this->tmp.outSecondPlaceGap = outSecondPlaceGap;
 }
+
+extern openLife::server::service::database::WorldMap* worldMap;
 
 int getMapBiomeIndex( int inX, int inY,
 					  int *outSecondPlaceIndex,
@@ -203,8 +205,8 @@ int getMapBiomeIndex( int inX, int inY,
 	}
 
 
-	int newBiome = worldMap->select(inX,inY)->getBiome();
-	if(newBiome != -1) pickedBiome = newBiome;
+	//int newBiome = worldMap->select(inX,inY)->getBiome();
+	//if(newBiome != -1) pickedBiome = newBiome;
 	return pickedBiome;
 }
 

@@ -3,7 +3,7 @@
 #include "minorGems/io/file/FileOutputStream.h"
 
 #include "src/server/server.h"
-#include "src/server/component/database/worldMap.h"
+#include "src/server/service/database/worldMap.h"
 #include "HashTable.h"
 #include "monument.h"
 #include "arcReport.h"
@@ -2890,38 +2890,28 @@ char initMap()
     mapCacheClear();
     
     edgeObjectID = SettingsManager::getIntSetting( "edgeObject", 0 );
-    
-    minEveCampRespawnAge = 
-        SettingsManager::getFloatSetting( "minEveCampRespawnAge", 60.0f );
-    
-
+    minEveCampRespawnAge = SettingsManager::getFloatSetting( "minEveCampRespawnAge", 60.0f );
     barrierRadius = SettingsManager::getIntSetting( "barrierRadius", 250 );
     barrierOn = SettingsManager::getIntSetting( "barrierOn", 1 );
-    
-    longTermCullEnabled =
-        SettingsManager::getIntSetting( "longTermNoLookCullEnabled", 1 );
+    longTermCullEnabled = SettingsManager::getIntSetting( "longTermNoLookCullEnabled", 1 );
 
-    
-    SimpleVector<int> *list = 
-        SettingsManager::getIntSettingMulti( "barrierObjects" );
-        
+    SimpleVector<int> *list = SettingsManager::getIntSettingMulti( "barrierObjects" );
     barrierItemList.deleteAll();
     barrierItemList.push_back_other( list );
     delete list;
     
     
 
-    for( int i=0; i<NUM_RECENT_PLACEMENTS; i++ ) {
+    for( int i=0; i<NUM_RECENT_PLACEMENTS; i++ )
+    {
         recentPlacements[i].pos.x = 0;
         recentPlacements[i].pos.y = 0;
         recentPlacements[i].depth = 0;
-        }
-    
-
+    }
     nextPlacementIndex = 0;
-    
     FILE *placeFile = fopen( "recentPlacements.txt", "r" );
-    if( placeFile != NULL ) {
+    if( placeFile != NULL )
+    {
         for( int i=0; i<NUM_RECENT_PLACEMENTS; i++ ) {
             fscanf( placeFile, "%d,%d %d", 
                     &( recentPlacements[i].pos.x ),
@@ -2929,43 +2919,40 @@ char initMap()
                     &( recentPlacements[i].depth ) );
             }
         fscanf( placeFile, "\nnextPlacementIndex=%d", &nextPlacementIndex );
-        
         fclose( placeFile );
-        }
+    }
     
 
     FILE *eveRadFile = fopen( "eveRadius.txt", "r" );
-    if( eveRadFile != NULL ) {
+    if( eveRadFile != NULL )
+    {
         
         fscanf( eveRadFile, "%d", &eveRadius );
 
         fclose( eveRadFile );
-        }
+    }
 
     FILE *eveLocFile = fopen( "lastEveLocation.txt", "r" );
-    if( eveLocFile != NULL ) {
-        
+    if( eveLocFile != NULL )
+    {
         fscanf( eveLocFile, "%d,%d", &( eveLocation.x ), &( eveLocation.y ) );
-
         fclose( eveLocFile );
-
         printf( "Loading lastEveLocation %d,%d\n", 
                 eveLocation.x, eveLocation.y );
-        }
+    }
 
     // override if shutdownLongLineagePos exists
     FILE *lineagePosFile = fopen( "shutdownLongLineagePos.txt", "r" );
-    if( lineagePosFile != NULL ) {
-        
+    if( lineagePosFile != NULL )
+    {
         fscanf( lineagePosFile, "%d,%d", 
                 &( eveLocation.x ), &( eveLocation.y ) );
-
         fclose( lineagePosFile );
-
         printf( "Overriding eveLocation with shutdownLongLineagePos %d,%d\n", 
                 eveLocation.x, eveLocation.y );
-        }
-    else {
+    }
+    else
+    {
         printf( "No shutdownLongLineagePos.txt file exists\n" );
         
         // look for longest monument log file
@@ -3027,50 +3014,39 @@ char initMap()
                         eveLocation.x, eveLocation.y );
                 }
             }
-        }
+    }
     
 
-
-
-
-    
     const char *lookTimeDBName = "lookTime.db";
-    
     char lookTimeDBExists = false;
-    
     File lookTimeDBFile( NULL, lookTimeDBName );
-
-
-
-    if( lookTimeDBFile.exists() &&
-        SettingsManager::getIntSetting( "flushLookTimes", 0 ) ) {
-        
+    if( lookTimeDBFile.exists() && SettingsManager::getIntSetting( "flushLookTimes", 0 ) )
+    {
         AppLog::info( "flushLookTimes.ini set, deleting lookTime.db" );
-        
         lookTimeDBFile.remove();
-        }
-
-
+    }
     
     lookTimeDBExists = lookTimeDBFile.exists();
 
-    if( ! lookTimeDBExists ) {
+    if( ! lookTimeDBExists )
+    {
         lookTimeDBEmpty = true;
-        }
+    }
 
 
-    skipLookTimeCleanup = 
-        SettingsManager::getIntSetting( "skipLookTimeCleanup", 0 );
+    skipLookTimeCleanup = SettingsManager::getIntSetting( "skipLookTimeCleanup", 0 );
 
 
-    if( skipLookTimeCleanup ) {
+    if( skipLookTimeCleanup )
+    {
         AppLog::info( "skipLookTimeCleanup.ini flag set, "
                       "not cleaning databases based on stale look times." );
-        }
+    }
 
     LINEARDB3_setMaxLoad( 0.80 );
     
-    if( ! skipLookTimeCleanup ) {
+    if( ! skipLookTimeCleanup )
+    {
         DB lookTimeDB_old;
         
         int error = DB_open( &lookTimeDB_old, 
@@ -3083,10 +3059,11 @@ char initMap()
                                // "double" on the server platform uses
                              );
     
-        if( error ) {
+        if( error )
+        {
             AppLog::errorF( "Error %d opening look time KissDB", error );
             return false;
-            }
+        }
     
 
         int staleSec = 
@@ -3203,7 +3180,7 @@ char initMap()
         else {
             DB_close( &lookTimeDB_old );
             }
-        }
+    }
 
 
     int error = DB_open( &lookTimeDB, 
@@ -3311,6 +3288,7 @@ char initMap()
 
 
 
+    /******************************************************************************************************************/
     error = DB_open_timeShrunk( &biomeDB, 
                          "biome.db", 
                          KISSDB_OPEN_MODE_RWCREAT,
@@ -3341,7 +3319,8 @@ char initMap()
     unsigned char biomeValue[12];
     
 
-    while( DB_Iterator_next( &biomeDBi, biomeKey, biomeValue ) > 0 ) {
+    while( DB_Iterator_next( &biomeDBi, biomeKey, biomeValue ) > 0 )
+    {
         int x = valueToInt( biomeKey );
         int y = valueToInt( &( biomeKey[4] ) );
         
@@ -3365,6 +3344,7 @@ char initMap()
             "Max (x,y) of biome in db = (%d,%d)\n",
             minBiomeXLoc, minBiomeYLoc,
             maxBiomeXLoc, maxBiomeYLoc );
+    /******************************************************************************************************************/
     
             
 
@@ -3928,8 +3908,8 @@ char initMap()
     SimpleVector<char*> *specialPlacements = 
         SettingsManager::getSetting( "specialMapPlacements" );
     
-    if( specialPlacements != NULL ) {
-        
+    if( specialPlacements != NULL )
+    {
         for( int i=0; i<specialPlacements->size(); i++ ) {
             char *line = specialPlacements->getElementDirect( i );
             
@@ -3942,11 +3922,9 @@ char initMap()
                 }
             setMapObject( x, y, id );
             }
-
-
         specialPlacements->deallocateStringElements();
         delete specialPlacements;
-        }
+    }
     
     
     reseedMap( false );
@@ -3963,7 +3941,7 @@ char initMap()
 
 
     return true;
-    }
+}
 
 
 

@@ -28,6 +28,7 @@ ${DIR_APP_SERVER}/server.cpp \
 ${DIR_APP_SERVER}/map.cpp \
 ${DIR_APP_SERVER}/../../minorGems/io/file/File.cpp \
 ${DIR_APP_SERVER}/../../src/common/object/entity/mapZone.cpp \
+${DIR_APP_SERVER}/../../src/server/service/database/worldMap.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/object/process/service.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/file.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/hash/murmurhash.cpp \
@@ -42,7 +43,6 @@ ${DIR_APP_SERVER}/../../src/common/system/time.cpp \
 ${DIR_APP_SERVER}/../../src/server/server.cpp \
 ${DIR_APP_SERVER}/../../src/server/component/channel/speech.cpp \
 ${DIR_APP_SERVER}/../../src/server/component/database/gameFeatures.cpp \
-${DIR_APP_SERVER}/../../src/server/component/database/worldMap.cpp \
 ${DIR_APP_SERVER}/../gameSource/transitionBank.cpp \
 ${DIR_APP_SERVER}/../gameSource/categoryBank.cpp \
 ${DIR_APP_SERVER}/../gameSource/objectBank.cpp \

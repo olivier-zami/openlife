@@ -7,7 +7,7 @@
 #include "server.h"
 #include "src/common/system.h"
 #include "src/common/object/entity/mapZone.h"
-#include "src/server/component/database/worldMap.h"
+#include "src/server/service/database/worldMap.h"
 #include "src/common/process/convert/image.h"
 #include "src/system/_base/settings/linearDB.h"
 #include "src/common/type/database/lineardb3.h"
@@ -15,7 +15,7 @@
 
 openLife::Server* server;
 
-openLife::server::component::database::WorldMap* worldMap;
+
 char anyBiomesInDB = false;//legacy: static char anyBiomesInDB = false;
 int maxBiomeXLoc = -2000000000;//legacy: static int maxBiomeXLoc = -2000000000;
 int maxBiomeYLoc = -2000000000;//legacy: static int maxBiomeYLoc = -2000000000;
@@ -36,10 +36,14 @@ char biomeDBOpen = false;
 
 openLife::system::object::store::device::random::LinearDB *newBiomeDB;
 
+openLife::server::service::database::WorldMap* worldMap;
+
 int main()
 {
 	server = new openLife::Server();
 
+	worldMap = new openLife::server::service::database::WorldMap(2048, 2048, 0);
+	//worldMap->select(-256,-256)->insert(mapZone);
 	//server->useService("worldMap");
 
 	if(!openLife::system::isFileWritable())
@@ -84,8 +88,6 @@ int main()
 		}
 	}
 
-	worldMap = new openLife::server::component::database::WorldMap(2048, 2048, 0);
-	//worldMap->select(-256,-256)->insert(mapZone);
 	/*******/
 
 	try

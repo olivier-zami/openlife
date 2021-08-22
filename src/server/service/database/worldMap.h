@@ -10,7 +10,7 @@
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/common/object/entity/mapZone.h"
 
-namespace openLife::server::component::database
+namespace openLife::server::service::database
 {
 	class WorldMap
 	{
