@@ -31,11 +31,17 @@ int cellsLookedAtToInit = 0;
 LINEARDB3 biomeDB;
 char biomeDBOpen = false;
 
+#include "src/server/definition/services.h"
+
 
 openLife::system::object::store::device::random::LinearDB *newBiomeDB;
 
 int main()
 {
+	server = new openLife::Server();
+
+	//server->useService("worldMap");
+
 	if(!openLife::system::isFileWritable())
 	{
 		openLife::system::notice("File system read-only.  Server exiting.");
@@ -50,8 +56,7 @@ int main()
 	newBiomeDB = new openLife::system::object::store::device::random::LinearDB(biomeDBSettings);
 	newBiomeDB->init(&biomeDB);
 
-	server = new openLife::Server();
-	server->init();
+
 
 
 	//!net map biome around spawning zone
@@ -82,7 +87,6 @@ int main()
 	worldMap = new openLife::server::component::database::WorldMap(2048, 2048, 0);
 	//worldMap->select(-256,-256)->insert(mapZone);
 	/*******/
-	//server->start();
 
 	try
 	{
@@ -462,9 +466,9 @@ int main()
 
 
 
-		SocketServer *server = new SocketServer( port, 256 );
+		SocketServer *socketServer = new SocketServer( port, 256 );
 
-		sockPoll.addSocketServer( server );
+		sockPoll.addSocketServer( socketServer );
 
 		AppLog::infoF( "Listening for connection on port %d", port );
 
@@ -499,7 +503,7 @@ int main()
 			}
 		*/
 
-
+		server->start();
 		while( !quit )
 		{
 			double curStepTime = Time::getCurrentTime();
@@ -968,7 +972,7 @@ int main()
 
 			if( readySock != NULL && !readySock->isSocket ) {
 				// server ready
-				Socket *sock = server->acceptConnection( 0 );
+				Socket *sock = socketServer->acceptConnection( 0 );
 
 				if( sock != NULL ) {
 					HostAddress *a = sock->getRemoteHostAddress();
@@ -12482,7 +12486,7 @@ int main()
 
 		// Closing the server socket makes these connection requests fail
 		// instantly (instead of relying on client timeouts).
-		delete server;
+		delete socketServer;
 
 		quitCleanup();
 
