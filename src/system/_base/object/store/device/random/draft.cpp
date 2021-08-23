@@ -43,7 +43,7 @@ int DB_open_timeShrunk(
 		unsigned long hash_table_size,
 		unsigned long key_size,
 		unsigned long value_size)
-		{
+{
 	File dbFile( NULL, path );
 
 	if( ! dbFile.exists() || lookTimeDBEmpty || skipLookTimeCleanup )
@@ -229,7 +229,7 @@ int DB_open_timeShrunk(
 						   hash_table_size,
 						   key_size,
 						   value_size );
-		}
+}
 
 int LINEARDB3_open(
 		LINEARDB3 *inDB,

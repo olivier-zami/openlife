@@ -178,6 +178,8 @@ extern GridPos getClosestPlayerPos( int inX, int inY );
 
 extern int getNumPlayers();
 
+extern openLife::server::service::database::WorldMap* worldMap;
+
 
 
 // track recent placements to determine camp where
@@ -3289,6 +3291,8 @@ char initMap()
 
 
     /******************************************************************************************************************/
+
+    /*
     error = DB_open_timeShrunk( &biomeDB, 
                          "biome.db", 
                          KISSDB_OPEN_MODE_RWCREAT,
@@ -3300,6 +3304,9 @@ char initMap()
                          // 3: second place biome gap as int (float gap
                          //    multiplied by 1,000,000)
                          );
+                         */
+
+    error = worldMap->init();
     
     if( error ) {
         AppLog::errorF( "Error %d opening biome KissDB", error );

@@ -40,60 +40,72 @@ openLife::server::service::database::WorldMap* worldMap;
 
 int main()
 {
-	server = new openLife::Server();
-
-	worldMap = new openLife::server::service::database::WorldMap(2048, 2048, 0);
-	//worldMap->select(-256,-256)->insert(mapZone);
-	//server->useService("worldMap");
-
-	if(!openLife::system::isFileWritable())
-	{
-		openLife::system::notice("File system read-only.  Server exiting.");
-		return 1;
-	}
-
-	openLife::system::notice("Attempt to start the server ...");
-
-	/*******/
-	openLife::system::settings::LinearDB biomeDBSettings;
-
-	newBiomeDB = new openLife::system::object::store::device::random::LinearDB(biomeDBSettings);
-	newBiomeDB->init(&biomeDB);
-
-
-
-
-	//!net map biome around spawning zone
-	common::object::entity::MapZone* mapZone;
-	mapZone = common::process::convert::image::getMapZoneFromBitmap("/home/olivier/Projets/OpenLife/data/images/maps/mini_map.bmp");
-	for(long unsigned int i=0; i<mapZone->getSize(); i++)
-	{
-		switch(mapZone->p(i))
-		{
-
-			case 16777215:	mapZone->p(i) = 6; break;//polar
-			/*
-			case 255:		mapZone->p(i) = -1; break;//water
-			 */
-			case 8355711:	mapZone->p(i) = 3; break;//montain/taiga/toundra
-			case 65280:		mapZone->p(i) = 1; break;//grassland
-			case 32639:		mapZone->p(i) = 0; break;//swamp
-			case 16744192:	mapZone->p(i) = 2; break;//savannah mediterranean
-			case 16776960:	mapZone->p(i) = 5; break;//desert
-			case 32512:		mapZone->p(i) = 4; break;//jungle
-			default:
-				std::cout << "\nConvert biome (default) value " << mapZone->p(i) << " to " << 1;
-				mapZone->p(i) = 1;
-				break;
-		}
-	}
-
-	/*******/
-
 	try
 	{
-		//!old
+		//!new
+		server = new openLife::Server();
 
+		/**
+		 * InitMap() : server/map.cpp => l2879
+		 **/
+
+		//!
+		openLife::system::settings::LinearDB biomeDBSettings;
+		newBiomeDB = new openLife::system::object::store::device::random::LinearDB(biomeDBSettings);
+		newBiomeDB->init(&biomeDB);
+
+		//!set worldMap
+		openLife::system::settings::database::WorldMap worldMapSetting;
+		worldMapSetting.filename = "biome.db";
+		worldMapSetting.mapSize.width = 10;
+		worldMapSetting.mapSize.height = 10;
+		worldMap = new openLife::server::service::database::WorldMap(worldMapSetting);
+		worldMap->handleBiomeDB(&biomeDB);
+
+		//worldMap->select(-256,-256)->insert(mapZone);
+		//server->useService("worldMap");
+
+		if(!openLife::system::isFileWritable())
+		{
+			openLife::system::notice("File system read-only.  Server exiting.");
+			return 1;
+		}
+
+		openLife::system::notice("Attempt to start the server ...");
+
+
+
+
+
+
+		//!net map biome around spawning zone
+		common::object::entity::MapZone* mapZone;
+		mapZone = common::process::convert::image::getMapZoneFromBitmap("/home/olivier/Projets/OpenLife/data/images/maps/mini_map.bmp");
+		for(long unsigned int i=0; i<mapZone->getSize(); i++)
+		{
+			switch(mapZone->p(i))
+			{
+
+				case 16777215:	mapZone->p(i) = 6; break;//polar
+				/*
+				case 255:		mapZone->p(i) = -1; break;//water
+				 */
+				case 8355711:	mapZone->p(i) = 3; break;//montain/taiga/toundra
+				case 65280:		mapZone->p(i) = 1; break;//grassland
+				case 32639:		mapZone->p(i) = 0; break;//swamp
+				case 16744192:	mapZone->p(i) = 2; break;//savannah mediterranean
+				case 16776960:	mapZone->p(i) = 5; break;//desert
+				case 32512:		mapZone->p(i) = 4; break;//jungle
+				default:
+					std::cout << "\nConvert biome (default) value " << mapZone->p(i) << " to " << 1;
+					mapZone->p(i) = 1;
+					break;
+			}
+		}
+
+		/*******/
+
+		//!old
 		//feature family stuff
 		familyDataLogFile = fopen( "familyDataLog.txt", "a" );
 		if( familyDataLogFile != NULL ) {

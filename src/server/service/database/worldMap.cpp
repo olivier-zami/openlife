@@ -6,12 +6,21 @@
 
 #include <iostream>
 
-#include "OneLife/server/map.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
+
+//!legacy
+#include "minorGems/util/log/AppLog.h"
+#include "minorGems/io/file/File.h"
+#include "src/system/_base/object/store/device/random/draft.h"
+#include "OneLife/server/map.h"
+#include "minorGems/util/stringUtils.h"
 #include "OneLife/server/dbCommon.h"
 
 extern LINEARDB3 biomeDB;
 extern openLife::system::object::store::device::random::LinearDB *newBiomeDB;
+extern char lookTimeDBEmpty;
+extern char skipLookTimeCleanup;
+extern int cellsLookedAtToInit;
 
 /**
  *
@@ -19,21 +28,216 @@ extern openLife::system::object::store::device::random::LinearDB *newBiomeDB;
  * @param height
  * @param detail
  */
-openLife::server::service::database::WorldMap::WorldMap(unsigned int width, unsigned int height, unsigned int detail=4)
+openLife::server::service::database::WorldMap::WorldMap(openLife::system::settings::database::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail=4*/)
 {
-	this->width = width;
-	this->height = height;
+	this->width = settings.mapSize.width;
+	this->height = settings.mapSize.height;
 	this->center.x = (unsigned int)this->width/2;
 	this->center.y = (unsigned int)this->height/2;
 	this->idxMax = this->width*this->height;
 	this->biome = std::vector<int>(this->idxMax);
 	std::fill(this->biome.begin(), this->biome.end(), -1);
+
+	this->settings = settings;
 }
 
 /**
  *
  */
 openLife::server::service::database::WorldMap::~WorldMap() {}
+
+/**
+ *
+ * @param biomeDB
+ * @note temporary methods
+ */
+void openLife::server::service::database::WorldMap::handleBiomeDB(LINEARDB3* biomeDB)
+{
+	this->biomeDB = biomeDB;
+}
+
+/**
+ *
+ */
+int openLife::server::service::database::WorldMap::init()
+{
+	//!legacy => DB_open_timeShrunk(db=>this->biomeDB, path=>s.filename, mode=>KISSDB_OPEN_MODE_RWCREAT, hash_table_size=>80000, key_size=>8, value_size=>12)
+	const char* path = this->settings.filename.c_str();
+	int mode = 3;//#define KISSDB_OPEN_MODE_RWCREAT 3
+	unsigned long hash_table_size = 80000;
+	unsigned long key_size = 8;
+	unsigned long value_size = 12;
+
+	File dbFile( NULL, path);
+
+	if( ! dbFile.exists() || lookTimeDBEmpty || skipLookTimeCleanup )
+	{
+
+		if( lookTimeDBEmpty ) AppLog::infoF( "No lookTimes present, not cleaning %s", path );//TODO: use loginServiceInstance
+
+		int error = LINEARDB3_open( this->biomeDB,
+									path,
+									mode,
+									hash_table_size,
+									key_size,
+									value_size );
+
+		if( ! error && ! skipLookTimeCleanup )
+		{
+			// add look time for cells in this DB to present
+			// essentially resetting all look times to NOW
+			LINEARDB3_Iterator dbi;
+			LINEARDB3_Iterator_init( this->biomeDB, &dbi );
+			// key and value size that are big enough to handle all of our DB
+			unsigned char key[16];
+			unsigned char value[12];
+
+			while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 )
+			{
+				int x = valueToInt( key );
+				int y = valueToInt( &( key[4] ) );
+				cellsLookedAtToInit++;
+				dbLookTimePut( x, y, Time::timeSec() );
+			}
+		}
+		return error;
+	}
+
+	char *dbTempName = autoSprintf( "%s.temp", path );
+	File dbTempFile( NULL, dbTempName );
+
+	if( dbTempFile.exists() )
+	{
+		dbTempFile.remove();
+	}
+
+	if( dbTempFile.exists() )
+	{
+		AppLog::errorF( "Failed to remove temp DB file %s", dbTempName );
+		delete [] dbTempName;
+		return LINEARDB3_open( this->biomeDB,
+							   path,
+							   mode,
+							   hash_table_size,
+							   key_size,
+							   value_size );
+	}
+
+	LINEARDB3 oldDB;
+	int error = LINEARDB3_open( &oldDB,
+								path,
+								mode,
+								hash_table_size,
+								key_size,
+								value_size );
+	if( error )
+	{
+		AppLog::errorF( "Failed to open DB file %s in DB_open_timeShrunk", path );
+		delete [] dbTempName;
+		return error;
+	}
+
+	LINEARDB3_Iterator dbi;
+	LINEARDB3_Iterator_init( &oldDB, &dbi );
+
+	// key and value size that are big enough to handle all of our DB
+	unsigned char key[16];
+	unsigned char value[12];
+
+	int total = 0;
+	int stale = 0;
+	int nonStale = 0;
+
+	// first, just count
+	while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 )
+	{
+		total++;
+
+		int x = valueToInt( key );
+		int y = valueToInt( &( key[4] ) );
+
+		if( dbLookTimeGet( x, y ) > 0 )
+		{
+			// keep
+			nonStale++;
+		}
+		else {
+			// stale
+			// ignore
+			stale++;
+		}
+	}
+
+	// optimial size for DB of remaining elements
+	unsigned int newSize = LINEARDB3_getShrinkSize( &oldDB, nonStale );
+
+	AppLog::infoF( "Shrinking hash table in %s from %d down to %d",
+				   path,
+				   LINEARDB3_getCurrentSize( &oldDB ),
+				   newSize );
+
+
+	LINEARDB3 tempDB;
+
+	error = LINEARDB3_open( &tempDB,
+							dbTempName,
+							mode,
+							newSize,
+							key_size,
+							value_size );
+	if( error ) {
+		AppLog::errorF( "Failed to open DB file %s in DB_open_timeShrunk",
+						dbTempName );
+		delete [] dbTempName;
+		LINEARDB3_close( &oldDB );
+		return error;
+	}
+
+
+	// now that we have new temp db properly sized,
+	// iterate again and insert, but don't count
+	LINEARDB3_Iterator_init( &oldDB, &dbi );
+
+	while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 ) {
+		int x = valueToInt( key );
+		int y = valueToInt( &( key[4] ) );
+
+		if( dbLookTimeGet( x, y ) > 0 ) {
+			// keep
+			// insert it in temp
+			LINEARDB3_put( &tempDB, key, value );
+		}
+		else {
+			// stale
+			// ignore
+		}
+	}
+
+
+
+	AppLog::infoF( "Cleaned %d / %d stale map cells from %s", stale, total,
+				   path );
+
+	printf( "\n" );
+
+
+	LINEARDB3_close( &tempDB );
+	LINEARDB3_close( &oldDB );
+
+	dbTempFile.copy( &dbFile );
+	dbTempFile.remove();
+
+	delete [] dbTempName;
+
+	// now open new, shrunk file
+	return LINEARDB3_open( this->biomeDB,
+						   path,
+						   mode,
+						   hash_table_size,
+						   key_size,
+						   value_size );
+	/***/
+}
 
 /**
  *

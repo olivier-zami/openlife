@@ -2,12 +2,14 @@
 // Created by olivier on 07/08/2021.
 //
 
-#ifndef OPENLIFE_WORLDMAP_H
-#define OPENLIFE_WORLDMAP_H
+#ifndef OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H
+#define OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H
 
 #include <vector>
 #include <array>
+#include "src/system/_base/settings/database/worldMap.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
+#include "src/common/type/database/lineardb3.h"
 #include "src/common/object/entity/mapZone.h"
 
 namespace openLife::server::service::database
@@ -15,9 +17,14 @@ namespace openLife::server::service::database
 	class WorldMap
 	{
 		public:
-			WorldMap(unsigned int width, unsigned int height, unsigned int detail);
+			WorldMap(openLife::system::settings::database::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail*/);
 			~WorldMap();
 
+			//!temporary methods
+			void handleBiomeDB(LINEARDB3* biomeDB);
+			openLife::system::settings::database::WorldMap settings;
+
+			int init();
 			void insert(common::object::entity::MapZone* mapZone);
 			WorldMap* select(int posX, int posY);
 			int getBiome();
@@ -37,6 +44,8 @@ namespace openLife::server::service::database
 			std::vector<int> biome;
 			openLife::system::object::store::device::random::LinearDB* biomeStoreHouse;
 
+			LINEARDB3* biomeDB;
+
 			struct{
 				int *outSecondPlaceIndex;
 				double *outSecondPlaceGap;
@@ -51,4 +60,4 @@ int biomeDBGet( int inX, int inY,
 int getMapBiomeIndex( int inX, int inY,
 					  int *outSecondPlaceIndex = nullptr,
 					  double *outSecondPlaceGap = nullptr);
-#endif //OPENLIFE_WORLDMAP_H
+#endif //OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H
