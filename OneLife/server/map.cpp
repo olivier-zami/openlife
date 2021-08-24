@@ -36,7 +36,7 @@
 
 #include "minorGems/util/crc32.h"
 
-extern openLife::Server* server;
+
 
 
 /*
@@ -178,6 +178,7 @@ extern GridPos getClosestPlayerPos( int inX, int inY );
 
 extern int getNumPlayers();
 
+extern openLife::Server* server;
 extern openLife::server::service::database::WorldMap* worldMap;
 
 
@@ -672,38 +673,16 @@ static char hasPrimaryHomeland( int inLineageEveID ) {
 
 
 
-
+/**********************************************************************************************************************/
 static void biomeDBPut( int inX, int inY, int inValue, int inSecondPlace,
-                        double inSecondPlaceGap ) {
-    unsigned char key[8];
-    unsigned char value[12];
-    
-
-    intPairToKey( inX, inY, key );
-    intToValue( inValue, &( value[0] ) );
-    intToValue( inSecondPlace, &( value[4] ) );
-    intToValue( lrint( inSecondPlaceGap * gapIntScale ), 
-                &( value[8] ) );
-            
-    
-    anyBiomesInDB = true;
-
-    if( inX > maxBiomeXLoc ) {
-        maxBiomeXLoc = inX;
-        }
-    if( inX < minBiomeXLoc ) {
-        minBiomeXLoc = inX;
-        }
-    if( inY > maxBiomeYLoc ) {
-        maxBiomeYLoc = inY;
-        }
-    if( inY < minBiomeYLoc ) {
-        minBiomeYLoc = inY;
-        }
-    
-
-    DB_put( &biomeDB, key, value );
-    }
+                        double inSecondPlaceGap )
+{
+	openlife::system::type::record::Biome biomeRecord;
+	biomeRecord.value = inValue;
+	biomeRecord.secondPlace = inSecondPlace;
+	biomeRecord.secondPlaceGap = inSecondPlaceGap;
+	worldMap->select(inX, inY)->insert(biomeRecord);
+}
     
 
 
@@ -2474,7 +2453,11 @@ static char loadIntoMapFromFile( FILE *inFile,
 
 
         // set all test map directly in database
-        biomeDBPut( r.x, r.y, r.biome, r.biome, 0.5 );
+        openlife::system::type::record::Biome biomeRecord;
+        biomeRecord.value = r.biome;
+        biomeRecord.secondPlace = r.biome;
+        biomeRecord.secondPlaceGap = 0.5;
+        worldMap->select(r.x, r.y)->insert(biomeRecord);//biomeDBPut( r.x, r.y, r.biome, r.biome, 0.5 );
                 
         dbFloorPut( r.x, r.y, r.floor );
 
@@ -3291,20 +3274,6 @@ char initMap()
 
 
     /******************************************************************************************************************/
-
-    /*
-    error = DB_open_timeShrunk( &biomeDB, 
-                         "biome.db", 
-                         KISSDB_OPEN_MODE_RWCREAT,
-                         80000,
-                         8, // two 32-bit ints, xy
-                         12 // three ints,  
-                         // 1: biome number at x,y 
-                         // 2: second place biome number at x,y 
-                         // 3: second place biome gap as int (float gap
-                         //    multiplied by 1,000,000)
-                         );
-                         */
 
     error = worldMap->init();
     
@@ -5946,8 +5915,13 @@ int getTweakedBaseMap( int inX, int inY ) {
             getBiomeIndex( o->forceBiome ) != -1 ) {
             
             // naturally-occurring object that forces a biome
-            // stick into floorDB            
-            biomeDBPut( inX, inY, o->forceBiome, o->forceBiome, 0.5 );
+            // stick into floorDB
+            openlife::system::type::record::Biome biomeRecord;
+            biomeRecord.value = o->forceBiome;
+            biomeRecord.secondPlace = o->forceBiome;
+            biomeRecord.secondPlaceGap = 0.5;
+            worldMap->select(inX, inY)->insert(biomeRecord);//biomeDBPut( inX, inY, o->forceBiome, o->forceBiome, 0.5 );
+
 
             if( lastCheckedBiome != -1 &&
                 lastCheckedBiomeX == inX &&

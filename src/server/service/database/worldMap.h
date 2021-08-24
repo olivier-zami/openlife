@@ -8,6 +8,7 @@
 #include <vector>
 #include <array>
 #include "src/system/_base/settings/database/worldMap.h"
+#include "src/system/_base/type/record.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/common/object/entity/mapZone.h"
@@ -25,8 +26,9 @@ namespace openLife::server::service::database
 			openLife::system::settings::database::WorldMap settings;
 
 			int init();
-			void insert(common::object::entity::MapZone* mapZone);
 			WorldMap* select(int posX, int posY);
+			void insert(openlife::system::type::record::Biome biome);
+			void insert(common::object::entity::MapZone* mapZone);
 			int getBiome();
 
 			void useBiomeStorehouse(openLife::system::object::store::device::random::LinearDB* biomeStoreHouse);
@@ -39,7 +41,7 @@ namespace openLife::server::service::database
 			unsigned int height;
 			unsigned int detail;
 			unsigned int idxMax;
-			struct {unsigned int x; unsigned int y;} query;
+			struct {int x; int y;} query;
 			struct {unsigned int x; unsigned int y;} center;
 			std::vector<int> biome;
 			openLife::system::object::store::device::random::LinearDB* biomeStoreHouse;

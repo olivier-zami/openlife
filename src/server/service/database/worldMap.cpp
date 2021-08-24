@@ -5,6 +5,7 @@
 #include "worldMap.h"
 
 #include <iostream>
+#include <cmath>
 
 #include "src/system/_base/object/store/device/random/linearDB.h"
 
@@ -17,10 +18,16 @@
 #include "OneLife/server/dbCommon.h"
 
 extern LINEARDB3 biomeDB;
+extern char anyBiomesInDB;
+extern int maxBiomeXLoc;
+extern int maxBiomeYLoc;
+extern int minBiomeXLoc;
+extern int minBiomeYLoc;
 extern openLife::system::object::store::device::random::LinearDB *newBiomeDB;
 extern char lookTimeDBEmpty;
 extern char skipLookTimeCleanup;
 extern int cellsLookedAtToInit;
+extern double gapIntScale;
 
 /**
  *
@@ -62,6 +69,19 @@ void openLife::server::service::database::WorldMap::handleBiomeDB(LINEARDB3* bio
 int openLife::server::service::database::WorldMap::init()
 {
 	//!legacy => DB_open_timeShrunk(db=>this->biomeDB, path=>s.filename, mode=>KISSDB_OPEN_MODE_RWCREAT, hash_table_size=>80000, key_size=>8, value_size=>12)
+	/*
+    error = DB_open_timeShrunk( &biomeDB,
+                         "biome.db",
+                         KISSDB_OPEN_MODE_RWCREAT,
+                         80000,
+                         8, // two 32-bit ints, xy
+                         12 // three ints,
+                         // 1: biome number at x,y
+                         // 2: second place biome number at x,y
+                         // 3: second place biome gap as int (float gap
+                         //    multiplied by 1,000,000)
+                         );
+                         */
 	const char* path = this->settings.filename.c_str();
 	int mode = 3;//#define KISSDB_OPEN_MODE_RWCREAT 3
 	unsigned long hash_table_size = 80000;
@@ -247,6 +267,9 @@ int openLife::server::service::database::WorldMap::init()
  */
 openLife::server::service::database::WorldMap* openLife::server::service::database::WorldMap::select(int posX, int posY)
 {
+	this->query.x = posX;
+	this->query.y = posY;
+	/*
 	unsigned int x = (unsigned)((signed)this->center.x+posX);
 	if(x<0) x = 0;
 	if(x>=this->width) x = this->width-1;
@@ -256,8 +279,38 @@ openLife::server::service::database::WorldMap* openLife::server::service::databa
 	if(y<0) y = 0;
 	if(y>=this->height) y = this->height-1;
 	this->query.y = y;
-
+	*/
 	return this;
+}
+
+void openLife::server::service::database::WorldMap::insert(openlife::system::type::record::Biome biome)
+{
+	//!legacy biomeDBPut( int inX, int inY, int inValue, int inSecondPlace, double inSecondPlaceGap )
+	unsigned char key[8];
+	unsigned char value[12];
+
+	intPairToKey( this->query.x, this->query.y, key );
+	intToValue( biome.value, &( value[0] ) );
+	intToValue( biome.secondPlace, &( value[4] ) );
+	intToValue( lrint( biome.secondPlaceGap * gapIntScale ),
+				&( value[8] ) );
+
+	anyBiomesInDB = true;
+
+	if( this->query.x > maxBiomeXLoc ) {
+		maxBiomeXLoc = this->query.x;
+	}
+	if( this->query.x < minBiomeXLoc ) {
+		minBiomeXLoc = this->query.x;
+	}
+	if( this->query.y > maxBiomeYLoc ) {
+		maxBiomeYLoc = this->query.y;
+	}
+	if( this->query.y < minBiomeYLoc ) {
+		minBiomeYLoc = this->query.y;
+	}
+
+	LINEARDB3_put(biomeDB, key, value);
 }
 
 /**
