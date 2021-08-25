@@ -391,4 +391,44 @@ int getBiomeIndex( int inBiome );
 void dbLookTimePut( int inX, int inY, timeSec_t inTime );
 
 timeSec_t dbLookTimeGet( int inX, int inY );
+
+void checkDecayContained( int inX, int inY, int inSubCont = 0 );
+
+void deleteFileByName( const char *inFileName );
+
+int *getContainedRaw( int inX, int inY, int *outNumContained,
+					  int inSubCont = 0 );
+
+void setMapObjectRaw( int inX, int inY, int inID );
+
+void dbPut( int inX, int inY, int inSlot, int inValue,
+				   int inSubCont = 0 );
+
+// from server.cpp
+extern int getPlayerLineage( int inID );
+extern char isPlayerIgnoredForEvePlacement( int inID );
+void initDBCaches();
+void initBiomeCache();
+void mapCacheClear();
+int countNewlines( char *inString );
+void changeContained( int inX, int inY, int inSlot,
+					  int inSubCont, int inID );
+int cleanMap();
+void clearRecentPlacements();
+char loadIntoMapFromFile( FILE *inFile,
+						  int inOffsetX = 0,
+						  int inOffsetY = 0,
+						  double inTimeLimitSec = 0 );
+
+typedef struct GlobalTriggerState {
+	SimpleVector<GridPos> triggerOnLocations;
+
+	// receivers for this trigger that are waiting to be turned on
+	SimpleVector<GridPos> receiverLocations;
+
+	SimpleVector<GridPos> triggeredLocations;
+	SimpleVector<int> triggeredIDs;
+	// what we revert to when global trigger turns off (back to receiver)
+	SimpleVector<int> triggeredRevertIDs;
+} GlobalTriggerState;
 #endif

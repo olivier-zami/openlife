@@ -1,43 +1,36 @@
 #include "map.h"
 
 #include "minorGems/io/file/FileOutputStream.h"
-
 #include "src/server/server.h"
 #include "src/server/service/database/worldMap.h"
 #include "HashTable.h"
 #include "monument.h"
 #include "arcReport.h"
-
 #include "CoordinateTimeTracking.h"
-
 #include "eveMovingGrid.h"
-
 
 // cell pixel dimension on client
 #define CELL_D 128
 
 #include "minorGems/util/random/JenkinsRandomSource.h"
 #include "minorGems/util/random/CustomRandomSource.h"
-
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/util/SimpleVector.h"
 #include "minorGems/util/SettingsManager.h"
-
 #include "minorGems/util/log/AppLog.h"
-
 #include "minorGems/system/Time.h"
-
 #include "minorGems/formats/encodingUtils.h"
-
 #include "kissdb.h"
 //#include "stackdb.h"
 //#include "lineardb.h"
 #include "lineardb3.h"
-
 #include "minorGems/util/crc32.h"
-
-
-
+#include "minorGems/util/MinPriorityQueue.h"
+#include "minorGems/graphics/Image.h"
+#include "minorGems/graphics/converters/TGAImageConverter.h"
+#include "minorGems/io/file/File.h"
+#include "minorGems/system/Time.h"
+#include "spiral.h"
 
 /*
 #define DB KISSDB
@@ -111,31 +104,1429 @@
 #define DB_getCurrentSize  LINEARDB3_getCurrentSize
 #define DB_getNumRecords LINEARDB3_getNumRecords
 
-
-
-
-
-    
-
-
-    
 #include "dbCommon.h"
-
-
 #include <stdarg.h>
 #include <math.h>
 #include <limits.h>
 #include <stdint.h>
 
-
 #include "../gameSource/transitionBank.h"
 #include "../gameSource/objectBank.h"
 #include "../gameSource/GridPos.h"
-
 #include "../gameSource/GridPos.h"
 #include "../gameSource/objectMetadata.h"
+#include "../commonSource/fractalNoise.h"
+
+// can replace with frozenTime to freeze time
+// or slowTime to slow it down
+#define MAP_TIMESEC Time::timeSec()
+//#define MAP_TIMESEC frozenTime()
+//#define MAP_TIMESEC fastTime()
+//#define MAP_TIMESEC slowTime()
+// track recent placements to determine camp where
+// we'll stick next Eve
+#define NUM_RECENT_PLACEMENTS 100
+#define DECAY_SLOT 1
+#define NUM_CONT_SLOT 2
+#define FIRST_CONT_SLOT 3
+#define NO_DECAY_SLOT -1
+
+extern GridPos getClosestPlayerPos( int inX, int inY );
+extern int getNumPlayers();
+typedef struct RecentPlacement {
+	GridPos pos;
+	// depth of object in tech tree
+	int depth;
+} RecentPlacement;
+static RecentPlacement recentPlacements[ NUM_RECENT_PLACEMENTS ];
+// ring buffer
+static int nextPlacementIndex = 0;
+static int eveRadiusStart = 2;
+static int eveRadius = eveRadiusStart;
+GridPos eveLocation = { 0,0 };
+static int eveLocationUsage = 0;
+static int maxEveLocationUsage = 3;
+// eves are placed along an Archimedean spiral
+// we track the angle of the last Eve to compute the position on
+// the spiral of the next Eve
+static double eveAngle = 2 * M_PI;
+static char eveStartSpiralPosSet = false;
+static GridPos eveStartSpiralPos = { 0, 0 };
+static int evePrimaryLocSpacingX = 0;
+static int evePrimaryLocSpacingY = 0;
+static int evePrimaryLocObjectID = -1;
+extern SimpleVector<int> eveSecondaryLocObjectIDs;
+static GridPos lastEvePrimaryLocation = {0,0};
+extern SimpleVector<GridPos> recentlyUsedPrimaryEvePositions;
+extern SimpleVector<int> recentlyUsedPrimaryEvePositionPlayerIDs;
+// when they were place, so they can time out
+extern SimpleVector<double> recentlyUsedPrimaryEvePositionTimes;
+// one hour
+static double recentlyUsedPrimaryEvePositionTimeout = 3600;
+static int eveHomeMarkerObjectID = -1;
+static char allowSecondPlaceBiomes = false;
+// what human-placed stuff, together, counts as a camp
+static int campRadius = 20;
+static float minEveCampRespawnAge = 60.0;
+static int barrierRadius = 250;
+static int barrierOn = 1;
+static int longTermCullEnabled = 1;
+static unsigned int biomeRandSeedA = 727;
+static unsigned int biomeRandSeedB = 941;
+static SimpleVector<int> barrierItemList;
+static FILE *mapChangeLogFile = NULL;
+static double mapChangeLogTimeStart = -1;
+extern int apocalypsePossible;
+extern char apocalypseTriggered;
+extern GridPos apocalypseLocation;
+// what object is placed on edge of map
+static int edgeObjectID = 0;
+static int currentResponsiblePlayer = -1;
+extern openLife::Server* server;
+extern openLife::server::service::database::WorldMap* worldMap;
+// object ids that occur naturally on map at random, per biome
+static int numBiomes;
+int *biomes;//legacy: static int *biomes;
+static float *biomeWeights;
+static float *biomeCumuWeights;
+static float biomeTotalWeight;
+static int regularBiomeLimit;
+static int numSpecialBiomes;
+static int *specialBiomes;
+static float *specialBiomeCumuWeights;
+static float specialBiomeTotalWeight;
+static int specialBiomeBandMode;
+static int specialBiomeBandThickness;
+static SimpleVector<int> specialBiomeBandOrder;
+// contains indices into biomes array instead of biome numbers
+static SimpleVector<int> specialBiomeBandIndexOrder;
+static SimpleVector<int> specialBiomeBandYCenter;
+static int minActivePlayersForBirthlands;
+// the biome index to use in place of special biomes outside of the north-most
+// or south-most band
+static int specialBiomeBandDefaultIndex;
+// one vector per biome
+static SimpleVector<int> *naturalMapIDs;
+static SimpleVector<float> *naturalMapChances;
+typedef struct MapGridPlacement {
+	int id;
+	int spacingX, spacingY;
+	int phaseX, phaseY;
+	int wiggleScaleX, wiggleScaleY;
+	SimpleVector<int> permittedBiomes;
+} MapGridPlacement;
+static SimpleVector<MapGridPlacement> gridPlacements;
+static SimpleVector<int> allNaturalMapIDs;
+static float *totalChanceWeight;
+// tracking when a given map cell was last seen
+static DB lookTimeDB;
+static char lookTimeDBOpen = false;
+static DB db;
+static char dbOpen = false;
+static DB timeDB;
+static char timeDBOpen = false;
+extern DB biomeDB;
+extern char biomeDBOpen;
+static DB floorDB;
+static char floorDBOpen = false;
+static DB floorTimeDB;
+static char floorTimeDBOpen = false;
+static DB graveDB;
+static char graveDBOpen = false;
+// per-player memory of where they should spawn as eve
+static DB eveDB;
+static char eveDBOpen = false;
+static DB metaDB;
+static char metaDBOpen = false;
+static int randSeed = 124567;
+//static JenkinsRandomSource randSource( randSeed );
+static CustomRandomSource randSource( randSeed );
+// decay slots for contained items start after container slots
+// 15 minutes
+static int maxSecondsForActiveDecayTracking = 900;
+// 15 seconds (before no-look regions are purged from live tracking)
+static int maxSecondsNoLookDecayTracking = 15;
+// live players look at their surrounding map region every 5 seconds
+// we count a region as stale after no one looks at it for 10 seconds
+// (we actually purge the live tracking of that region after 15 seconds).
+// This gives us some wiggle room with the timing, so we always make
+// sure to re-look at a region (when walking back into it) that is >10
+// seconds old, because it may (or may not) have fallen out of our live
+// tracking (if our re-look time was 15 seconds to match the time stuff actually
+// is dropped from live tracking, we might miss some stuff, depending
+// on how the check calls are interleaved time-wise).
+static int noLookCountAsStaleSeconds = 10;
+typedef struct LiveDecayRecord {
+	int x, y;
+
+	// 0 means main object decay
+	// 1 - NUM_CONT_SLOT means contained object decay
+	int slot;
+
+	timeSec_t etaTimeSeconds;
+
+	// 0 means main object
+	// >0 indexs sub containers of object
+	int subCont;
+
+	// the transition that will apply when this decay happens
+	// this allows us to avoid marking certain types of move decays
+	// as stale when not looked at in a while (all other types of decays
+	// go stale)
+	// Can be NULL if we don't care about the transition
+	// associated with this decay (for contained item decay, for example)
+	TransRecord *applicableTrans;
+
+} LiveDecayRecord;
+static MinPriorityQueue<LiveDecayRecord> liveDecayQueue;
+// for quick lookup of existing records in liveDecayQueue
+// store the eta time here
+// before storing a new record in the queue, we can check this hash
+// table to see whether it already exists
+static HashTable<timeSec_t> liveDecayRecordPresentHashTable( 1024 );
+// times in seconds that a tracked live decay map cell or slot
+// was last looked at
+static HashTable<timeSec_t> liveDecayRecordLastLookTimeHashTable( 1024 );
+typedef struct ContRecord {
+	int maxSlots;
+	int maxSubSlots;
+} ContRecord;
+static ContRecord defaultContRecord = { 0, 0 };
+// track max tracked contained for each x,y
+// this allows us to update last look times without getting contained count
+// from map
+// indexed as x, y, 0, 0
+static HashTable<ContRecord>
+liveDecayRecordLastLookTimeMaxContainedHashTable( 1024, defaultContRecord );
+static CoordinateTimeTracking lookTimeTracking;
+// track currently in-process movements so that we can be queried
+// about whether arrival has happened or not
+typedef struct MovementRecord {
+	int x, y;
+	int sourceX, sourceY;
+	int id;
+	char deadly;
+	double etaTime;
+	double totalTime;
+} MovementRecord;
+// clock time in fractional seconds of destination ETA
+// indexed as x, y, 0
+static HashTable<double> liveMovementEtaTimes( 1024, 0 );
+static MinPriorityQueue<MovementRecord> liveMovements;
+// track all map changes that happened since the last
+// call to stepMap
+static SimpleVector<ChangePosition> mapChangePosSinceLastStep;
+extern char anyBiomesInDB;//legacy: static char anyBiomesInDB = false;
+extern int maxBiomeXLoc;//legacy: static int maxBiomeXLoc = -2000000000;
+extern int maxBiomeYLoc;//legacy: static int maxBiomeYLoc = -2000000000;
+extern int minBiomeXLoc;//legacy: static int minBiomeXLoc = 2000000000;
+extern int minBiomeYLoc;//legacy: static int minBiomeYLoc = 2000000000;
+// if true, rest of natural map is blank
+static char useTestMap = false;
+// read from testMap.txt
+// unless testMapStale.txt is present
+// each line contains data in this order:
+// x y biome floor id_and_contained
+// id and contained are in CONTAINER OBJECT FORMAT described in protocol.txt
+// biome = -1 means use naturally-occurring biome
+typedef struct TestMapRecord {
+	int x, y;
+	int biome;
+	int floor;
+	int id;
+	SimpleVector<int> contained;
+	SimpleVector< SimpleVector<int> > subContained;
+} TestMapRecord;
+typedef struct Homeland {
+	int x, y;
+
+	int radius;
+
+	int lineageEveID;
+
+	double lastBabyBirthTime;
+
+	char expired;
+
+	char changed;
+
+	// did the creation of this homeland tapout-trigger
+	// a +primaryHomeland object?
+	char primary;
+
+	// should Eve placement ignore this homeland?
+	char ignoredForEve;
+
+} Homeland;
+static SimpleVector<Homeland> homelands;
+static void dbFloorPut( int inX, int inY, int inValue );
+// optimization:
+// cache biomeIndex results in RAM
+
+// 3.1 MB of RAM for this.
+#define BIOME_CACHE_SIZE 131072
+
+typedef struct BiomeCacheRecord {
+	int x, y;
+	int biome, secondPlace;
+	double secondPlaceGap;
+} BiomeCacheRecord;
+
+static BiomeCacheRecord biomeCache[ BIOME_CACHE_SIZE ];
+
+#define CACHE_PRIME_A 776509273
+#define CACHE_PRIME_B 904124281
+#define CACHE_PRIME_C 528383237
+#define CACHE_PRIME_D 148497157
+
+// gets procedurally-generated base map at a given spot
+// player modifications are overlayed on top of this
+
+// SIDE EFFECT:
+// if biome at x,y needed to be determined in order to compute map
+// at this spot, it is saved into lastCheckedBiome
+static int lastCheckedBiome = -1;
+static int lastCheckedBiomeX = 0;
+static int lastCheckedBiomeY = 0;
+// 1671 shy of int max
+static int xLimit = 2147481977;
+static int yLimit = 2147481977;
+typedef struct BaseMapCacheRecord {
+	int x, y;
+	int id;
+	char gridPlacement;
+} BaseMapCacheRecord;
+// should be a power of 2
+// cache will contain squared number of records
+#define BASE_MAP_CACHE_SIZE 256
+// if BASE_MAP_CACHE_SIZE is a power of 2, then this is the bit mask
+// of solid 1's that can limit an integer to that range
+static int mapCacheBitMask = BASE_MAP_CACHE_SIZE - 1;
+BaseMapCacheRecord baseMapCache[ BASE_MAP_CACHE_SIZE ][ BASE_MAP_CACHE_SIZE ];
+static int getBaseMapCallCount = 0;
+// optimization:
+// cache dbGet results in RAM
+
+// 2.6 MB of RAM for this.
+#define DB_CACHE_SIZE 131072
+
+typedef struct DBCacheRecord {
+	int x, y, slot, subCont;
+	int value;
+} DBCacheRecord;
+
+static DBCacheRecord dbCache[ DB_CACHE_SIZE ];
+
+#include "specialBiomes.h"
+
+static char tileCullingIteratorSet = false;
+static DB_Iterator tileCullingIterator;
+static char floorCullingIteratorSet = false;
+static DB_Iterator floorCullingIterator;
+static double lastSettingsLoadTime = 0;
+static double settingsLoadInterval = 5 * 60;
+static int numTilesExaminedPerCullStep = 10;
+static int longTermCullingSeconds = 3600 * 12;
+static int minActivePlayersForLongTermCulling = 15;
+static SimpleVector<int> noCullItemList;
+static int numTilesSeenByIterator = 0;
+static int numFloorsSeenByIterator = 0;
+static unsigned int nextLoadID = 0;
+extern char doesEveLineExist( int inEveID );
+extern char lookTimeDBEmpty;
+extern char skipLookTimeCleanup;
+extern int cellsLookedAtToInit;
+extern char lookTimeDBEmpty;
+extern char skipLookTimeCleanup;
+char skipRemovedObjectCleanup = 0;
+// if lookTimeDBEmpty, then we init all map cell look times to NOW
+extern int cellsLookedAtToInit;
+// for large inserts, like tutorial map loads, we don't want to
+// track individual map changes.
+static char skipTrackingMapChanges = false;
+static SimpleVector<GlobalTriggerState> globalTriggerStates;
+extern int numSpeechPipes;
+extern SimpleVector<GridPos> *speechPipesIn;
+extern SimpleVector<GridPos> *speechPipesOut;
+static SimpleVector<GridPos> flightLandingPos;
+
+/**********************************************************************************************************************/
+
+#include "src/server/component/channel/speech.h"
+#include "src/server/component/database/gameFeatures.h"
+
+extern openLife::server::component::channel::SpeechService* speechService;
+extern openLife::server::component::database::GameFeatures* gameFeatures;
+
+char initMap()
+{
+	//!new
+	speechService->init();
+	gameFeatures->deleteEveFeatures1();
 
 
+	//!old
+	initDBCaches();
+	initBiomeCache();
+
+	mapCacheClear();
+
+	edgeObjectID = SettingsManager::getIntSetting( "edgeObject", 0 );
+	minEveCampRespawnAge = SettingsManager::getFloatSetting( "minEveCampRespawnAge", 60.0f );
+	barrierRadius = SettingsManager::getIntSetting( "barrierRadius", 250 );
+	barrierOn = SettingsManager::getIntSetting( "barrierOn", 1 );
+	longTermCullEnabled = SettingsManager::getIntSetting( "longTermNoLookCullEnabled", 1 );
+
+	SimpleVector<int> *list = SettingsManager::getIntSettingMulti( "barrierObjects" );
+	barrierItemList.deleteAll();
+	barrierItemList.push_back_other( list );
+	delete list;
+
+
+
+	for( int i=0; i<NUM_RECENT_PLACEMENTS; i++ )
+	{
+		recentPlacements[i].pos.x = 0;
+		recentPlacements[i].pos.y = 0;
+		recentPlacements[i].depth = 0;
+	}
+	nextPlacementIndex = 0;
+	FILE *placeFile = fopen( "recentPlacements.txt", "r" );
+	if( placeFile != NULL )
+	{
+		for( int i=0; i<NUM_RECENT_PLACEMENTS; i++ ) {
+			fscanf( placeFile, "%d,%d %d",
+					&( recentPlacements[i].pos.x ),
+					&( recentPlacements[i].pos.y ),
+					&( recentPlacements[i].depth ) );
+		}
+		fscanf( placeFile, "\nnextPlacementIndex=%d", &nextPlacementIndex );
+		fclose( placeFile );
+	}
+
+
+	FILE *eveRadFile = fopen( "eveRadius.txt", "r" );
+	if( eveRadFile != NULL )
+	{
+
+		fscanf( eveRadFile, "%d", &eveRadius );
+
+		fclose( eveRadFile );
+	}
+
+	FILE *eveLocFile = fopen( "lastEveLocation.txt", "r" );
+	if( eveLocFile != NULL )
+	{
+		fscanf( eveLocFile, "%d,%d", &( eveLocation.x ), &( eveLocation.y ) );
+		fclose( eveLocFile );
+		printf( "Loading lastEveLocation %d,%d\n",
+				eveLocation.x, eveLocation.y );
+	}
+
+	// override if shutdownLongLineagePos exists
+	FILE *lineagePosFile = fopen( "shutdownLongLineagePos.txt", "r" );
+	if( lineagePosFile != NULL )
+	{
+		fscanf( lineagePosFile, "%d,%d",
+				&( eveLocation.x ), &( eveLocation.y ) );
+		fclose( lineagePosFile );
+		printf( "Overriding eveLocation with shutdownLongLineagePos %d,%d\n",
+				eveLocation.x, eveLocation.y );
+	}
+	else
+	{
+		printf( "No shutdownLongLineagePos.txt file exists\n" );
+
+		// look for longest monument log file
+		// that has been touched in last 24 hours
+		// (ignore spots that may have been culled)
+		File f( NULL, "monumentLogs" );
+		if( f.exists() && f.isDirectory() ) {
+			int numChildFiles;
+			File **childFiles = f.getChildFiles( &numChildFiles );
+
+			timeSec_t longTime = 0;
+			int longLen = 0;
+			int longX = 0;
+			int longY = 0;
+
+			timeSec_t curTime = Time::timeSec();
+
+			int secInDay = 3600 * 24;
+
+			for( int i=0; i<numChildFiles; i++ ) {
+				timeSec_t modTime = childFiles[i]->getModificationTime();
+
+				if( curTime - modTime < secInDay ) {
+					char *cont = childFiles[i]->readFileContents();
+
+					int numNewlines = countNewlines( cont );
+
+					delete [] cont;
+
+					if( numNewlines > longLen ||
+					( numNewlines == longLen && modTime > longTime ) ) {
+
+						char *name = childFiles[i]->getFileName();
+
+						int x, y;
+						int numRead = sscanf( name, "%d_%d_",
+											  &x, &y );
+
+						delete [] name;
+
+						if( numRead == 2 ) {
+							longTime = modTime;
+							longLen = numNewlines;
+							longX = x;
+							longY = y;
+						}
+					}
+				}
+				delete childFiles[i];
+			}
+			delete [] childFiles;
+
+			if( longLen > 0 ) {
+				eveLocation.x = longX;
+				eveLocation.y = longY;
+
+				printf( "Overriding eveLocation with "
+						"tallest recent monument location %d,%d\n",
+						eveLocation.x, eveLocation.y );
+			}
+		}
+	}
+
+
+	const char *lookTimeDBName = "lookTime.db";
+	char lookTimeDBExists = false;
+	File lookTimeDBFile( NULL, lookTimeDBName );
+	if( lookTimeDBFile.exists() && SettingsManager::getIntSetting( "flushLookTimes", 0 ) )
+	{
+		AppLog::info( "flushLookTimes.ini set, deleting lookTime.db" );
+		lookTimeDBFile.remove();
+	}
+
+	lookTimeDBExists = lookTimeDBFile.exists();
+
+	if( ! lookTimeDBExists )
+	{
+		lookTimeDBEmpty = true;
+	}
+
+
+	skipLookTimeCleanup = SettingsManager::getIntSetting( "skipLookTimeCleanup", 0 );
+
+
+	if( skipLookTimeCleanup )
+	{
+		AppLog::info( "skipLookTimeCleanup.ini flag set, "
+					  "not cleaning databases based on stale look times." );
+	}
+
+	LINEARDB3_setMaxLoad( 0.80 );
+
+	if( ! skipLookTimeCleanup )
+	{
+		DB lookTimeDB_old;
+
+		int error = DB_open( &lookTimeDB_old,
+							 lookTimeDBName,
+							 KISSDB_OPEN_MODE_RWCREAT,
+							 80000,
+							 8, // two 32-bit ints, xy
+							 8 // one 64-bit double, representing an ETA time
+							 // in whatever binary format and byte order
+							 // "double" on the server platform uses
+							 );
+
+		if( error )
+		{
+			AppLog::errorF( "Error %d opening look time KissDB", error );
+			return false;
+		}
+
+
+		int staleSec =
+				SettingsManager::getIntSetting( "mapCellForgottenSeconds", 0 );
+
+		if( lookTimeDBExists && staleSec > 0 ) {
+			AppLog::info( "\nCleaning stale look times from map..." );
+
+
+			static DB lookTimeDB_temp;
+
+			const char *lookTimeDBName_temp = "lookTime_temp.db";
+
+			File tempDBFile( NULL, lookTimeDBName_temp );
+
+			if( tempDBFile.exists() ) {
+				tempDBFile.remove();
+			}
+
+
+
+			DB_Iterator dbi;
+
+
+			DB_Iterator_init( &lookTimeDB_old, &dbi );
+
+
+			timeSec_t curTime = MAP_TIMESEC;
+
+			unsigned char key[8];
+			unsigned char value[8];
+
+			int total = 0;
+			int stale = 0;
+			int nonStale = 0;
+
+			// first, just count them
+			while( DB_Iterator_next( &dbi, key, value ) > 0 ) {
+				total++;
+
+				timeSec_t t = valueToTime( value );
+
+				if( curTime - t >= staleSec ) {
+					// stale cell
+					// ignore
+					stale++;
+				}
+				else {
+					// non-stale
+					nonStale++;
+				}
+			}
+
+			// optimial size for DB of remaining elements
+			unsigned int newSize = DB_getShrinkSize( &lookTimeDB_old,
+													 nonStale );
+
+			AppLog::infoF( "Shrinking hash table for lookTimes from "
+						   "%d down to %d",
+						   DB_getCurrentSize( &lookTimeDB_old ),
+						   newSize );
+
+
+			error = DB_open( &lookTimeDB_temp,
+							 lookTimeDBName_temp,
+							 KISSDB_OPEN_MODE_RWCREAT,
+							 newSize,
+							 8, // two 32-bit ints, xy
+							 8 // one 64-bit double, representing an ETA time
+							 // in whatever binary format and byte order
+							 // "double" on the server platform uses
+							 );
+
+			if( error ) {
+				AppLog::errorF(
+						"Error %d opening look time temp KissDB", error );
+				return false;
+			}
+
+
+			// now that we have new temp db properly sized,
+			// iterate again and insert
+			DB_Iterator_init( &lookTimeDB_old, &dbi );
+
+			while( DB_Iterator_next( &dbi, key, value ) > 0 ) {
+				timeSec_t t = valueToTime( value );
+
+				if( curTime - t >= staleSec ) {
+					// stale cell
+					// ignore
+				}
+				else {
+					// non-stale
+					// insert it in temp
+					DB_put_new( &lookTimeDB_temp, key, value );
+				}
+			}
+
+
+			AppLog::infoF( "Cleaned %d / %d stale look times", stale, total );
+
+			printf( "\n" );
+
+			if( total == 0 ) {
+				lookTimeDBEmpty = true;
+			}
+
+			DB_close( &lookTimeDB_temp );
+			DB_close( &lookTimeDB_old );
+
+			tempDBFile.copy( &lookTimeDBFile );
+			tempDBFile.remove();
+		}
+		else {
+			DB_close( &lookTimeDB_old );
+		}
+	}
+
+
+	int error = DB_open( &lookTimeDB,
+						 lookTimeDBName,
+						 KISSDB_OPEN_MODE_RWCREAT,
+						 80000,
+						 8, // two 32-bit ints, xy
+						 8 // one 64-bit double, representing an ETA time
+						 // in whatever binary format and byte order
+						 // "double" on the server platform uses
+						 );
+
+	if( error ) {
+		AppLog::errorF( "Error %d opening look time KissDB", error );
+		return false;
+	}
+
+	lookTimeDBOpen = true;
+
+
+
+
+	// note that the various decay ETA slots in map.db
+	// are define but unused, because we store times separately
+	// in mapTime.db
+	error = DB_open_timeShrunk( &db,
+								"map.db",
+								KISSDB_OPEN_MODE_RWCREAT,
+								80000,
+								16, // four 32-bit ints, xysb
+								// s is the slot number
+								// s=0 for base object
+								// s=1 decay ETA seconds (wall clock time)
+								// s=2 for count of contained objects
+								// s=3 first contained object
+								// s=4 second contained object
+								// s=... remaining contained objects
+								// Then decay ETA for each slot, in order,
+								//   after that.
+								// s = -1
+								//  is a special flag slot set to 0 if NONE
+								//  of the contained items have ETA decay
+								//  or 1 if some of the contained items might
+								//  have ETA decay.
+								//  (this saves us from having to check each
+								//   one)
+								// If a contained object id is negative,
+								// that indicates that it sub-contains
+								// other objects in its corresponding b slot
+								//
+								// b is for indexing sub-container slots
+								// b=0 is the main object
+								// b=1 is the first sub-slot, etc.
+								4 // one int, object ID at x,y in slot (s-3)
+								// OR contained count if s=2
+								);
+
+	if( error ) {
+		AppLog::errorF( "Error %d opening map KissDB", error );
+		return false;
+	}
+
+	dbOpen = true;
+
+
+
+	// this DB uses the same slot numbers as the map.db
+	// however, only times are stored here, because they require 8 bytes
+	// so, slot 0 and 2 are never used, for example
+	error = DB_open_timeShrunk( &timeDB,
+								"mapTime.db",
+								KISSDB_OPEN_MODE_RWCREAT,
+								80000,
+								16, // four 32-bit ints, xysb
+								// s is the slot number
+								// s=0 for base object
+								// s=1 decay ETA seconds (wall clock time)
+								// s=2 for count of contained objects
+								// s=3 first contained object
+								// s=4 second contained object
+								// s=... remaining contained objects
+								// Then decay ETA for each slot, in order,
+								//   after that.
+								// If a contained object id is negative,
+								// that indicates that it sub-contains
+								// other objects in its corresponding b slot
+								//
+								// b is for indexing sub-container slots
+								// b=0 is the main object
+								// b=1 is the first sub-slot, etc.
+								8 // one 64-bit double, representing an ETA time
+								// in whatever binary format and byte order
+								// "double" on the server platform uses
+								);
+
+	if( error ) {
+		AppLog::errorF( "Error %d opening map time KissDB", error );
+		return false;
+	}
+
+	timeDBOpen = true;
+
+
+
+
+
+
+	/******************************************************************************************************************/
+
+	error = worldMap->init();
+
+	if( error ) {
+		AppLog::errorF( "Error %d opening biome KissDB", error );
+		return false;
+	}
+
+	biomeDBOpen = true;
+
+
+
+	// see if any biomes are listed in DB
+	// if not, we don't even need to check it when generating map
+	DB_Iterator biomeDBi;
+	DB_Iterator_init( &biomeDB, &biomeDBi );
+
+	unsigned char biomeKey[8];
+	unsigned char biomeValue[12];
+
+
+	while( DB_Iterator_next( &biomeDBi, biomeKey, biomeValue ) > 0 )
+	{
+		int x = valueToInt( biomeKey );
+		int y = valueToInt( &( biomeKey[4] ) );
+
+		anyBiomesInDB = true;
+
+		if( x > maxBiomeXLoc ) {
+			maxBiomeXLoc = x;
+		}
+		if( x < minBiomeXLoc ) {
+			minBiomeXLoc = x;
+		}
+		if( y > maxBiomeYLoc ) {
+			maxBiomeYLoc = y;
+		}
+		if( y < minBiomeYLoc ) {
+			minBiomeYLoc = y;
+		}
+	}
+
+	printf( "Min (x,y) of biome in db = (%d,%d), "
+			"Max (x,y) of biome in db = (%d,%d)\n",
+			minBiomeXLoc, minBiomeYLoc,
+			maxBiomeXLoc, maxBiomeYLoc );
+	/******************************************************************************************************************/
+
+
+
+
+	error = DB_open_timeShrunk( &floorDB,
+								"floor.db",
+								KISSDB_OPEN_MODE_RWCREAT,
+								80000,
+								8, // two 32-bit ints, xy
+								4 // one int, the floor object ID at x,y
+								);
+
+	if( error ) {
+		AppLog::errorF( "Error %d opening floor KissDB", error );
+		return false;
+	}
+
+	floorDBOpen = true;
+
+
+
+	error = DB_open_timeShrunk( &floorTimeDB,
+								"floorTime.db",
+								KISSDB_OPEN_MODE_RWCREAT,
+								80000,
+								8, // two 32-bit ints, xy
+								8 // one 64-bit double, representing an ETA time
+								// in whatever binary format and byte order
+								// "double" on the server platform uses
+								);
+
+	if( error ) {
+		AppLog::errorF( "Error %d opening floor time KissDB", error );
+		return false;
+	}
+
+	floorTimeDBOpen = true;
+
+
+
+	// ALWAYS delete old grave DB at each server startup
+	// grave info is only player ID, and server only remembers players
+	// live, in RAM, while it is still running
+	deleteFileByName( "grave.db" );
+
+
+	error = DB_open( &graveDB,
+					 "grave.db",
+					 KISSDB_OPEN_MODE_RWCREAT,
+					 80000,
+					 8, // two 32-bit ints, xy
+					 4 // one int, the grave player ID at x,y
+					 );
+
+	if( error ) {
+		AppLog::errorF( "Error %d opening grave KissDB", error );
+		return false;
+	}
+
+	graveDBOpen = true;
+
+
+
+
+
+	error = DB_open( &eveDB,
+					 "eve.db",
+					 KISSDB_OPEN_MODE_RWCREAT,
+					 // this can be a lot smaller than other DBs
+					 // it's not performance-critical, and the keys are
+					 // much longer, so stackdb will waste disk space
+					 5000,
+					 50, // first 50 characters of email address
+					 // append spaces to the end if needed
+					 12 // three ints,  x_center, y_center, radius
+					 );
+
+	if( error ) {
+		AppLog::errorF( "Error %d opening eve KissDB", error );
+		return false;
+	}
+
+	eveDBOpen = true;
+
+
+
+
+	error = DB_open( &metaDB,
+					 "meta.db",
+					 KISSDB_OPEN_MODE_RWCREAT,
+					 // starting size doesn't matter here
+					 500,
+					 4, // one 32-bit int as key
+					 // data
+					 MAP_METADATA_LENGTH
+					 );
+
+	if( error ) {
+		AppLog::errorF( "Error %d opening meta KissDB", error );
+		return false;
+	}
+
+	metaDBOpen = true;
+
+	DB_Iterator metaIterator;
+
+	DB_Iterator_init( &metaDB, &metaIterator );
+
+	unsigned char metaKey[4];
+
+	unsigned char metaValue[MAP_METADATA_LENGTH];
+
+	int maxMetaID = 0;
+	int numMetaRecords = 0;
+
+	while( DB_Iterator_next( &metaIterator, metaKey, metaValue ) > 0 ) {
+		numMetaRecords++;
+
+		int metaID = valueToInt( metaKey );
+
+		if( metaID > maxMetaID ) {
+			maxMetaID = metaID;
+		}
+	}
+
+	AppLog::infoF(
+			"MetadataDB:  Found %d records with max MetadataID of %d",
+			numMetaRecords, maxMetaID );
+
+	setLastMetadataID( maxMetaID );
+
+
+
+
+
+
+	if( lookTimeDBEmpty && cellsLookedAtToInit > 0 ) {
+		printf( "Since lookTime db was empty, we initialized look times "
+				"for %d cells to now.\n\n", cellsLookedAtToInit );
+	}
+
+
+
+	int numObjects;
+	ObjectRecord **allObjects = getAllObjects( &numObjects );
+
+
+	// first, find all biomes
+	SimpleVector<int> biomeList;
+
+
+	for( int i=0; i<numObjects; i++ ) {
+		ObjectRecord *o = allObjects[i];
+
+		if( o->mapChance > 0 ) {
+
+			for( int j=0; j< o->numBiomes; j++ ) {
+				int b = o->biomes[j];
+
+				if( biomeList.getElementIndex(b) == -1 ) {
+					biomeList.push_back( b );
+				}
+			}
+		}
+
+	}
+
+
+	// manually controll order
+	SimpleVector<int> *biomeOrderList =
+			SettingsManager::getIntSettingMulti( "biomeOrder" );
+
+	SimpleVector<float> *biomeWeightList =
+			SettingsManager::getFloatSettingMulti( "biomeWeights" );
+
+	for( int i=0; i<biomeOrderList->size(); i++ ) {
+		int b = biomeOrderList->getElementDirect( i );
+
+		if( biomeList.getElementIndex( b ) == -1 ) {
+			biomeOrderList->deleteElement( i );
+			biomeWeightList->deleteElement( i );
+			i--;
+		}
+	}
+
+	// now add any discovered biomes to end of list
+	for( int i=0; i<biomeList.size(); i++ ) {
+		int b = biomeList.getElementDirect( i );
+		if( biomeOrderList->getElementIndex( b ) == -1 ) {
+			biomeOrderList->push_back( b );
+			// default weight
+			biomeWeightList->push_back( 0.1 );
+		}
+	}
+
+	numBiomes = biomeOrderList->size();
+	biomes = biomeOrderList->getElementArray();
+	biomeWeights = biomeWeightList->getElementArray();
+	biomeCumuWeights = new float[ numBiomes ];
+
+	biomeTotalWeight = 0;
+	for( int i=0; i<numBiomes; i++ ) {
+		biomeTotalWeight += biomeWeights[i];
+		biomeCumuWeights[i] = biomeTotalWeight;
+	}
+
+	delete biomeOrderList;
+	delete biomeWeightList;
+
+
+	SimpleVector<int> *specialBiomeList =
+			SettingsManager::getIntSettingMulti( "specialBiomes" );
+
+	numSpecialBiomes = specialBiomeList->size();
+	specialBiomes = specialBiomeList->getElementArray();
+
+	regularBiomeLimit = numBiomes - numSpecialBiomes;
+
+	delete specialBiomeList;
+
+	specialBiomeCumuWeights = new float[ numSpecialBiomes ];
+
+	specialBiomeTotalWeight = 0;
+	for( int i=regularBiomeLimit; i<numBiomes; i++ ) {
+		specialBiomeTotalWeight += biomeWeights[i];
+		specialBiomeCumuWeights[i-regularBiomeLimit] = specialBiomeTotalWeight;
+	}
+
+
+	specialBiomeBandMode =
+			SettingsManager::getIntSetting( "specialBiomeBandMode", 0 );
+
+	specialBiomeBandThickness =
+			SettingsManager::getIntSetting( "specialBiomeBandThickness",
+											300 );
+
+	SimpleVector<int> *specialBiomeOrderList =
+			SettingsManager::getIntSettingMulti( "specialBiomeBandOrder" );
+
+	specialBiomeBandOrder.push_back_other( specialBiomeOrderList );
+
+	// look up biome index for each special biome
+	for( int i=0; i<specialBiomeBandOrder.size(); i++ ) {
+		int biomeNumber = specialBiomeBandOrder.getElementDirect( i );
+
+		int biomeIndex = 0;
+
+		for( int j=0; j<numBiomes; j++ ) {
+			if( biomes[j] == biomeNumber ) {
+				biomeIndex = j;
+				break;
+			}
+		}
+		specialBiomeBandIndexOrder.push_back( biomeIndex );
+	}
+
+	delete specialBiomeOrderList;
+
+
+	int specialBiomeBandDefault =
+			SettingsManager::getIntSetting( "specialBiomeBandDefault", 0 );
+
+	// look up biome index
+	specialBiomeBandDefaultIndex = 0;
+	for( int j=0; j<numBiomes; j++ ) {
+		if( biomes[j] == specialBiomeBandDefault ) {
+			specialBiomeBandDefaultIndex = j;
+			break;
+		}
+	}
+
+
+	SimpleVector<int> *specialBiomeBandYCenterList =
+			SettingsManager::getIntSettingMulti( "specialBiomeBandYCenter" );
+
+	specialBiomeBandYCenter.push_back_other( specialBiomeBandYCenterList );
+
+	delete specialBiomeBandYCenterList;
+
+
+	minActivePlayersForBirthlands =
+			SettingsManager::getIntSetting( "minActivePlayersForBirthlands", 15 );
+
+
+
+	naturalMapIDs = new SimpleVector<int>[ numBiomes ];
+	naturalMapChances = new SimpleVector<float>[ numBiomes ];
+	totalChanceWeight = new float[ numBiomes ];
+
+	for( int j=0; j<numBiomes; j++ ) {
+		totalChanceWeight[j] = 0;
+	}
+
+
+	CustomRandomSource phaseRandSource( randSeed );
+
+
+	for( int i=0; i<numObjects; i++ ) {
+		ObjectRecord *o = allObjects[i];
+
+		if( strstr( o->description, "eveSecondaryLoc" ) != NULL ) {
+			eveSecondaryLocObjectIDs.push_back( o->id );
+		}
+		if( strstr( o->description, "eveHomeMarker" ) != NULL ) {
+			eveHomeMarkerObjectID = o->id;
+		}
+
+
+
+		float p = o->mapChance;
+		if( p > 0 ) {
+			int id = o->id;
+
+			allNaturalMapIDs.push_back( id );
+
+			char *gridPlacementLoc =
+					strstr( o->description, "gridPlacement" );
+
+			char *randPlacementLoc =
+					strstr( o->description, "randPlacement" );
+
+			if( gridPlacementLoc != NULL ) {
+				// special grid placement
+
+				int spacingX = 10;
+				int spacingY = 10;
+				int phaseX = 0;
+				int phaseY = 0;
+
+				int numRead = sscanf( gridPlacementLoc,
+									  "gridPlacement%d,%d,p%d,p%d",
+									  &spacingX, &spacingY,
+									  &phaseX, &phaseY );
+				if( numRead < 2 ) {
+					// only X specified, square grid
+					spacingY = spacingX;
+				}
+				if( numRead < 4 ) {
+					// only X specified, square grid
+					phaseY = phaseX;
+				}
+
+
+
+				if( strstr( o->description, "evePrimaryLoc" ) != NULL ) {
+					evePrimaryLocObjectID = id;
+					evePrimaryLocSpacingX = spacingX;
+					evePrimaryLocSpacingY = spacingY;
+				}
+
+				SimpleVector<int> permittedBiomes;
+				for( int b=0; b<o->numBiomes; b++ ) {
+					permittedBiomes.push_back(
+							getBiomeIndex( o->biomes[ b ] ) );
+				}
+
+				int wiggleScaleX = 4;
+				int wiggleScaleY = 4;
+
+				if( spacingX > 12 ) {
+					wiggleScaleX = spacingX / 3;
+				}
+				if( spacingY > 12 ) {
+					wiggleScaleY = spacingY / 3;
+				}
+
+				MapGridPlacement gp =
+						{ id,
+						  spacingX, spacingY,
+						  phaseX, phaseY,
+						  //phaseRandSource.getRandomBoundedInt( 0,
+						  //                                     spacingX - 1 ),
+						  //phaseRandSource.getRandomBoundedInt( 0,
+						  //                                     spacingY - 1 ),
+						  wiggleScaleX,
+						  wiggleScaleY,
+						  permittedBiomes };
+
+				gridPlacements.push_back( gp );
+			}
+			else if( randPlacementLoc != NULL ) {
+				// special random placement
+
+				// don't actually place these now, do it on reseed
+				// but skip adding them to list of natural objects
+			}
+			else {
+				// regular fractal placement
+
+				for( int j=0; j< o->numBiomes; j++ ) {
+					int b = o->biomes[j];
+
+					int bIndex = getBiomeIndex( b );
+					naturalMapIDs[bIndex].push_back( id );
+					naturalMapChances[bIndex].push_back( p );
+
+					totalChanceWeight[bIndex] += p;
+				}
+			}
+		}
+	}
+
+
+	for( int j=0; j<numBiomes; j++ ) {
+		AppLog::infoF(
+				"Biome %d:  Found %d natural objects with total weight %f",
+				biomes[j], naturalMapIDs[j].size(), totalChanceWeight[j] );
+	}
+
+	delete [] allObjects;
+
+
+	skipRemovedObjectCleanup =
+			SettingsManager::getIntSetting( "skipRemovedObjectCleanup", 0 );
+
+
+
+
+
+	FILE *dummyFile = fopen( "mapDummyRecall.txt", "r" );
+
+	if( dummyFile != NULL ) {
+		AppLog::info( "Found mapDummyRecall.txt file, restoring dummy objects "
+					  "on map" );
+
+		skipTrackingMapChanges = true;
+
+		int numRead = 5;
+
+		int numSet = 0;
+
+		int numStale = 0;
+
+		while( numRead == 5 || numRead == 7 ) {
+
+			int x, y, parentID, dummyIndex, slot, b;
+
+			char marker;
+
+			slot = -1;
+			b = 0;
+
+			numRead = fscanf( dummyFile, "(%d,%d) %c %d %d [%d %d]\n",
+							  &x, &y, &marker, &parentID, &dummyIndex,
+							  &slot, &b );
+			if( numRead == 5 || numRead == 7 ) {
+
+				if( dbLookTimeGet( x, y ) <= 0 ) {
+					// stale area of map
+					numStale++;
+					continue;
+				}
+
+				ObjectRecord *parent = getObject( parentID );
+
+				int dummyID = -1;
+
+				if( parent != NULL ) {
+
+					if( marker == 'u' && parent->numUses-1 > dummyIndex ) {
+						dummyID = parent->useDummyIDs[ dummyIndex ];
+					}
+					else if( marker == 'v' &&
+					parent->numVariableDummyIDs > dummyIndex ) {
+						dummyID = parent->variableDummyIDs[ dummyIndex ];
+					}
+				}
+				if( dummyID > 0 ) {
+					if( numRead == 5 ) {
+						setMapObjectRaw( x, y, dummyID );
+					}
+					else {
+						changeContained( x, y, slot, b, dummyID );
+					}
+					numSet++;
+				}
+			}
+		}
+		skipTrackingMapChanges = false;
+
+		fclose( dummyFile );
+
+
+		AppLog::infoF( "Restored %d dummy objects to map "
+					   "(%d skipped as stale)", numSet, numStale );
+
+		remove( "mapDummyRecall.txt" );
+
+		printf( "\n" );
+	}
+
+
+
+	// clean map after restoring dummy objects
+	int totalSetCount = 1;
+
+	if( ! skipRemovedObjectCleanup ) {
+		totalSetCount = cleanMap();
+	}
+	else {
+		AppLog::info( "Skipping cleaning map of removed objects" );
+	}
+
+
+
+
+	if( totalSetCount == 0 ) {
+		// map has been cleared
+
+		// ignore old value for placements
+		clearRecentPlacements();
+	}
+
+
+
+	globalTriggerStates.deleteAll();
+
+	int numTriggers = getNumGlobalTriggers();
+	for( int i=0; i<numTriggers; i++ ) {
+		GlobalTriggerState s;
+		globalTriggerStates.push_back( s );
+	}
+
+
+
+	useTestMap = SettingsManager::getIntSetting( "useTestMap", 0 );
+
+
+	if( useTestMap ) {
+
+		FILE *testMapFile = fopen( "testMap.txt", "r" );
+		FILE *testMapStaleFile = fopen( "testMapStale.txt", "r" );
+
+		if( testMapFile != NULL && testMapStaleFile == NULL ) {
+
+			testMapStaleFile = fopen( "testMapStale.txt", "w" );
+
+			if( testMapStaleFile != NULL ) {
+				fprintf( testMapStaleFile, "1" );
+				fclose( testMapStaleFile );
+				testMapStaleFile = NULL;
+			}
+
+			printf( "Loading testMap.txt\n" );
+
+			loadIntoMapFromFile( testMapFile );
+
+			fclose( testMapFile );
+			testMapFile = NULL;
+		}
+
+		if( testMapFile != NULL ) {
+			fclose( testMapFile );
+		}
+		if( testMapStaleFile != NULL ) {
+			fclose( testMapStaleFile );
+		}
+	}
+
+
+	SimpleVector<char*> *specialPlacements =
+			SettingsManager::getSetting( "specialMapPlacements" );
+
+	if( specialPlacements != NULL )
+	{
+		for( int i=0; i<specialPlacements->size(); i++ ) {
+			char *line = specialPlacements->getElementDirect( i );
+
+			int x, y, id;
+			id = -1;
+			int numRead = sscanf( line, "%d_%d_%d", &x, &y, &id );
+
+			if( numRead == 3 && id > -1 ) {
+
+			}
+			setMapObject( x, y, id );
+		}
+		specialPlacements->deallocateStringElements();
+		delete specialPlacements;
+	}
+
+
+	reseedMap( false );
+
+
+
+
+	// for debugging the map
+	// printObjectSamples();
+	// printBiomeSamples();
+	//outputMapImage();
+
+	//outputBiomeFractals();
+
+
+	return true;
+}
+
+/**********************************************************************************************************************/
+static void biomeDBPut( int inX, int inY, int inValue, int inSecondPlace,
+						double inSecondPlaceGap )
+						{
+	openlife::system::type::record::Biome biomeRecord;
+	biomeRecord.value = inValue;
+	biomeRecord.secondPlace = inSecondPlace;
+	biomeRecord.secondPlaceGap = inSecondPlaceGap;
+	worldMap->select(inX, inY)->insert(biomeRecord);
+						}
+/**********************************************************************************************************************/
 
 timeSec_t startFrozenTime = -1;
 
@@ -156,8 +1547,6 @@ timeSec_t fastTime() {
     return 1000 * ( Time::timeSec() - startFastTime ) + startFastTime;
     }
 
-
-
 timeSec_t slowTime() {
     if( startFastTime == -1 ) {
         startFastTime = Time::timeSec();
@@ -165,186 +1554,9 @@ timeSec_t slowTime() {
     return ( Time::timeSec() - startFastTime ) / 4 + startFastTime;
     }
 
-
-// can replace with frozenTime to freeze time
-// or slowTime to slow it down
-#define MAP_TIMESEC Time::timeSec()
-//#define MAP_TIMESEC frozenTime()
-//#define MAP_TIMESEC fastTime()
-//#define MAP_TIMESEC slowTime()
-
-
-extern GridPos getClosestPlayerPos( int inX, int inY );
-
-extern int getNumPlayers();
-
-extern openLife::Server* server;
-extern openLife::server::service::database::WorldMap* worldMap;
-
-
-
-// track recent placements to determine camp where
-// we'll stick next Eve
-#define NUM_RECENT_PLACEMENTS 100
-
-typedef struct RecentPlacement {
-        GridPos pos;
-        // depth of object in tech tree
-        int depth;
-    } RecentPlacement;
-
-
-static RecentPlacement recentPlacements[ NUM_RECENT_PLACEMENTS ];
-
-// ring buffer
-static int nextPlacementIndex = 0;
-
-static int eveRadiusStart = 2;
-static int eveRadius = eveRadiusStart;
-
-
-
-GridPos eveLocation = { 0,0 };
-static int eveLocationUsage = 0;
-static int maxEveLocationUsage = 3;
-
-// eves are placed along an Archimedean spiral
-// we track the angle of the last Eve to compute the position on
-// the spiral of the next Eve
-static double eveAngle = 2 * M_PI;
-
-static char eveStartSpiralPosSet = false;
-static GridPos eveStartSpiralPos = { 0, 0 };
-
-
-
-static int evePrimaryLocSpacingX = 0;
-static int evePrimaryLocSpacingY = 0;
-static int evePrimaryLocObjectID = -1;
-extern SimpleVector<int> eveSecondaryLocObjectIDs;
-
-static GridPos lastEvePrimaryLocation = {0,0};
-
-extern SimpleVector<GridPos> recentlyUsedPrimaryEvePositions;
-extern SimpleVector<int> recentlyUsedPrimaryEvePositionPlayerIDs;
-// when they were place, so they can time out
-extern SimpleVector<double> recentlyUsedPrimaryEvePositionTimes;
-// one hour
-static double recentlyUsedPrimaryEvePositionTimeout = 3600;
-
-static int eveHomeMarkerObjectID = -1;
-
-
-static char allowSecondPlaceBiomes = false;
-
-
-
-// what human-placed stuff, together, counts as a camp
-static int campRadius = 20;
-
-static float minEveCampRespawnAge = 60.0;
-
-
-static int barrierRadius = 250;
-
-static int barrierOn = 1;
-
-static int longTermCullEnabled = 1;
-
-
-static unsigned int biomeRandSeedA = 727;
-static unsigned int biomeRandSeedB = 941;
-
-
-static SimpleVector<int> barrierItemList;
-
-
-static FILE *mapChangeLogFile = NULL;
-
-static double mapChangeLogTimeStart = -1;
-
-
-
-extern int apocalypsePossible;
-extern char apocalypseTriggered;
-extern GridPos apocalypseLocation;
-
-
-
-
-
-
-// what object is placed on edge of map
-static int edgeObjectID = 0;
-
-
-
-static int currentResponsiblePlayer = -1;
-
-
 void setResponsiblePlayer( int inPlayerID ) {
     currentResponsiblePlayer = inPlayerID;
     }
-
-
-
-
-
-
-
-
-// object ids that occur naturally on map at random, per biome
-static int numBiomes;
-int *biomes;//legacy: static int *biomes;
-static float *biomeWeights;
-static float *biomeCumuWeights;
-static float biomeTotalWeight;
-static int regularBiomeLimit;
-
-static int numSpecialBiomes;
-static int *specialBiomes;
-static float *specialBiomeCumuWeights;
-static float specialBiomeTotalWeight;
-
-
-static int specialBiomeBandMode;
-static int specialBiomeBandThickness;
-static SimpleVector<int> specialBiomeBandOrder;
-// contains indices into biomes array instead of biome numbers
-static SimpleVector<int> specialBiomeBandIndexOrder;
-
-static SimpleVector<int> specialBiomeBandYCenter;
-
-static int minActivePlayersForBirthlands;
-
-
-
-// the biome index to use in place of special biomes outside of the north-most
-// or south-most band
-static int specialBiomeBandDefaultIndex;
-
-
-
-// one vector per biome
-static SimpleVector<int> *naturalMapIDs;
-static SimpleVector<float> *naturalMapChances;
-
-typedef struct MapGridPlacement {
-        int id;
-        int spacingX, spacingY;
-        int phaseX, phaseY;
-        int wiggleScaleX, wiggleScaleY;
-        SimpleVector<int> permittedBiomes;
-    } MapGridPlacement;
-
-static SimpleVector<MapGridPlacement> gridPlacements;
-
-
-
-static SimpleVector<int> allNaturalMapIDs;
-
-static float *totalChanceWeight;
-
 
 int getBiomeIndex( int inBiome ) {
     for( int i=0; i<numBiomes; i++ ) {
@@ -354,229 +1566,6 @@ int getBiomeIndex( int inBiome ) {
         }
     return -1;
     }
-
-
-
-// tracking when a given map cell was last seen
-static DB lookTimeDB;
-static char lookTimeDBOpen = false;
-
-
-
-static DB db;
-static char dbOpen = false;
-
-
-static DB timeDB;
-static char timeDBOpen = false;
-
-
-extern DB biomeDB;
-extern char biomeDBOpen;
-
-
-static DB floorDB;
-static char floorDBOpen = false;
-
-static DB floorTimeDB;
-static char floorTimeDBOpen = false;
-
-
-static DB graveDB;
-static char graveDBOpen = false;
-
-
-// per-player memory of where they should spawn as eve
-static DB eveDB;
-static char eveDBOpen = false;
-
-
-static DB metaDB;
-static char metaDBOpen = false;
-
-
-
-static int randSeed = 124567;
-//static JenkinsRandomSource randSource( randSeed );
-static CustomRandomSource randSource( randSeed );
-
-
-
-#define DECAY_SLOT 1
-#define NUM_CONT_SLOT 2
-#define FIRST_CONT_SLOT 3
-
-#define NO_DECAY_SLOT -1
-
-
-// decay slots for contained items start after container slots
-
-
-// 15 minutes
-static int maxSecondsForActiveDecayTracking = 900;
-
-// 15 seconds (before no-look regions are purged from live tracking)
-static int maxSecondsNoLookDecayTracking = 15;
-
-// live players look at their surrounding map region every 5 seconds
-// we count a region as stale after no one looks at it for 10 seconds
-// (we actually purge the live tracking of that region after 15 seconds).
-// This gives us some wiggle room with the timing, so we always make
-// sure to re-look at a region (when walking back into it) that is >10
-// seconds old, because it may (or may not) have fallen out of our live
-// tracking (if our re-look time was 15 seconds to match the time stuff actually
-// is dropped from live tracking, we might miss some stuff, depending
-// on how the check calls are interleaved time-wise).
-static int noLookCountAsStaleSeconds = 10;
-
-
-
-typedef struct LiveDecayRecord {
-        int x, y;
-        
-        // 0 means main object decay
-        // 1 - NUM_CONT_SLOT means contained object decay
-        int slot;
-        
-        timeSec_t etaTimeSeconds;
-
-        // 0 means main object
-        // >0 indexs sub containers of object
-        int subCont;
-
-        // the transition that will apply when this decay happens
-        // this allows us to avoid marking certain types of move decays
-        // as stale when not looked at in a while (all other types of decays
-        // go stale)
-        // Can be NULL if we don't care about the transition
-        // associated with this decay (for contained item decay, for example)
-        TransRecord *applicableTrans;
-
-    } LiveDecayRecord;
-
-
-
-#include "minorGems/util/MinPriorityQueue.h"
-
-static MinPriorityQueue<LiveDecayRecord> liveDecayQueue;
-
-
-// for quick lookup of existing records in liveDecayQueue
-// store the eta time here
-// before storing a new record in the queue, we can check this hash
-// table to see whether it already exists
-static HashTable<timeSec_t> liveDecayRecordPresentHashTable( 1024 );
-
-// times in seconds that a tracked live decay map cell or slot
-// was last looked at
-static HashTable<timeSec_t> liveDecayRecordLastLookTimeHashTable( 1024 );
-
-
-typedef struct ContRecord {
-    int maxSlots;
-    int maxSubSlots;
-    } ContRecord;
-
-static ContRecord defaultContRecord = { 0, 0 };
-
-
-// track max tracked contained for each x,y
-// this allows us to update last look times without getting contained count
-// from map
-// indexed as x, y, 0, 0
-static HashTable<ContRecord> 
-liveDecayRecordLastLookTimeMaxContainedHashTable( 1024, defaultContRecord );
-
-
-
-static CoordinateTimeTracking lookTimeTracking;
-
-
-
-// track currently in-process movements so that we can be queried
-// about whether arrival has happened or not
-typedef struct MovementRecord {
-        int x, y;
-        int sourceX, sourceY;
-        int id;
-        char deadly;
-        double etaTime;
-        double totalTime;
-    } MovementRecord;
-
-
-// clock time in fractional seconds of destination ETA
-// indexed as x, y, 0
-static HashTable<double> liveMovementEtaTimes( 1024, 0 );
-
-static MinPriorityQueue<MovementRecord> liveMovements;
-
-
-
-    
-
-// track all map changes that happened since the last
-// call to stepMap
-static SimpleVector<ChangePosition> mapChangePosSinceLastStep;
-
-extern char anyBiomesInDB;//legacy: static char anyBiomesInDB = false;
-extern int maxBiomeXLoc;//legacy: static int maxBiomeXLoc = -2000000000;
-extern int maxBiomeYLoc;//legacy: static int maxBiomeYLoc = -2000000000;
-extern int minBiomeXLoc;//legacy: static int minBiomeXLoc = 2000000000;
-extern int minBiomeYLoc;//legacy: static int minBiomeYLoc = 2000000000;
-
-
-
-
-// if true, rest of natural map is blank
-static char useTestMap = false;
-
-// read from testMap.txt
-// unless testMapStale.txt is present
-
-// each line contains data in this order:
-// x y biome floor id_and_contained
-// id and contained are in CONTAINER OBJECT FORMAT described in protocol.txt
-// biome = -1 means use naturally-occurring biome
-typedef struct TestMapRecord {
-        int x, y;
-        int biome;
-        int floor;
-        int id;
-        SimpleVector<int> contained;
-        SimpleVector< SimpleVector<int> > subContained;
-    } TestMapRecord;
-
-
-
-
-
-typedef struct Homeland {
-        int x, y;
-
-        int radius;
-
-        int lineageEveID;
-        
-        double lastBabyBirthTime;
-        
-        char expired;
-        
-        char changed;
-        
-        // did the creation of this homeland tapout-trigger
-        // a +primaryHomeland object?
-        char primary;
-
-        // should Eve placement ignore this homeland?
-        char ignoredForEve;
-
-    } Homeland;
-
-
-
-static SimpleVector<Homeland> homelands;
-
 
 static void expireHomeland( Homeland *inH ) {
     inH->expired = true;
@@ -598,9 +1587,6 @@ static void expireHomeland( Homeland *inH ) {
             }
         }
     }
-
-
-
 
 // NULL if not found
 static Homeland *getHomeland( int inX, int inY, 
@@ -636,8 +1622,6 @@ static Homeland *getHomeland( int inX, int inY,
     return NULL;
     }
 
-
-
 static char hasPrimaryHomeland( int inLineageEveID ) {
     for( int i=0; i<homelands.size(); i++ ) {
         Homeland *h = homelands.getElement( i );
@@ -647,45 +1631,6 @@ static char hasPrimaryHomeland( int inLineageEveID ) {
         }
     return false;
     }
-
-
-
-#include "../commonSource/fractalNoise.h"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**********************************************************************************************************************/
-static void biomeDBPut( int inX, int inY, int inValue, int inSecondPlace,
-                        double inSecondPlaceGap )
-{
-	openlife::system::type::record::Biome biomeRecord;
-	biomeRecord.value = inValue;
-	biomeRecord.secondPlace = inSecondPlace;
-	biomeRecord.secondPlaceGap = inSecondPlaceGap;
-	worldMap->select(inX, inY)->insert(biomeRecord);
-}
-    
-
-
 
 // returns -1 on failure, 1 on success
 static int eveDBGet( const char *inEmail, int *outX, int *outY, 
@@ -712,8 +1657,6 @@ static int eveDBGet( const char *inEmail, int *outX, int *outY,
         }
     }
 
-
-
 static void eveDBPut( const char *inEmail, int inX, int inY, int inRadius ) {
     unsigned char key[50];
     unsigned char value[12];
@@ -728,13 +1671,6 @@ static void eveDBPut( const char *inEmail, int inX, int inY, int inRadius ) {
     
     DB_put( &eveDB, key, value );
     }
-
-
-
-static void dbFloorPut( int inX, int inY, int inValue );
-
-
-
 
 // inKnee in 0..inf, smaller values make harder knees
 // intput in 0..1
@@ -765,31 +1701,6 @@ double sigmoid( double inInput, double inKnee ) {
     return ( out + 1 ) * 0.5;
     }
 
-
-
-
-
-
-// optimization:
-// cache biomeIndex results in RAM
-
-// 3.1 MB of RAM for this.
-#define BIOME_CACHE_SIZE 131072
-
-typedef struct BiomeCacheRecord {
-        int x, y;
-        int biome, secondPlace;
-        double secondPlaceGap;
-    } BiomeCacheRecord;
-    
-static BiomeCacheRecord biomeCache[ BIOME_CACHE_SIZE ];
-
-
-#define CACHE_PRIME_A 776509273
-#define CACHE_PRIME_B 904124281
-#define CACHE_PRIME_C 528383237
-#define CACHE_PRIME_D 148497157
-
 static int computeXYCacheHash( int inKeyA, int inKeyB ) {
     
     int hashKey = ( inKeyA * CACHE_PRIME_A + 
@@ -800,17 +1711,12 @@ static int computeXYCacheHash( int inKeyA, int inKeyB ) {
     return hashKey;
     }
 
-
-
-static void initBiomeCache() {
+void initBiomeCache() {
     BiomeCacheRecord blankRecord = { 0, 0, -2, 0, 0 };
     for( int i=0; i<BIOME_CACHE_SIZE; i++ ) {
         biomeCache[i] = blankRecord;
         }
     }
-
-    
-
 
 // returns -2 on miss
 static int biomeGetCached( int inX, int inY, 
@@ -830,17 +1736,12 @@ static int biomeGetCached( int inX, int inY,
         }
     }
 
-
-
 static void biomePutCached( int inX, int inY, int inBiome, int inSecondPlace,
                             double inSecondPlaceGap ) {
     BiomeCacheRecord r = { inX, inY, inBiome, inSecondPlace, inSecondPlaceGap };
     
     biomeCache[ computeXYCacheHash( inX, inY ) ] = r;
     }
-
-
-
 
 static int getSpecialBiomeIndexForYBand( int inY, char *outOfBand = NULL ) {
     if( outOfBand != NULL ) {
@@ -866,9 +1767,6 @@ static int getSpecialBiomeIndexForYBand( int inY, char *outOfBand = NULL ) {
     
     return specialBiomeBandDefaultIndex;
     }
-
-
-
 
 // new code, topographic rings
 int computeMapBiomeIndex( int inX, int inY,
@@ -1062,9 +1960,6 @@ int computeMapBiomeIndex( int inX, int inY,
     return pickedBiome;
 }
 
-
-
-
 // old code, separate height fields per biome that compete
 // and create a patchwork layout
 static int computeMapBiomeIndexOld( int inX, int inY, 
@@ -1139,52 +2034,7 @@ static int computeMapBiomeIndexOld( int inX, int inY,
     return pickedBiome;
     }
 
-
-
-
-
-
-
-
-
-// gets procedurally-generated base map at a given spot
-// player modifications are overlayed on top of this
-
-// SIDE EFFECT:
-// if biome at x,y needed to be determined in order to compute map
-// at this spot, it is saved into lastCheckedBiome
-
-static int lastCheckedBiome = -1;
-static int lastCheckedBiomeX = 0;
-static int lastCheckedBiomeY = 0;
-
-
-// 1671 shy of int max
-static int xLimit = 2147481977;
-static int yLimit = 2147481977;
-
-
-
-
-
-typedef struct BaseMapCacheRecord {
-        int x, y;
-        int id;
-        char gridPlacement;
-    } BaseMapCacheRecord;
-
-
-// should be a power of 2
-// cache will contain squared number of records
-#define BASE_MAP_CACHE_SIZE 256
-
-// if BASE_MAP_CACHE_SIZE is a power of 2, then this is the bit mask
-// of solid 1's that can limit an integer to that range
-static int mapCacheBitMask = BASE_MAP_CACHE_SIZE - 1;
-
-BaseMapCacheRecord baseMapCache[ BASE_MAP_CACHE_SIZE ][ BASE_MAP_CACHE_SIZE ];
-
-static void mapCacheClear() {
+void mapCacheClear() {
     for( int y=0; y<BASE_MAP_CACHE_SIZE; y++ ) {
         for( int x=0; x<BASE_MAP_CACHE_SIZE; x++ ) {
             baseMapCache[y][x].x = 0;
@@ -1201,8 +2051,6 @@ static BaseMapCacheRecord *mapCacheRecordLookup( int inX, int inY ) {
     return &( baseMapCache[ inY & mapCacheBitMask ][ inX & mapCacheBitMask ] ); 
     }
 
-
-
 // returns -1 if not in cache
 static int mapCacheLookup( int inX, int inY, char *outGridPlacement = NULL ) {
     BaseMapCacheRecord *r = mapCacheRecordLookup( inX, inY );
@@ -1217,8 +2065,6 @@ static int mapCacheLookup( int inX, int inY, char *outGridPlacement = NULL ) {
     return -1;
     }
 
-
-
 static void mapCacheInsert( int inX, int inY, int inID, 
                             char inGridPlacement = false ) {
     BaseMapCacheRecord *r = mapCacheRecordLookup( inX, inY );
@@ -1228,11 +2074,6 @@ static void mapCacheInsert( int inX, int inY, int inID,
     r->id = inID;
     r->gridPlacement = inGridPlacement;
     }
-
-    
-
-static int getBaseMapCallCount = 0;
-
 
 static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
     
@@ -1488,21 +2329,6 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
     
     }
 
-
-
-
-
-
-
-
-
-
-
-#include "minorGems/graphics/Image.h"
-#include "minorGems/graphics/converters/TGAImageConverter.h"
-#include "minorGems/io/file/File.h"
-#include "minorGems/system/Time.h"
-
 void outputMapImage() {
     
     // output a chunk of the map as an image
@@ -1703,9 +2529,6 @@ void outputMapImage() {
     exit(0);
     }
 
-
-
-
 void outputBiomeFractals() {
     for( int scale = 1; scale <=4; scale *= 2 ) {
         
@@ -1751,22 +2574,6 @@ void outputBiomeFractals() {
         }       
     }
 
-
-
-
-
-
-int *getContainedRaw( int inX, int inY, int *outNumContained, 
-                      int inSubCont = 0 );
-
-void setMapObjectRaw( int inX, int inY, int inID );
-
-static void dbPut( int inX, int inY, int inSlot, int inValue, 
-                   int inSubCont = 0 );
-
-
-
-
 void writeRecentPlacements() {
     FILE *placeFile = fopen( "recentPlacements.txt", "w" );
     if( placeFile != NULL ) {
@@ -1781,8 +2588,6 @@ void writeRecentPlacements() {
         }
     }
 
-
-
 static void writeEveRadius() {
     FILE *eveRadFile = fopen( "eveRadius.txt", "w" );
     if( eveRadFile != NULL ) {
@@ -1793,8 +2598,6 @@ static void writeEveRadius() {
         }
     }
 
-
-
 void doubleEveRadius() {
     if( eveRadius < 1024 ) {
         eveRadius *= 2;
@@ -1802,14 +2605,10 @@ void doubleEveRadius() {
         }
     }
 
-
-
 void resetEveRadius() {
     eveRadius = eveRadiusStart;
     writeEveRadius();
     }
-
-
 
 void clearRecentPlacements() {
     for( int i=0; i<NUM_RECENT_PLACEMENTS; i++ ) {
@@ -1820,9 +2619,6 @@ void clearRecentPlacements() {
 
     writeRecentPlacements();
     }
-
-
-
 
 void printBiomeSamples() {
     int *biomeSamples = new int[ numBiomes ];
@@ -1850,8 +2646,6 @@ void printBiomeSamples() {
                 biomeSamples[i] / (double)numSamples );
         }
     }
-
-
 
 int printObjectSamples( int inXCenter, int inYCenter ) {
     int objectToCount = 2285;
@@ -1890,25 +2684,6 @@ int printObjectSamples( int inXCenter, int inYCenter ) {
     return count;
     }
 
-
-
-
-
-// optimization:
-// cache dbGet results in RAM
-
-// 2.6 MB of RAM for this.
-#define DB_CACHE_SIZE 131072
-
-typedef struct DBCacheRecord {
-        int x, y, slot, subCont;
-        int value;
-    } DBCacheRecord;
-    
-static DBCacheRecord dbCache[ DB_CACHE_SIZE ];
-
-
-
 static int computeDBCacheHash( int inKeyA, int inKeyB, 
                                int inKeyC, int inKeyD ) {
     
@@ -1922,8 +2697,6 @@ static int computeDBCacheHash( int inKeyA, int inKeyB,
     return hashKey;
     }
 
-
-
 static int computeBLCacheHash( int inKeyA, int inKeyB ) {
     
     int hashKey = ( inKeyA * CACHE_PRIME_A + 
@@ -1935,15 +2708,12 @@ static int computeBLCacheHash( int inKeyA, int inKeyB ) {
     }
 
 
-
 typedef struct DBTimeCacheRecord {
         int x, y, slot, subCont;
         timeSec_t timeVal;
     } DBTimeCacheRecord;
     
 static DBTimeCacheRecord dbTimeCache[ DB_CACHE_SIZE ];
-
-
 
 typedef struct BlockingCacheRecord {
         int x, y;
@@ -1954,10 +2724,7 @@ typedef struct BlockingCacheRecord {
 static BlockingCacheRecord blockingCache[ DB_CACHE_SIZE ];
 
 
-
-
-
-static void initDBCaches() {
+void initDBCaches() {
     DBCacheRecord blankRecord = { 0, 0, 0, 0, -2 };
     for( int i=0; i<DB_CACHE_SIZE; i++ ) {
         dbCache[i] = blankRecord;
@@ -1973,8 +2740,6 @@ static void initDBCaches() {
         blockingCache[i] = blankBlockingRecord;
         }
     }
-
-    
 
 
 // returns -2 on miss
@@ -1992,18 +2757,12 @@ static int dbGetCached( int inX, int inY, int inSlot, int inSubCont ) {
         }
     }
 
-
-
 static void dbPutCached( int inX, int inY, int inSlot, int inSubCont, 
                         int inValue ) {
     DBCacheRecord r = { inX, inY, inSlot, inSubCont, inValue };
     
     dbCache[ computeDBCacheHash( inX, inY, inSlot, inSubCont ) ] = r;
     }
-
-
-
-
 
 // returns 1 on miss
 static int dbTimeGetCached( int inX, int inY, int inSlot, int inSubCont ) {
@@ -2021,17 +2780,12 @@ static int dbTimeGetCached( int inX, int inY, int inSlot, int inSubCont ) {
     }
 
 
-
 static void dbTimePutCached( int inX, int inY, int inSlot, int inSubCont, 
                          timeSec_t inValue ) {
     DBTimeCacheRecord r = { inX, inY, inSlot, inSubCont, inValue };
     
     dbTimeCache[ computeDBCacheHash( inX, inY, inSlot, inSubCont ) ] = r;
     }
-
-
-
-
 
 // returns -1 on miss
 static char blockingGetCached( int inX, int inY ) {
@@ -2047,14 +2801,11 @@ static char blockingGetCached( int inX, int inY ) {
         }
     }
 
-
-
 static void blockingPutCached( int inX, int inY, char inBlocking ) {
     BlockingCacheRecord r = { inX, inY, inBlocking };
     
     blockingCache[ computeBLCacheHash( inX, inY ) ] = r;
     }
-
 
 static void blockingClearCached( int inX, int inY ) {
     
@@ -2066,23 +2817,6 @@ static void blockingClearCached( int inX, int inY ) {
         }
     }
 
-
-
-
-
-extern char lookTimeDBEmpty;
-extern char skipLookTimeCleanup;
-char skipRemovedObjectCleanup = 0;
-
-// if lookTimeDBEmpty, then we init all map cell look times to NOW
-extern int cellsLookedAtToInit;
-
-
-
-
-
-
-
 int countNewlines( char *inString ) {
     int len = strlen( inString );
     int num = 0;
@@ -2093,8 +2827,6 @@ int countNewlines( char *inString ) {
         }
     return num;
     }
-
-
 
 
 #include "../gameSource/categoryBank.h"
@@ -2112,14 +2844,6 @@ char getIsCategory( int inID ) {
         }
     return true;
     }
-
-
-
-// for large inserts, like tutorial map loads, we don't want to 
-// track individual map changes.
-static char skipTrackingMapChanges = false;
-
-
 
 // returns num set after
 int cleanMap() {
@@ -2365,21 +3089,14 @@ int cleanMap() {
     return totalSetCount;
     }
 
-
-
-
-
-
-
-
 // reads lines from inFile until EOF reached or inTimeLimitSec passes
 // leaves file pos at end of last line read, ready to read more lines
 // on future calls
 // returns true if there's more file to read, or false if end of file reached
-static char loadIntoMapFromFile( FILE *inFile, 
-                                 int inOffsetX = 0, 
-                                 int inOffsetY = 0,
-                                 double inTimeLimitSec = 0 ) {
+char loadIntoMapFromFile( FILE *inFile,
+                                 int inOffsetX,
+                                 int inOffsetY,
+                                 double inTimeLimitSec) {
 
     skipTrackingMapChanges = true;
     
@@ -2486,43 +3203,10 @@ static char loadIntoMapFromFile( FILE *inFile,
     return moreFileLeft;
     }
 
-
-
-static inline void changeContained( int inX, int inY, int inSlot, 
+void changeContained( int inX, int inY, int inSlot,
                                     int inSubCont, int inID ) {
     dbPut( inX, inY, FIRST_CONT_SLOT + inSlot, inID, inSubCont );    
     }
-
-
-
-typedef struct GlobalTriggerState {
-        SimpleVector<GridPos> triggerOnLocations;
-        
-        // receivers for this trigger that are waiting to be turned on
-        SimpleVector<GridPos> receiverLocations;
-        
-        SimpleVector<GridPos> triggeredLocations;
-        SimpleVector<int> triggeredIDs;
-        // what we revert to when global trigger turns off (back to receiver)
-        SimpleVector<int> triggeredRevertIDs;
-    } GlobalTriggerState;
-        
-
-
-static SimpleVector<GlobalTriggerState> globalTriggerStates;
-
-
-extern int numSpeechPipes;
-
-extern SimpleVector<GridPos> *speechPipesIn;
-
-extern SimpleVector<GridPos> *speechPipesOut;
-
-
-
-static SimpleVector<GridPos> flightLandingPos;
-
-
 
 static char isAdjacent( GridPos inPos, int inX, int inY ) {
     if( inX <= inPos.x + 1 &&
@@ -2533,8 +3217,6 @@ static char isAdjacent( GridPos inPos, int inX, int inY ) {
         }
     return false;
     }
-
-
 
 void getSpeechPipesIn( int inX, int inY, SimpleVector<int> *outIndicies ) {
     for( int i=0; i<numSpeechPipes; i++ ) {
@@ -2570,8 +3252,6 @@ void getSpeechPipesIn( int inX, int inY, SimpleVector<int> *outIndicies ) {
         }
     }
 
-
-
 SimpleVector<GridPos> *getSpeechPipesOut( int inIndex ) {
     // first, filter them to make sure they are all still here
     for( int p=0; p<speechPipesOut[ inIndex ].size(); p++ ) {
@@ -2601,1327 +3281,254 @@ SimpleVector<GridPos> *getSpeechPipesOut( int inIndex ) {
 
 
 
-static void deleteFileByName( const char *inFileName ) {
-    File f( NULL, inFileName );
-    
-    if( f.exists() ) {
-        f.remove();
-        }
-    }
-
-
-
-static void setupMapChangeLogFile() {
-    File logFolder( NULL, "mapChangeLogs" );
-    
-    if( ! logFolder.exists() ) {
-        logFolder.makeDirectory();
-        }
-
-    // always close file and start a new one when this is called
-
-    if( mapChangeLogFile != NULL ) {
-        fclose( mapChangeLogFile );
-        mapChangeLogFile = NULL;
-        }
-    
-
-    if( logFolder.isDirectory() ) {
-        
-        if( mapChangeLogFile == NULL ) {
-
-            // file does not exist
-            char *newFileName = 
-                autoSprintf( "%.ftime_mapLog.txt",
-                             Time::getCurrentTime() );
-            
-            File *f = logFolder.getChildFile( newFileName );
-            
-            delete [] newFileName;
-            
-            char *fullName = f->getFullFileName();
-            
-            delete f;
-        
-            mapChangeLogFile = fopen( fullName, "a" );
-            delete [] fullName;
-            }
-        }
-
-    mapChangeLogTimeStart = Time::getCurrentTime();
-    fprintf( mapChangeLogFile, "startTime: %.2f\n", mapChangeLogTimeStart );
-    }
-
-
-
-
-void reseedMap( char inForceFresh ) {
-    
-    FILE *seedFile = NULL;
-    
-    if( ! inForceFresh ) {
-        seedFile = fopen( "biomeRandSeed.txt", "r" );
-        }
-    
-
-    char set = false;
-    
-    if( seedFile != NULL ) {
-        int numRead = 
-            fscanf( seedFile, "%u %u", &biomeRandSeedA, &biomeRandSeedB );
-        fclose( seedFile );
-        
-        if( numRead == 2 ) {
-            AppLog::infoF( "Reading map rand seed from file: %u %u\n", 
-                           biomeRandSeedA, biomeRandSeedB );
-            set = true;
-            }
-        }
-    
-
-
-    if( !set ) {
-        // no seed set, or ignoring it, make a new one
-        
-        if( !inForceFresh ) {
-            // not forced (not internal apocalypse)
-            // seed file wiped externally, so it's like a manual apocalypse
-            // report a fresh arc starting
-            reportArcEnd();
-            }
-
-        char *secretA =
-            SettingsManager::getStringSetting( "statsServerSharedSecret", 
-                                               "secret" );
-        int secretALen = strlen( secretA );
-        
-        unsigned int seedBaseA = 
-            crc32( (unsigned char*)secretA, secretALen );
-        
-        const char *nonce = 
-            "8TX8sr7weEK8UIqrE0xV"
-            "voZgafknTgZAVQCTD8UG"
-            "6FKWSgi9N1wDhUQ7VCuw"
-            "uJbKsMAnOzLwbnnB7nQs"
-            "a6mI5rjqijo1oMjPiYbk"
-            "uezCnYjrn744AvSP7Zux"
-            "wOiZLLDUn5tUe1Ym3vTG"
-            "0I80QFzhFPht5TOiiYqT"
-            "jeZx0k9reFeknKkGUac3"
-            "fHlp0rg1PEOtZZ0LZsme";
-        
-        // assumption:  secret has way more than 32 bits of entropy
-        // crc32 only extracts 32 bits, though.
-        
-        // by XORing secret with a random nonce and passing through crc32
-        // again, we get another 32 bits of entropy out of it.
-
-        // Not the best way of doing this, but it is probably sufficient
-        // to prevent brute-force test-guessing of the map seed based
-        // on sample map data.
-
-        char *secretB = stringDuplicate( secretA );
-        
-        int nonceLen = strlen( nonce );
-        
-        for( int i=0; i<secretALen; i++ ) {
-            if( i > nonceLen ) {
-                break;
-                }
-            secretB[i] = secretB[i] ^ nonce[i];
-            }
-
-        unsigned int seedBaseB = 
-            crc32( (unsigned char*)secretB, secretALen );
-
-
-        delete [] secretA;
-        delete [] secretB;
-
-        unsigned int modTimeSeedA = 
-            (unsigned int)fmod( Time::getCurrentTime() + seedBaseA, 
-                                4294967295U );
-        
-        JenkinsRandomSource tempRandSourceA( modTimeSeedA );
-
-        biomeRandSeedA = tempRandSourceA.getRandomInt();
-
-        unsigned int modTimeSeedB = 
-            (unsigned int)fmod( Time::getCurrentTime() + seedBaseB, 
-                                4294967295U );
-        
-        JenkinsRandomSource tempRandSourceB( modTimeSeedB );
-
-        biomeRandSeedB = tempRandSourceB.getRandomInt();
-        
-        AppLog::infoF( "Generating fresh map rand seeds and saving to file: "
-                       "%u %u\n", biomeRandSeedA, biomeRandSeedB );
-
-        // and save it
-        seedFile = fopen( "biomeRandSeed.txt", "w" );
-        if( seedFile != NULL ) {
-            
-            fprintf( seedFile, "%u %u", biomeRandSeedA, biomeRandSeedB );
-            fclose( seedFile );
-            }
-
-
-
-        // re-place rand placement objects
-        CustomRandomSource placementRandSource( biomeRandSeedA );
-
-        int numObjects;
-        ObjectRecord **allObjects = getAllObjects( &numObjects );
-    
-        for( int i=0; i<numObjects; i++ ) {
-            ObjectRecord *o = allObjects[i];
-
-            float p = o->mapChance;
-            if( p > 0 ) {
-                int id = o->id;
-            
-                char *randPlacementLoc =
-                    strstr( o->description, "randPlacement" );
-                
-                if( randPlacementLoc != NULL ) {
-                    // special random placement
-                
-                    int count = 10;                
-                    sscanf( randPlacementLoc, "randPlacement%d", &count );
-                
-                    printf( "Placing %d random occurences of %d (%s) "
-                            "inside %d square radius:\n",
-                            count, id, o->description, barrierRadius );
-                    for( int p=0; p<count; p++ ) {
-                        // sample until we find target biome
-                        int safeR = barrierRadius - 2;
-                        
-                        char placed = false;
-                        while( ! placed ) {                    
-                            int pickX = 
-                                placementRandSource.
-                                getRandomBoundedInt( -safeR, safeR );
-                            int pickY = 
-                                placementRandSource.
-                                getRandomBoundedInt( -safeR, safeR );
-                            
-                            int pickB = getMapBiome( pickX, pickY );
-                            
-                            for( int j=0; j< o->numBiomes; j++ ) {
-                                int b = o->biomes[j];
-                                
-                                if( b == pickB ) {
-                                    // hit
-                                    placed = true;
-                                    printf( "  (%d,%d)\n", pickX, pickY );
-                                    setMapObject( pickX, pickY, id );
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        delete [] allObjects;
-        }
-
-                
-    setupMapChangeLogFile();
-
-    if( !set && mapChangeLogFile != NULL ) {
-        // whenever we actually change the seed, save it to a separate
-        // file in log folder
-
-        File logFolder( NULL, "mapChangeLogs" );
-        
-        char *newFileName = 
-            autoSprintf( "%.ftime_mapSeed.txt",
-                         Time::getCurrentTime() );
-            
-        File *f = logFolder.getChildFile( newFileName );
-            
-        delete [] newFileName;
-        
-        char *fullName = f->getFullFileName();
-        
-        delete f;
-        
-        FILE *seedFile = fopen( fullName, "w" );
-        delete [] fullName;
-        
-        fprintf( seedFile, "%u %u", biomeRandSeedA, biomeRandSeedB );
-        
-        fclose( seedFile );
-        }
-    }
-
-#include "src/server/component/channel/speech.h"
-#include "src/server/component/database/gameFeatures.h"
-
-extern openLife::server::component::channel::SpeechService* speechService;
-extern openLife::server::component::database::GameFeatures* gameFeatures;
-
-char initMap()
-{
-	//!new
-    speechService->init();
-    gameFeatures->deleteEveFeatures1();
-
-
-    //!old
-    initDBCaches();
-    initBiomeCache();
-
-    mapCacheClear();
-    
-    edgeObjectID = SettingsManager::getIntSetting( "edgeObject", 0 );
-    minEveCampRespawnAge = SettingsManager::getFloatSetting( "minEveCampRespawnAge", 60.0f );
-    barrierRadius = SettingsManager::getIntSetting( "barrierRadius", 250 );
-    barrierOn = SettingsManager::getIntSetting( "barrierOn", 1 );
-    longTermCullEnabled = SettingsManager::getIntSetting( "longTermNoLookCullEnabled", 1 );
-
-    SimpleVector<int> *list = SettingsManager::getIntSettingMulti( "barrierObjects" );
-    barrierItemList.deleteAll();
-    barrierItemList.push_back_other( list );
-    delete list;
-    
-    
-
-    for( int i=0; i<NUM_RECENT_PLACEMENTS; i++ )
-    {
-        recentPlacements[i].pos.x = 0;
-        recentPlacements[i].pos.y = 0;
-        recentPlacements[i].depth = 0;
-    }
-    nextPlacementIndex = 0;
-    FILE *placeFile = fopen( "recentPlacements.txt", "r" );
-    if( placeFile != NULL )
-    {
-        for( int i=0; i<NUM_RECENT_PLACEMENTS; i++ ) {
-            fscanf( placeFile, "%d,%d %d", 
-                    &( recentPlacements[i].pos.x ),
-                    &( recentPlacements[i].pos.y ),
-                    &( recentPlacements[i].depth ) );
-            }
-        fscanf( placeFile, "\nnextPlacementIndex=%d", &nextPlacementIndex );
-        fclose( placeFile );
-    }
-    
-
-    FILE *eveRadFile = fopen( "eveRadius.txt", "r" );
-    if( eveRadFile != NULL )
-    {
-        
-        fscanf( eveRadFile, "%d", &eveRadius );
-
-        fclose( eveRadFile );
-    }
-
-    FILE *eveLocFile = fopen( "lastEveLocation.txt", "r" );
-    if( eveLocFile != NULL )
-    {
-        fscanf( eveLocFile, "%d,%d", &( eveLocation.x ), &( eveLocation.y ) );
-        fclose( eveLocFile );
-        printf( "Loading lastEveLocation %d,%d\n", 
-                eveLocation.x, eveLocation.y );
-    }
-
-    // override if shutdownLongLineagePos exists
-    FILE *lineagePosFile = fopen( "shutdownLongLineagePos.txt", "r" );
-    if( lineagePosFile != NULL )
-    {
-        fscanf( lineagePosFile, "%d,%d", 
-                &( eveLocation.x ), &( eveLocation.y ) );
-        fclose( lineagePosFile );
-        printf( "Overriding eveLocation with shutdownLongLineagePos %d,%d\n", 
-                eveLocation.x, eveLocation.y );
-    }
-    else
-    {
-        printf( "No shutdownLongLineagePos.txt file exists\n" );
-        
-        // look for longest monument log file
-        // that has been touched in last 24 hours
-        // (ignore spots that may have been culled)
-        File f( NULL, "monumentLogs" );
-        if( f.exists() && f.isDirectory() ) {
-            int numChildFiles;
-            File **childFiles = f.getChildFiles( &numChildFiles );
-            
-            timeSec_t longTime = 0;
-            int longLen = 0;
-            int longX = 0;
-            int longY = 0;
-            
-            timeSec_t curTime = Time::timeSec();
-
-            int secInDay = 3600 * 24;
-            
-            for( int i=0; i<numChildFiles; i++ ) {
-                timeSec_t modTime = childFiles[i]->getModificationTime();
-                
-                if( curTime - modTime < secInDay ) {
-                    char *cont = childFiles[i]->readFileContents();
-                    
-                    int numNewlines = countNewlines( cont );
-                    
-                    delete [] cont;
-                    
-                    if( numNewlines > longLen ||
-                        ( numNewlines == longLen && modTime > longTime ) ) {
-                        
-                        char *name = childFiles[i]->getFileName();
-                        
-                        int x, y;
-                        int numRead = sscanf( name, "%d_%d_",
-                                              &x, &y );
-
-                        delete [] name;
-                        
-                        if( numRead == 2 ) {
-                            longTime = modTime;
-                            longLen = numNewlines;
-                            longX = x;
-                            longY = y;
-                            }
-                        }
-                    }
-                delete childFiles[i];
-                }
-            delete [] childFiles;
-
-            if( longLen > 0 ) {
-                eveLocation.x = longX;
-                eveLocation.y = longY;
-                
-                printf( "Overriding eveLocation with "
-                        "tallest recent monument location %d,%d\n", 
-                        eveLocation.x, eveLocation.y );
-                }
-            }
-    }
-    
-
-    const char *lookTimeDBName = "lookTime.db";
-    char lookTimeDBExists = false;
-    File lookTimeDBFile( NULL, lookTimeDBName );
-    if( lookTimeDBFile.exists() && SettingsManager::getIntSetting( "flushLookTimes", 0 ) )
-    {
-        AppLog::info( "flushLookTimes.ini set, deleting lookTime.db" );
-        lookTimeDBFile.remove();
-    }
-    
-    lookTimeDBExists = lookTimeDBFile.exists();
-
-    if( ! lookTimeDBExists )
-    {
-        lookTimeDBEmpty = true;
-    }
-
-
-    skipLookTimeCleanup = SettingsManager::getIntSetting( "skipLookTimeCleanup", 0 );
-
-
-    if( skipLookTimeCleanup )
-    {
-        AppLog::info( "skipLookTimeCleanup.ini flag set, "
-                      "not cleaning databases based on stale look times." );
-    }
-
-    LINEARDB3_setMaxLoad( 0.80 );
-    
-    if( ! skipLookTimeCleanup )
-    {
-        DB lookTimeDB_old;
-        
-        int error = DB_open( &lookTimeDB_old, 
-                             lookTimeDBName, 
-                             KISSDB_OPEN_MODE_RWCREAT,
-                             80000,
-                             8, // two 32-bit ints, xy
-                             8 // one 64-bit double, representing an ETA time
-                               // in whatever binary format and byte order
-                               // "double" on the server platform uses
-                             );
-    
-        if( error )
-        {
-            AppLog::errorF( "Error %d opening look time KissDB", error );
-            return false;
-        }
-    
-
-        int staleSec = 
-            SettingsManager::getIntSetting( "mapCellForgottenSeconds", 0 );
-    
-        if( lookTimeDBExists && staleSec > 0 ) {
-            AppLog::info( "\nCleaning stale look times from map..." );
-            
-            
-            static DB lookTimeDB_temp;
-        
-            const char *lookTimeDBName_temp = "lookTime_temp.db";
-
-            File tempDBFile( NULL, lookTimeDBName_temp );
-        
-            if( tempDBFile.exists() ) {
-                tempDBFile.remove();
-                }
-        
-
-        
-            DB_Iterator dbi;
-        
-        
-            DB_Iterator_init( &lookTimeDB_old, &dbi );
-        
-    
-            timeSec_t curTime = MAP_TIMESEC;
-        
-            unsigned char key[8];
-            unsigned char value[8];
-
-            int total = 0;
-            int stale = 0;
-            int nonStale = 0;
-            
-            // first, just count them
-            while( DB_Iterator_next( &dbi, key, value ) > 0 ) {
-                total++;
-
-                timeSec_t t = valueToTime( value );
-            
-                if( curTime - t >= staleSec ) {
-                    // stale cell
-                    // ignore
-                    stale++;
-                    }
-                else {
-                    // non-stale
-                    nonStale++;
-                    }
-                }
-
-            // optimial size for DB of remaining elements
-            unsigned int newSize = DB_getShrinkSize( &lookTimeDB_old,
-                                                     nonStale );
-            
-            AppLog::infoF( "Shrinking hash table for lookTimes from "
-                           "%d down to %d", 
-                           DB_getCurrentSize( &lookTimeDB_old ), 
-                           newSize );
-            
-
-            error = DB_open( &lookTimeDB_temp, 
-                             lookTimeDBName_temp, 
-                             KISSDB_OPEN_MODE_RWCREAT,
-                             newSize,
-                             8, // two 32-bit ints, xy
-                             8 // one 64-bit double, representing an ETA time
-                             // in whatever binary format and byte order
-                             // "double" on the server platform uses
-                             );
-    
-            if( error ) {
-                AppLog::errorF( 
-                    "Error %d opening look time temp KissDB", error );
-                return false;
-                }
-            
-
-            // now that we have new temp db properly sized,
-            // iterate again and insert
-            DB_Iterator_init( &lookTimeDB_old, &dbi );
-        
-            while( DB_Iterator_next( &dbi, key, value ) > 0 ) {
-                timeSec_t t = valueToTime( value );
-            
-                if( curTime - t >= staleSec ) {
-                    // stale cell
-                    // ignore
-                    }
-                else {
-                    // non-stale
-                    // insert it in temp
-                    DB_put_new( &lookTimeDB_temp, key, value );
-                    }
-                }
-
-
-            AppLog::infoF( "Cleaned %d / %d stale look times", stale, total );
-
-            printf( "\n" );
-
-            if( total == 0 ) {
-                lookTimeDBEmpty = true;
-                }
-
-            DB_close( &lookTimeDB_temp );
-            DB_close( &lookTimeDB_old );
-
-            tempDBFile.copy( &lookTimeDBFile );
-            tempDBFile.remove();
-            }
-        else {
-            DB_close( &lookTimeDB_old );
-            }
-    }
-
-
-    int error = DB_open( &lookTimeDB, 
-                         lookTimeDBName, 
-                         KISSDB_OPEN_MODE_RWCREAT,
-                         80000,
-                         8, // two 32-bit ints, xy
-                         8 // one 64-bit double, representing an ETA time
-                         // in whatever binary format and byte order
-                         // "double" on the server platform uses
-                         );
-    
-    if( error ) {
-        AppLog::errorF( "Error %d opening look time KissDB", error );
-        return false;
-        }
-    
-    lookTimeDBOpen = true;
-    
-    
-
-
-    // note that the various decay ETA slots in map.db 
-    // are define but unused, because we store times separately
-    // in mapTime.db
-    error = DB_open_timeShrunk( &db, 
-                         "map.db", 
-                         KISSDB_OPEN_MODE_RWCREAT,
-                         80000,
-                         16, // four 32-bit ints, xysb
-                             // s is the slot number 
-                             // s=0 for base object
-                             // s=1 decay ETA seconds (wall clock time)
-                             // s=2 for count of contained objects
-                             // s=3 first contained object
-                             // s=4 second contained object
-                             // s=... remaining contained objects
-                             // Then decay ETA for each slot, in order,
-                             //   after that.
-                             // s = -1
-                             //  is a special flag slot set to 0 if NONE
-                             //  of the contained items have ETA decay
-                             //  or 1 if some of the contained items might 
-                             //  have ETA decay.
-                             //  (this saves us from having to check each
-                             //   one)
-                             // If a contained object id is negative,
-                             // that indicates that it sub-contains
-                             // other objects in its corresponding b slot
-                             //
-                             // b is for indexing sub-container slots
-                             // b=0 is the main object 
-                             // b=1 is the first sub-slot, etc.
-                         4 // one int, object ID at x,y in slot (s-3)
-                           // OR contained count if s=2
-                         );
-    
-    if( error ) {
-        AppLog::errorF( "Error %d opening map KissDB", error );
-        return false;
-        }
-    
-    dbOpen = true;
-
-
-
-    // this DB uses the same slot numbers as the map.db
-    // however, only times are stored here, because they require 8 bytes
-    // so, slot 0 and 2 are never used, for example
-    error = DB_open_timeShrunk( &timeDB, 
-                         "mapTime.db", 
-                         KISSDB_OPEN_MODE_RWCREAT,
-                         80000,
-                         16, // four 32-bit ints, xysb
-                         // s is the slot number 
-                         // s=0 for base object
-                         // s=1 decay ETA seconds (wall clock time)
-                         // s=2 for count of contained objects
-                         // s=3 first contained object
-                         // s=4 second contained object
-                         // s=... remaining contained objects
-                         // Then decay ETA for each slot, in order,
-                         //   after that.
-                             // If a contained object id is negative,
-                             // that indicates that it sub-contains
-                             // other objects in its corresponding b slot
-                             //
-                             // b is for indexing sub-container slots
-                             // b=0 is the main object 
-                             // b=1 is the first sub-slot, etc.
-                         8 // one 64-bit double, representing an ETA time
-                           // in whatever binary format and byte order
-                           // "double" on the server platform uses
-                         );
-    
-    if( error ) {
-        AppLog::errorF( "Error %d opening map time KissDB", error );
-        return false;
-        }
-    
-    timeDBOpen = true;
-
-
-
-
-
-
-    /******************************************************************************************************************/
-
-    error = worldMap->init();
-    
-    if( error ) {
-        AppLog::errorF( "Error %d opening biome KissDB", error );
-        return false;
-        }
-    
-    biomeDBOpen = true;
-
-
-
-    // see if any biomes are listed in DB
-    // if not, we don't even need to check it when generating map
-    DB_Iterator biomeDBi;
-    DB_Iterator_init( &biomeDB, &biomeDBi );
-    
-    unsigned char biomeKey[8];
-    unsigned char biomeValue[12];
-    
-
-    while( DB_Iterator_next( &biomeDBi, biomeKey, biomeValue ) > 0 )
-    {
-        int x = valueToInt( biomeKey );
-        int y = valueToInt( &( biomeKey[4] ) );
-        
-        anyBiomesInDB = true;
-        
-        if( x > maxBiomeXLoc ) {
-            maxBiomeXLoc = x;
-            }
-        if( x < minBiomeXLoc ) {
-            minBiomeXLoc = x;
-            }
-        if( y > maxBiomeYLoc ) {
-            maxBiomeYLoc = y;
-            }
-        if( y < minBiomeYLoc ) {
-            minBiomeYLoc = y;
-            }
-        }
-    
-    printf( "Min (x,y) of biome in db = (%d,%d), "
-            "Max (x,y) of biome in db = (%d,%d)\n",
-            minBiomeXLoc, minBiomeYLoc,
-            maxBiomeXLoc, maxBiomeYLoc );
-    /******************************************************************************************************************/
-    
-            
-
-
-    error = DB_open_timeShrunk( &floorDB, 
-                         "floor.db", 
-                         KISSDB_OPEN_MODE_RWCREAT,
-                         80000,
-                         8, // two 32-bit ints, xy
-                         4 // one int, the floor object ID at x,y 
-                         );
-    
-    if( error ) {
-        AppLog::errorF( "Error %d opening floor KissDB", error );
-        return false;
-        }
-    
-    floorDBOpen = true;
-
-
-
-    error = DB_open_timeShrunk( &floorTimeDB, 
-                         "floorTime.db", 
-                         KISSDB_OPEN_MODE_RWCREAT,
-                         80000,
-                         8, // two 32-bit ints, xy
-                         8 // one 64-bit double, representing an ETA time
-                           // in whatever binary format and byte order
-                           // "double" on the server platform uses
-                         );
-    
-    if( error ) {
-        AppLog::errorF( "Error %d opening floor time KissDB", error );
-        return false;
-        }
-    
-    floorTimeDBOpen = true;
-
-
-
-    // ALWAYS delete old grave DB at each server startup
-    // grave info is only player ID, and server only remembers players
-    // live, in RAM, while it is still running
-    deleteFileByName( "grave.db" );
-
-
-    error = DB_open( &graveDB, 
-                     "grave.db", 
-                     KISSDB_OPEN_MODE_RWCREAT,
-                     80000,
-                     8, // two 32-bit ints, xy
-                     4 // one int, the grave player ID at x,y 
-                     );
-    
-    if( error ) {
-        AppLog::errorF( "Error %d opening grave KissDB", error );
-        return false;
-        }
-    
-    graveDBOpen = true;
-
-
-
-
-
-    error = DB_open( &eveDB, 
-                         "eve.db", 
-                         KISSDB_OPEN_MODE_RWCREAT,
-                         // this can be a lot smaller than other DBs
-                         // it's not performance-critical, and the keys are
-                         // much longer, so stackdb will waste disk space
-                         5000,
-                         50, // first 50 characters of email address
-                             // append spaces to the end if needed 
-                         12 // three ints,  x_center, y_center, radius
-                         );
-    
-    if( error ) {
-        AppLog::errorF( "Error %d opening eve KissDB", error );
-        return false;
-        }
-    
-    eveDBOpen = true;
-
-
-
-
-    error = DB_open( &metaDB, 
-                     "meta.db", 
-                     KISSDB_OPEN_MODE_RWCREAT,
-                     // starting size doesn't matter here
-                     500,
-                     4, // one 32-bit int as key
-                     // data
-                     MAP_METADATA_LENGTH
-                     );
-    
-    if( error ) {
-        AppLog::errorF( "Error %d opening meta KissDB", error );
-        return false;
-        }
-    
-    metaDBOpen = true;
-
-    DB_Iterator metaIterator;
-    
-    DB_Iterator_init( &metaDB, &metaIterator );
-
-    unsigned char metaKey[4];
-    
-    unsigned char metaValue[MAP_METADATA_LENGTH];
-
-    int maxMetaID = 0;
-    int numMetaRecords = 0;
-    
-    while( DB_Iterator_next( &metaIterator, metaKey, metaValue ) > 0 ) {
-        numMetaRecords++;
-        
-        int metaID = valueToInt( metaKey );
-
-        if( metaID > maxMetaID ) {
-            maxMetaID = metaID;
-            }
-        }
-    
-    AppLog::infoF( 
-        "MetadataDB:  Found %d records with max MetadataID of %d",
-        numMetaRecords, maxMetaID );
-    
-    setLastMetadataID( maxMetaID );
-    
-
-
-    
-
-
-    if( lookTimeDBEmpty && cellsLookedAtToInit > 0 ) {
-        printf( "Since lookTime db was empty, we initialized look times "
-                "for %d cells to now.\n\n", cellsLookedAtToInit );
-        }
-
-    
-
-    int numObjects;
-    ObjectRecord **allObjects = getAllObjects( &numObjects );
-    
-    
-    // first, find all biomes
-    SimpleVector<int> biomeList;
-    
-    
-    for( int i=0; i<numObjects; i++ ) {
-        ObjectRecord *o = allObjects[i];
-        
-        if( o->mapChance > 0 ) {
-            
-            for( int j=0; j< o->numBiomes; j++ ) {
-                int b = o->biomes[j];
-                
-                if( biomeList.getElementIndex(b) == -1 ) {
-                    biomeList.push_back( b );
-                    }
-                }
-            }
-        
-        }
-
-
-    // manually controll order
-    SimpleVector<int> *biomeOrderList =
-        SettingsManager::getIntSettingMulti( "biomeOrder" );
-
-    SimpleVector<float> *biomeWeightList =
-        SettingsManager::getFloatSettingMulti( "biomeWeights" );
-
-    for( int i=0; i<biomeOrderList->size(); i++ ) {
-        int b = biomeOrderList->getElementDirect( i );
-        
-        if( biomeList.getElementIndex( b ) == -1 ) {
-            biomeOrderList->deleteElement( i );
-            biomeWeightList->deleteElement( i );
-            i--;
-            }
-        }
-    
-    // now add any discovered biomes to end of list
-    for( int i=0; i<biomeList.size(); i++ ) {
-        int b = biomeList.getElementDirect( i );
-        if( biomeOrderList->getElementIndex( b ) == -1 ) {
-            biomeOrderList->push_back( b );
-            // default weight
-            biomeWeightList->push_back( 0.1 );
-            }
-        }
-    
-    numBiomes = biomeOrderList->size();
-    biomes = biomeOrderList->getElementArray();
-    biomeWeights = biomeWeightList->getElementArray();
-    biomeCumuWeights = new float[ numBiomes ];
-    
-    biomeTotalWeight = 0;
-    for( int i=0; i<numBiomes; i++ ) {
-        biomeTotalWeight += biomeWeights[i];
-        biomeCumuWeights[i] = biomeTotalWeight;
-        }
-    
-    delete biomeOrderList;
-    delete biomeWeightList;
-
-
-    SimpleVector<int> *specialBiomeList =
-        SettingsManager::getIntSettingMulti( "specialBiomes" );
-    
-    numSpecialBiomes = specialBiomeList->size();
-    specialBiomes = specialBiomeList->getElementArray();
-    
-    regularBiomeLimit = numBiomes - numSpecialBiomes;
-
-    delete specialBiomeList;
-
-    specialBiomeCumuWeights = new float[ numSpecialBiomes ];
-    
-    specialBiomeTotalWeight = 0;
-    for( int i=regularBiomeLimit; i<numBiomes; i++ ) {
-        specialBiomeTotalWeight += biomeWeights[i];
-        specialBiomeCumuWeights[i-regularBiomeLimit] = specialBiomeTotalWeight;
-        }
-
-
-    specialBiomeBandMode = 
-        SettingsManager::getIntSetting( "specialBiomeBandMode", 0 );
-    
-    specialBiomeBandThickness = 
-        SettingsManager::getIntSetting( "specialBiomeBandThickness",
-                                        300 );
-    
-    SimpleVector<int> *specialBiomeOrderList =
-        SettingsManager::getIntSettingMulti( "specialBiomeBandOrder" );
-
-    specialBiomeBandOrder.push_back_other( specialBiomeOrderList );
-    
-    // look up biome index for each special biome
-    for( int i=0; i<specialBiomeBandOrder.size(); i++ ) {
-        int biomeNumber = specialBiomeBandOrder.getElementDirect( i );
-    
-        int biomeIndex = 0;
-
-        for( int j=0; j<numBiomes; j++ ) {
-            if( biomes[j] == biomeNumber ) {
-                biomeIndex = j;
-                break;
-                }
-            }
-        specialBiomeBandIndexOrder.push_back( biomeIndex );
-        }
-
-    delete specialBiomeOrderList;
-
-
-    int specialBiomeBandDefault = 
-        SettingsManager::getIntSetting( "specialBiomeBandDefault", 0 );
-    
-    // look up biome index
-    specialBiomeBandDefaultIndex = 0;
-    for( int j=0; j<numBiomes; j++ ) {
-        if( biomes[j] == specialBiomeBandDefault ) {
-            specialBiomeBandDefaultIndex = j;
-            break;
-            }
-        }
-    
-
-    SimpleVector<int> *specialBiomeBandYCenterList =
-        SettingsManager::getIntSettingMulti( "specialBiomeBandYCenter" );
-
-    specialBiomeBandYCenter.push_back_other( specialBiomeBandYCenterList );
-
-    delete specialBiomeBandYCenterList;
-
-
-    minActivePlayersForBirthlands = 
-        SettingsManager::getIntSetting( "minActivePlayersForBirthlands", 15 );
-
-    
-
-    naturalMapIDs = new SimpleVector<int>[ numBiomes ];
-    naturalMapChances = new SimpleVector<float>[ numBiomes ];
-    totalChanceWeight = new float[ numBiomes ];
-
-    for( int j=0; j<numBiomes; j++ ) {
-        totalChanceWeight[j] = 0;
-        }
-    
-
-    CustomRandomSource phaseRandSource( randSeed );
-
-    
-    for( int i=0; i<numObjects; i++ ) {
-        ObjectRecord *o = allObjects[i];
-
-        if( strstr( o->description, "eveSecondaryLoc" ) != NULL ) {
-            eveSecondaryLocObjectIDs.push_back( o->id );
-            }
-        if( strstr( o->description, "eveHomeMarker" ) != NULL ) {
-            eveHomeMarkerObjectID = o->id;
-            }
-        
-
-
-        float p = o->mapChance;
-        if( p > 0 ) {
-            int id = o->id;
-            
-            allNaturalMapIDs.push_back( id );
-
-            char *gridPlacementLoc =
-                strstr( o->description, "gridPlacement" );
-
-            char *randPlacementLoc =
-                strstr( o->description, "randPlacement" );
-                
-            if( gridPlacementLoc != NULL ) {
-                // special grid placement
-                
-                int spacingX = 10;
-                int spacingY = 10;
-                int phaseX = 0;
-                int phaseY = 0;
-                
-                int numRead = sscanf( gridPlacementLoc, 
-                                      "gridPlacement%d,%d,p%d,p%d", 
-                                      &spacingX, &spacingY,
-                                      &phaseX, &phaseY );
-                if( numRead < 2 ) {
-                    // only X specified, square grid
-                    spacingY = spacingX;
-                    }
-                if( numRead < 4 ) {
-                    // only X specified, square grid
-                    phaseY = phaseX;
-                    }
-                
-                
-
-                if( strstr( o->description, "evePrimaryLoc" ) != NULL ) {
-                    evePrimaryLocObjectID = id;
-                    evePrimaryLocSpacingX = spacingX;
-                    evePrimaryLocSpacingY = spacingY;
-                    }
-
-                SimpleVector<int> permittedBiomes;
-                for( int b=0; b<o->numBiomes; b++ ) {
-                    permittedBiomes.push_back( 
-                        getBiomeIndex( o->biomes[ b ] ) );
-                    }
-
-                int wiggleScaleX = 4;
-                int wiggleScaleY = 4;
-                
-                if( spacingX > 12 ) {
-                    wiggleScaleX = spacingX / 3;
-                    }
-                if( spacingY > 12 ) {
-                    wiggleScaleY = spacingY / 3;
-                    }
-                
-                MapGridPlacement gp =
-                    { id, 
-                      spacingX, spacingY,
-                      phaseX, phaseY,
-                      //phaseRandSource.getRandomBoundedInt( 0, 
-                      //                                     spacingX - 1 ),
-                      //phaseRandSource.getRandomBoundedInt( 0, 
-                      //                                     spacingY - 1 ),
-                      wiggleScaleX,
-                      wiggleScaleY,
-                      permittedBiomes };
-                
-                gridPlacements.push_back( gp );
-                }
-            else if( randPlacementLoc != NULL ) {
-                // special random placement
-                
-                // don't actually place these now, do it on reseed
-                // but skip adding them to list of natural objects
-                }
-            else {
-                // regular fractal placement
-                
-                for( int j=0; j< o->numBiomes; j++ ) {
-                    int b = o->biomes[j];
-                    
-                    int bIndex = getBiomeIndex( b );
-                    naturalMapIDs[bIndex].push_back( id );
-                    naturalMapChances[bIndex].push_back( p );
-                    
-                    totalChanceWeight[bIndex] += p;
-                    }
-                }
-            }
-        }
-
-
-    for( int j=0; j<numBiomes; j++ ) {    
-        AppLog::infoF( 
-            "Biome %d:  Found %d natural objects with total weight %f",
-            biomes[j], naturalMapIDs[j].size(), totalChanceWeight[j] );
-        }
-    
-    delete [] allObjects;
-
-    
-    skipRemovedObjectCleanup = 
-        SettingsManager::getIntSetting( "skipRemovedObjectCleanup", 0 );
-
-
-
-
-    
-    FILE *dummyFile = fopen( "mapDummyRecall.txt", "r" );
-    
-    if( dummyFile != NULL ) {
-        AppLog::info( "Found mapDummyRecall.txt file, restoring dummy objects "
-                      "on map" );
-        
-        skipTrackingMapChanges = true;
-        
-        int numRead = 5;
-        
-        int numSet = 0;
-        
-        int numStale = 0;
-
-        while( numRead == 5 || numRead == 7 ) {
-            
-            int x, y, parentID, dummyIndex, slot, b;
-            
-            char marker;            
-            
-            slot = -1;
-            b = 0;
-            
-            numRead = fscanf( dummyFile, "(%d,%d) %c %d %d [%d %d]\n", 
-                              &x, &y, &marker, &parentID, &dummyIndex,
-                              &slot, &b );
-            if( numRead == 5 || numRead == 7 ) {
-
-                if( dbLookTimeGet( x, y ) <= 0 ) {
-                    // stale area of map
-                    numStale++;
-                    continue;
-                    }                
-                
-                ObjectRecord *parent = getObject( parentID );
-                
-                int dummyID = -1;
-                
-                if( parent != NULL ) {
-                    
-                    if( marker == 'u' && parent->numUses-1 > dummyIndex ) {
-                        dummyID = parent->useDummyIDs[ dummyIndex ];
-                        }
-                    else if( marker == 'v' && 
-                             parent->numVariableDummyIDs > dummyIndex ) {
-                        dummyID = parent->variableDummyIDs[ dummyIndex ];
-                        }
-                    }
-                if( dummyID > 0 ) {
-                    if( numRead == 5 ) {
-                        setMapObjectRaw( x, y, dummyID );
-                        }
-                    else {
-                        changeContained( x, y, slot, b, dummyID );
-                        }
-                    numSet++;
-                    }
-                }
-            }
-        skipTrackingMapChanges = false;
-        
-        fclose( dummyFile );
-        
-        
-        AppLog::infoF( "Restored %d dummy objects to map "
-                       "(%d skipped as stale)", numSet, numStale );
-        
-        remove( "mapDummyRecall.txt" );
-        
-        printf( "\n" );
-        }
-
-
-
-    // clean map after restoring dummy objects
-    int totalSetCount = 1;
-
-    if( ! skipRemovedObjectCleanup ) {
-        totalSetCount = cleanMap();
-        }
-    else {
-        AppLog::info( "Skipping cleaning map of removed objects" );
-        }
-    
-
-
-    
-    if( totalSetCount == 0 ) {
-        // map has been cleared
-
-        // ignore old value for placements
-        clearRecentPlacements();
-        }
-
-
-
-    globalTriggerStates.deleteAll();
-    
-    int numTriggers = getNumGlobalTriggers();
-    for( int i=0; i<numTriggers; i++ ) {
-        GlobalTriggerState s;
-        globalTriggerStates.push_back( s );
-        }
-
-
-
-    useTestMap = SettingsManager::getIntSetting( "useTestMap", 0 );
-    
-
-    if( useTestMap ) {        
-
-        FILE *testMapFile = fopen( "testMap.txt", "r" );
-        FILE *testMapStaleFile = fopen( "testMapStale.txt", "r" );
-        
-        if( testMapFile != NULL && testMapStaleFile == NULL ) {
-            
-            testMapStaleFile = fopen( "testMapStale.txt", "w" );
-            
-            if( testMapStaleFile != NULL ) {
-                fprintf( testMapStaleFile, "1" );
-                fclose( testMapStaleFile );
-                testMapStaleFile = NULL;
-                }
-            
-            printf( "Loading testMap.txt\n" );
-            
-            loadIntoMapFromFile( testMapFile );
-
-            fclose( testMapFile );
-            testMapFile = NULL;
-            }
-        
-        if( testMapFile != NULL ) {
-            fclose( testMapFile );
-            }
-        if( testMapStaleFile != NULL ) {
-            fclose( testMapStaleFile );
-            }
-        }
-
-
-    SimpleVector<char*> *specialPlacements = 
-        SettingsManager::getSetting( "specialMapPlacements" );
-    
-    if( specialPlacements != NULL )
-    {
-        for( int i=0; i<specialPlacements->size(); i++ ) {
-            char *line = specialPlacements->getElementDirect( i );
-            
-            int x, y, id;
-            id = -1;
-            int numRead = sscanf( line, "%d_%d_%d", &x, &y, &id );
-            
-            if( numRead == 3 && id > -1 ) {
-                
-                }
-            setMapObject( x, y, id );
-            }
-        specialPlacements->deallocateStringElements();
-        delete specialPlacements;
-    }
-    
-    
-    reseedMap( false );
-        
-    
-
-    
-    // for debugging the map
-    // printObjectSamples();
-    // printBiomeSamples();
-    //outputMapImage();
-
-    //outputBiomeFractals();
-
-
-    return true;
+void deleteFileByName( const char *inFileName ) {
+	File f( NULL, inFileName );
+
+	if( f.exists() ) {
+		f.remove();
+	}
 }
 
+static void setupMapChangeLogFile() {
+	File logFolder( NULL, "mapChangeLogs" );
+
+	if( ! logFolder.exists() ) {
+		logFolder.makeDirectory();
+	}
+
+	// always close file and start a new one when this is called
+
+	if( mapChangeLogFile != NULL ) {
+		fclose( mapChangeLogFile );
+		mapChangeLogFile = NULL;
+	}
+
+
+	if( logFolder.isDirectory() ) {
+
+		if( mapChangeLogFile == NULL ) {
+
+			// file does not exist
+			char *newFileName =
+					autoSprintf( "%.ftime_mapLog.txt",
+								 Time::getCurrentTime() );
+
+			File *f = logFolder.getChildFile( newFileName );
+
+			delete [] newFileName;
+
+			char *fullName = f->getFullFileName();
+
+			delete f;
+
+			mapChangeLogFile = fopen( fullName, "a" );
+			delete [] fullName;
+		}
+	}
+
+	mapChangeLogTimeStart = Time::getCurrentTime();
+	fprintf( mapChangeLogFile, "startTime: %.2f\n", mapChangeLogTimeStart );
+}
+
+void reseedMap( char inForceFresh ) {
+
+	FILE *seedFile = NULL;
+
+	if( ! inForceFresh ) {
+		seedFile = fopen( "biomeRandSeed.txt", "r" );
+	}
+
+
+	char set = false;
+
+	if( seedFile != NULL ) {
+		int numRead =
+				fscanf( seedFile, "%u %u", &biomeRandSeedA, &biomeRandSeedB );
+		fclose( seedFile );
+
+		if( numRead == 2 ) {
+			AppLog::infoF( "Reading map rand seed from file: %u %u\n",
+						   biomeRandSeedA, biomeRandSeedB );
+			set = true;
+		}
+	}
 
 
 
+	if( !set ) {
+		// no seed set, or ignoring it, make a new one
+
+		if( !inForceFresh ) {
+			// not forced (not internal apocalypse)
+			// seed file wiped externally, so it's like a manual apocalypse
+			// report a fresh arc starting
+			reportArcEnd();
+		}
+
+		char *secretA =
+				SettingsManager::getStringSetting( "statsServerSharedSecret",
+												   "secret" );
+		int secretALen = strlen( secretA );
+
+		unsigned int seedBaseA =
+				crc32( (unsigned char*)secretA, secretALen );
+
+		const char *nonce =
+				"8TX8sr7weEK8UIqrE0xV"
+				"voZgafknTgZAVQCTD8UG"
+				"6FKWSgi9N1wDhUQ7VCuw"
+				"uJbKsMAnOzLwbnnB7nQs"
+				"a6mI5rjqijo1oMjPiYbk"
+				"uezCnYjrn744AvSP7Zux"
+				"wOiZLLDUn5tUe1Ym3vTG"
+				"0I80QFzhFPht5TOiiYqT"
+				"jeZx0k9reFeknKkGUac3"
+				"fHlp0rg1PEOtZZ0LZsme";
+
+		// assumption:  secret has way more than 32 bits of entropy
+		// crc32 only extracts 32 bits, though.
+
+		// by XORing secret with a random nonce and passing through crc32
+		// again, we get another 32 bits of entropy out of it.
+
+		// Not the best way of doing this, but it is probably sufficient
+		// to prevent brute-force test-guessing of the map seed based
+		// on sample map data.
+
+		char *secretB = stringDuplicate( secretA );
+
+		int nonceLen = strlen( nonce );
+
+		for( int i=0; i<secretALen; i++ ) {
+			if( i > nonceLen ) {
+				break;
+			}
+			secretB[i] = secretB[i] ^ nonce[i];
+		}
+
+		unsigned int seedBaseB =
+				crc32( (unsigned char*)secretB, secretALen );
+
+
+		delete [] secretA;
+		delete [] secretB;
+
+		unsigned int modTimeSeedA =
+				(unsigned int)fmod( Time::getCurrentTime() + seedBaseA,
+									4294967295U );
+
+		JenkinsRandomSource tempRandSourceA( modTimeSeedA );
+
+		biomeRandSeedA = tempRandSourceA.getRandomInt();
+
+		unsigned int modTimeSeedB =
+				(unsigned int)fmod( Time::getCurrentTime() + seedBaseB,
+									4294967295U );
+
+		JenkinsRandomSource tempRandSourceB( modTimeSeedB );
+
+		biomeRandSeedB = tempRandSourceB.getRandomInt();
+
+		AppLog::infoF( "Generating fresh map rand seeds and saving to file: "
+					   "%u %u\n", biomeRandSeedA, biomeRandSeedB );
+
+		// and save it
+		seedFile = fopen( "biomeRandSeed.txt", "w" );
+		if( seedFile != NULL ) {
+
+			fprintf( seedFile, "%u %u", biomeRandSeedA, biomeRandSeedB );
+			fclose( seedFile );
+		}
+
+
+
+		// re-place rand placement objects
+		CustomRandomSource placementRandSource( biomeRandSeedA );
+
+		int numObjects;
+		ObjectRecord **allObjects = getAllObjects( &numObjects );
+
+		for( int i=0; i<numObjects; i++ ) {
+			ObjectRecord *o = allObjects[i];
+
+			float p = o->mapChance;
+			if( p > 0 ) {
+				int id = o->id;
+
+				char *randPlacementLoc =
+						strstr( o->description, "randPlacement" );
+
+				if( randPlacementLoc != NULL ) {
+					// special random placement
+
+					int count = 10;
+					sscanf( randPlacementLoc, "randPlacement%d", &count );
+
+					printf( "Placing %d random occurences of %d (%s) "
+							"inside %d square radius:\n",
+							count, id, o->description, barrierRadius );
+					for( int p=0; p<count; p++ ) {
+						// sample until we find target biome
+						int safeR = barrierRadius - 2;
+
+						char placed = false;
+						while( ! placed ) {
+							int pickX =
+									placementRandSource.
+									getRandomBoundedInt( -safeR, safeR );
+							int pickY =
+									placementRandSource.
+									getRandomBoundedInt( -safeR, safeR );
+
+							int pickB = getMapBiome( pickX, pickY );
+
+							for( int j=0; j< o->numBiomes; j++ ) {
+								int b = o->biomes[j];
+
+								if( b == pickB ) {
+									// hit
+									placed = true;
+									printf( "  (%d,%d)\n", pickX, pickY );
+									setMapObject( pickX, pickY, id );
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		delete [] allObjects;
+	}
+
+
+	setupMapChangeLogFile();
+
+	if( !set && mapChangeLogFile != NULL ) {
+		// whenever we actually change the seed, save it to a separate
+		// file in log folder
+
+		File logFolder( NULL, "mapChangeLogs" );
+
+		char *newFileName =
+				autoSprintf( "%.ftime_mapSeed.txt",
+							 Time::getCurrentTime() );
+
+		File *f = logFolder.getChildFile( newFileName );
+
+		delete [] newFileName;
+
+		char *fullName = f->getFullFileName();
+
+		delete f;
+
+		FILE *seedFile = fopen( fullName, "w" );
+		delete [] fullName;
+
+		fprintf( seedFile, "%u %u", biomeRandSeedA, biomeRandSeedB );
+
+		fclose( seedFile );
+	}
+}
 
 
 
@@ -3931,8 +3538,6 @@ void freeAndNullString( char **inStringPointer ) {
         *inStringPointer = NULL;
         }
     }
-
-
 
 static void rememberDummy( FILE *inFile, int inX, int inY, 
                            ObjectRecord *inDummyO, 
@@ -3990,9 +3595,7 @@ static void rememberDummy( FILE *inFile, int inX, int inY,
                      marker, parent, dummyIndex, inSlot, inB );
             }
         }
-    }
-
-
+}
 
 void freeMap( char inSkipCleanup ) {
     if( mapChangeLogFile != NULL ) {
@@ -4280,13 +3883,7 @@ void freeMap( char inSkipCleanup ) {
     flightLandingPos.deleteAll();
 
     homelands.deleteAll();
-    }
-
-
-
-
-
-
+}
 
 void wipeMapFiles() {
     deleteFileByName( "biome.db" );
@@ -4300,12 +3897,6 @@ void wipeMapFiles() {
     deleteFileByName( "playerStats.db" );
     deleteFileByName( "meta.db" );
     }
-
-
-
-
-
-
 
 // returns -1 if not found
 static int dbGet( int inX, int inY, int inSlot, int inSubCont = 0 ) {
@@ -4343,8 +3934,6 @@ static int dbGet( int inX, int inY, int inSlot, int inSubCont = 0 ) {
     }
 
 
-
-
 // returns 0 if not found
 static timeSec_t dbTimeGet( int inX, int inY, int inSlot, int inSubCont = 0 ) {
 
@@ -4378,8 +3967,6 @@ static timeSec_t dbTimeGet( int inX, int inY, int inSlot, int inSubCont = 0 ) {
     return timeVal;
     }
 
-
-
 static int dbFloorGet( int inX, int inY ) {
     unsigned char key[9];
     unsigned char value[4];
@@ -4400,8 +3987,6 @@ static int dbFloorGet( int inX, int inY ) {
         }
     }
 
-
-
 // returns 0 if not found
 static timeSec_t dbFloorTimeGet( int inX, int inY ) {
     unsigned char key[8];
@@ -4419,8 +4004,6 @@ static timeSec_t dbFloorTimeGet( int inX, int inY ) {
         return 0;
         }
     }
-
-
 
 // returns 0 if not found
 timeSec_t dbLookTimeGet( int inX, int inY ) {
@@ -4440,10 +4023,7 @@ timeSec_t dbLookTimeGet( int inX, int inY ) {
         }
     }
 
-
-
-
-static void dbPut( int inX, int inY, int inSlot, int inValue, 
+void dbPut( int inX, int inY, int inSlot, int inValue,
                    int inSubCont ) {
     
     if( inSlot == 0 && inSubCont == 0 ) {
@@ -4523,10 +4103,6 @@ static void dbPut( int inX, int inY, int inSlot, int inValue,
     dbPutCached( inX, inY, inSlot, inSubCont, inValue );
     }
 
-
-
-
-
 static void dbTimePut( int inX, int inY, int inSlot, timeSec_t inTime,
                        int inSubCont = 0 ) {
     // ETA decay changes don't get reported as map changes    
@@ -4543,9 +4119,6 @@ static void dbTimePut( int inX, int inY, int inSlot, timeSec_t inTime,
 
     dbTimePutCached( inX, inY, inSlot, inSubCont, inTime );
     }
-
-
-
 
 static void dbFloorPut( int inX, int inY, int inValue ) {
     
@@ -4585,8 +4158,6 @@ static void dbFloorPut( int inX, int inY, int inValue ) {
     DB_put( &floorDB, key, value );
     }
 
-
-
 static void dbFloorTimePut( int inX, int inY, timeSec_t inTime ) {
     // ETA decay changes don't get reported as map changes    
     
@@ -4600,7 +4171,6 @@ static void dbFloorTimePut( int inX, int inY, timeSec_t inTime ) {
     
     DB_put( &floorTimeDB, key, value );
     }
-
 
 
 void dbLookTimePut( int inX, int inY, timeSec_t inTime ) {
@@ -4618,7 +4188,6 @@ void dbLookTimePut( int inX, int inY, timeSec_t inTime ) {
     }
 
 
-
 // certain types of movement transitions should always be live
 // tracked, even when out of view (NSEW moves, for human-made traveling objects
 // for example)
@@ -4631,8 +4200,6 @@ static char isDecayTransAlwaysLiveTracked( TransRecord *inTrans ) {
 
     return false;
     }
-
-
 
 // slot is 0 for main map cell, or higher for container slots
 static void trackETA( int inX, int inY, int inSlot, timeSec_t inETA,
@@ -4703,10 +4270,6 @@ static void trackETA( int inX, int inY, int inSlot, timeSec_t inETA,
         }
     }
 
-
-
-
-
 float getMapContainerTimeStretch( int inX, int inY, int inSubCont=0 ) {
     
     float stretch = 1.0f;
@@ -4728,17 +4291,7 @@ float getMapContainerTimeStretch( int inX, int inY, int inSubCont=0 ) {
         stretch = getObject( containerID )->slotTimeStretch;
         }
     return stretch;
-    }                        
-
-
-
-void checkDecayContained( int inX, int inY, int inSubCont = 0 );
-
-
-
-
-
-
+}
 
 int *getContainedRaw( int inX, int inY, int *outNumContained, 
                       int inSubCont ) {
@@ -4781,8 +4334,6 @@ int *getContainedRaw( int inX, int inY, int *outNumContained,
         }
     }
 
-
-
 // returns true if no contained items will decay
 char getSlotItemsNoDecay( int inX, int inY, int inSubCont ) {
     int result = dbGet( inX, inY, NO_DECAY_SLOT, inSubCont );
@@ -4797,7 +4348,6 @@ char getSlotItemsNoDecay( int inX, int inY, int inSubCont ) {
         }
     }
 
-
 void setSlotItemsNoDecay( int inX, int inY, int inSubCont, char inNoDecay ) {
     int val = 1;
     if( inNoDecay ) {
@@ -4805,9 +4355,6 @@ void setSlotItemsNoDecay( int inX, int inY, int inSubCont, char inNoDecay ) {
         }
     dbPut( inX, inY, NO_DECAY_SLOT, val, inSubCont );
     }
-
-
-
 
 int *getContained( int inX, int inY, int *outNumContained, int inSubCont ) {
     if( ! getSlotItemsNoDecay( inX, inY, inSubCont ) ) {
@@ -4842,7 +4389,6 @@ int *getContainedNoLook( int inX, int inY, int *outNumContained,
     }
 
 
-
 // gets DB slot number where a given container slot's decay time is stored
 // if inNumContained is -1, it will be looked up in database
 static int getContainerDecaySlot( int inX, int inY, int inSlot, 
@@ -4854,9 +4400,6 @@ static int getContainerDecaySlot( int inX, int inY, int inSlot,
     
     return FIRST_CONT_SLOT + inNumContained + inSlot;
     }
-
-
-
 
 
 timeSec_t *getContainedEtaDecay( int inX, int inY, int *outNumContained,
@@ -4880,8 +4423,6 @@ timeSec_t *getContainedEtaDecay( int inX, int inY, int *outNumContained,
         }
     return containedEta;
     }
-
-
 
 int checkDecayObject( int inX, int inY, int inID ) {
     if( inID == 0 ) {
@@ -5660,8 +5201,6 @@ int checkDecayObject( int inX, int inY, int inID ) {
         }
     }
 
-
-
 void checkDecayContained( int inX, int inY, int inSubCont ) {
     
     if( getNumContained( inX, inY, inSubCont ) == 0 ) {
@@ -5818,8 +5357,6 @@ void checkDecayContained( int inX, int inY, int inSubCont ) {
     }
 
 
-
-
 int getTweakedBaseMap( int inX, int inY ) {
     
     // nothing in map
@@ -5940,7 +5477,6 @@ int getTweakedBaseMap( int inX, int inY ) {
     }
 
 
-
 static int getPossibleBarrier( int inX, int inY ) {
     if( barrierOn )
     if( inX == barrierRadius ||
@@ -5983,12 +5519,10 @@ static int getPossibleBarrier( int inX, int inY ) {
         }
 
     return 0;
-    }
+}
 
-
-
-int getMapObjectRaw( int inX, int inY ) {
-    
+int getMapObjectRaw( int inX, int inY )
+{
     int barrier = getPossibleBarrier( inX, inY );
 
     if( barrier != 0 ) {
@@ -6000,13 +5534,16 @@ int getMapObjectRaw( int inX, int inY ) {
     if( result == -1 ) {
         result = getTweakedBaseMap( inX, inY );
         }
-    
     return result;
-    }
+}
 
-
-
-
+/**
+ *
+ * @param inXStart
+ * @param inYStart
+ * @param inXEnd
+ * @param inYEnd
+ */
 void lookAtRegion( int inXStart, int inYStart, int inXEnd, int inYEnd ) {
     timeSec_t currentTime = MAP_TIMESEC;
     
@@ -6108,7 +5645,12 @@ void lookAtRegion( int inXStart, int inYStart, int inXEnd, int inYEnd ) {
     }
 
 
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @return
+ */
 int getMapObject( int inX, int inY ) {
 
     // look at this map cell
@@ -6126,15 +5668,24 @@ int getMapObject( int inX, int inY ) {
     return checkDecayObject( inX, inY, getMapObjectRaw( inX, inY ) );
     }
 
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @return
+ */
 int getMapObjectNoLook( int inX, int inY ) {
 
     // apply any decay that should have happened by now
     return checkDecayObject( inX, inY, getMapObjectRaw( inX, inY ) );
     }
 
-
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @return
+ */
 char isMapObjectInTransit( int inX, int inY ) {
     char found;
     
@@ -6150,15 +5701,17 @@ char isMapObjectInTransit( int inX, int inY ) {
     return false;
     }
 
-
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @return
+ */
 int getMapBiome( int inX, int inY )
 {
 	//return biomes[worldMap->select(inX, inY)->getBiome()];
     return biomes[getMapBiomeIndex( inX, inY )];
 }
-
-
 
 /**
  * @note returns properly formatted chunk message for chunk centered around x,y
@@ -6385,14 +5938,6 @@ unsigned char *getChunkMessage( int inStartX, int inStartY,
     }
 
 
-
-
-
-
-
-
-
-
 char isMapSpotBlocking( int inX, int inY ) {
     
     char cachedVal = blockingGetCached( inX, inY );
@@ -6457,11 +6002,7 @@ char isMapSpotBlocking( int inX, int inY ) {
     // cache non-blocking results
     blockingPutCached( inX, inY, 0 );
     return false;
-    }
-
-
-
-
+}
 
 static char equal( GridPos inA, GridPos inB ) {
     if( inA.x == inB.x && inA.y == inB.y ) {
@@ -6469,8 +6010,6 @@ static char equal( GridPos inA, GridPos inB ) {
         }
     return false;
     }
-
-
 
 static char tooClose( GridPos inA, GridPos inB, int inMinComponentDistance ) {
     double xDist = (double)inA.x - (double)inB.x;
@@ -6488,9 +6027,6 @@ static char tooClose( GridPos inA, GridPos inB, int inMinComponentDistance ) {
         }
     return false;
     }
-    
-
-
 
 static int findGridPos( SimpleVector<GridPos> *inList, GridPos inP ) {
     for( int i=0; i<inList->size(); i++ ) {
@@ -6501,9 +6037,6 @@ static int findGridPos( SimpleVector<GridPos> *inList, GridPos inP ) {
         }
     return -1;
     }
-
-
-
 
 // inSetO can be NULL
 // returns new ID at inX, inY
@@ -6669,9 +6202,6 @@ static int applyTapoutGradientRotate( int inX, int inY,
     return curObjectID;
     }
 
-
-
-
 // returns true if tapout-triggered a +primaryHomeland object
 static char runTapoutOperation( int inX, int inY, 
                                 int inRadiusX, int inRadiusY,
@@ -6757,15 +6287,6 @@ static char runTapoutOperation( int inX, int inY,
     
     return returnVal;
     }
-
-
-
-// from server.cpp
-extern int getPlayerLineage( int inID );
-extern char isPlayerIgnoredForEvePlacement( int inID );
-
-    
-
 
 void setMapObjectRaw( int inX, int inY, int inID ) {
     int oldID = dbGet( inX, inY, 0 );
@@ -7134,8 +6655,6 @@ void setMapObjectRaw( int inX, int inY, int inID ) {
         }
     }
 
-
-
 static void logMapChange( int inX, int inY, int inID ) {
     // log it?
     if( mapChangeLogFile != NULL ) {
@@ -7195,8 +6714,6 @@ static void logMapChange( int inX, int inY, int inID ) {
             }
         }
     }
-
-
 
 void setMapObject( int inX, int inY, int inID ) {
     
@@ -7283,9 +6800,6 @@ void setMapObject( int inX, int inY, int inID ) {
         
     }
 
-
-
-
 void setEtaDecay( int inX, int inY, timeSec_t inAbsoluteTimeInSeconds,
                   TransRecord *inApplicableTrans ) {
     dbTimePut( inX, inY, DECAY_SLOT, inAbsoluteTimeInSeconds );
@@ -7294,19 +6808,10 @@ void setEtaDecay( int inX, int inY, timeSec_t inAbsoluteTimeInSeconds,
         }
     }
 
-
-
-
 timeSec_t getEtaDecay( int inX, int inY ) {
     // 0 if not found
     return dbTimeGet( inX, inY, DECAY_SLOT );
     }
-
-
-
-
-
-
 
 void setSlotEtaDecay( int inX, int inY, int inSlot,
                       timeSec_t inAbsoluteTimeInSeconds, int inSubCont ) {
@@ -7320,7 +6825,6 @@ void setSlotEtaDecay( int inX, int inY, int inSlot,
         }
     }
 
-
 timeSec_t getSlotEtaDecay( int inX, int inY, int inSlot, int inSubCont ) {
     // 0 if not found
     return dbTimeGet( inX, inY, getContainerDecaySlot( inX, inY, inSlot, 
@@ -7328,13 +6832,17 @@ timeSec_t getSlotEtaDecay( int inX, int inY, int inSlot, int inSubCont ) {
                       inSubCont );
     }
 
-
-
-
-
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inContainedID
+ * @param inEtaDecay
+ * @param inSubCont
+ */
 void addContained( int inX, int inY, int inContainedID, 
-                   timeSec_t inEtaDecay, int inSubCont ) {
+                   timeSec_t inEtaDecay, int inSubCont )
+{
     int oldNum;
     
 
@@ -7384,9 +6892,15 @@ void addContained( int inX, int inY, int inContainedID,
     
     delete [] newContained;
     delete [] newContainedETA;
-    }
+}
 
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inSubCont
+ * @return
+ */
 int getNumContained( int inX, int inY, int inSubCont ) {
     int result = dbGet( inX, inY, NUM_CONT_SLOT, inSubCont );
     
@@ -7400,11 +6914,14 @@ int getNumContained( int inX, int inY, int inSubCont ) {
         }
     }
 
-
-
-
-
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inNumContained
+ * @param inContained
+ * @param inSubCont
+ */
 void setContained( int inX, int inY, int inNumContained, int *inContained,
                    int inSubCont ) {
     dbPut( inX, inY, NUM_CONT_SLOT, inNumContained, inSubCont );
@@ -7413,7 +6930,14 @@ void setContained( int inX, int inY, int inNumContained, int *inContained,
         }
     }
 
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inNumContained
+ * @param inContainedEtaDecay
+ * @param inSubCont
+ */
 void setContainedEtaDecay( int inX, int inY, int inNumContained, 
                            timeSec_t *inContainedEtaDecay, int inSubCont ) {
     char someDecay = false;
@@ -7432,9 +6956,14 @@ void setContainedEtaDecay( int inX, int inY, int inNumContained,
     }
 
 
-
-
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inSlot
+ * @param inSubCont
+ * @return
+ */
 int getContained( int inX, int inY, int inSlot, int inSubCont ) {
     int num = getNumContained( inX, inY, inSubCont );
     
@@ -7456,11 +6985,17 @@ int getContained( int inX, int inY, int inSlot, int inSubCont ) {
         // nothing in that slot
         return 0;
         }
-    }
-
-
+}
     
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inSlot
+ * @param outEtaDecay
+ * @param inSubCont
+ * @return
+ */
 // removes from top of stack
 int removeContained( int inX, int inY, int inSlot, timeSec_t *outEtaDecay,
                      int inSubCont ) {
@@ -7569,7 +7104,12 @@ int removeContained( int inX, int inY, int inSlot, timeSec_t *outEtaDecay,
     }
 
 
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inSubCont
+ */
 void clearAllContained( int inX, int inY, int inSubCont ) {
     int oldNum = getNumContained( inX, inY, inSubCont );
 
@@ -7588,13 +7128,15 @@ void clearAllContained( int inX, int inY, int inSubCont ) {
         }
     }
 
-
-
-
-#include "spiral.h"
-
-
-void shrinkContainer( int inX, int inY, int inNumNewSlots, int inSubCont ) {
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inNumNewSlots
+ * @param inSubCont
+ */
+void shrinkContainer( int inX, int inY, int inNumNewSlots, int inSubCont )
+{
     int oldNum = getNumContained( inX, inY, inSubCont );
     
     if( oldNum > inNumNewSlots ) {
@@ -7657,12 +7199,15 @@ void shrinkContainer( int inX, int inY, int inNumNewSlots, int inSubCont ) {
             }
         
         }
-    }
+}
 
-
-
-
-MapChangeRecord getMapChangeRecord( ChangePosition inPos ) {
+/**
+ *
+ * @param inPos
+ * @return
+ */
+MapChangeRecord getMapChangeRecord( ChangePosition inPos )
+{
 
     MapChangeRecord r;
     r.absoluteX = inPos.x;
@@ -7763,13 +7308,15 @@ MapChangeRecord getMapChangeRecord( ChangePosition inPos ) {
     r.formatString = buffer.getElementString();
 
     return r;
-    }
+}
 
-
-
-
-
-char *getMapChangeLineString( ChangePosition inPos ) {
+/**
+ *
+ * @param inPos
+ * @return
+ */
+char *getMapChangeLineString( ChangePosition inPos )
+{
     MapChangeRecord r = getMapChangeRecord( inPos );
 
     char *lineString = getMapChangeLineString( &r, 0, 0 );
@@ -7777,13 +7324,18 @@ char *getMapChangeLineString( ChangePosition inPos ) {
     delete [] r.formatString;
     
     return lineString;
-    }
+}
 
-
-
-
+/**
+ *
+ * @param inRecord
+ * @param inRelativeToX
+ * @param inRelativeToY
+ * @return
+ */
 char *getMapChangeLineString( MapChangeRecord *inRecord,
-                              int inRelativeToX, int inRelativeToY ) {
+                              int inRelativeToX, int inRelativeToY )
+{
     
     char *lineString;
     
@@ -7801,13 +7353,16 @@ char *getMapChangeLineString( MapChangeRecord *inRecord,
         }
     
     return lineString;
-    }
+}
 
-
-
-
-
-int getMapFloor( int inX, int inY ) {
+/**
+ *
+ * @param inX
+ * @param inY
+ * @return
+ */
+int getMapFloor( int inX, int inY )
+{
     int id = dbFloorGet( inX, inY );
     
     if( id <= 0 ) {
@@ -7847,11 +7402,16 @@ int getMapFloor( int inX, int inY ) {
     setMapFloor( inX, inY, newID );
 
     return newID;
-    }
+}
 
-
-
-void setMapFloor( int inX, int inY, int inID ) {
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inID
+ */
+void setMapFloor( int inX, int inY, int inID )
+{
     
     logMapChange( inX, inY, inID );
 
@@ -7870,24 +7430,34 @@ void setMapFloor( int inX, int inY, int inID ) {
         }
 
     setFloorEtaDecay( inX, inY, newEta );
-    }
+}
 
-
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inAbsoluteTimeInSeconds
+ */
 void setFloorEtaDecay( int inX, int inY, timeSec_t inAbsoluteTimeInSeconds ) {
     dbFloorTimePut( inX, inY, inAbsoluteTimeInSeconds );
     }
 
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @return
+ */
 timeSec_t getFloorEtaDecay( int inX, int inY ) {
     return dbFloorTimeGet( inX, inY );
     }
 
-
-
-
-
-int getNextDecayDelta() {
+/**
+ *
+ * @return
+ */
+int getNextDecayDelta()
+{
     if( liveDecayQueue.size() == 0 ) {
         return -1;
         }
@@ -7902,11 +7472,13 @@ int getNextDecayDelta() {
         }
     
     return minTime - curTime;
-    }
+}
 
-
-
-
+/**
+ *
+ * @param inX
+ * @param inY
+ */
 static void cleanMaxContainedHashTable( int inX, int inY ) {
     
     ContRecord *oldCount = 
@@ -7945,14 +7517,14 @@ static void cleanMaxContainedHashTable( int inX, int inY ) {
                 oldCount->maxSubSlots = maxFoundSubSlot;
                 }            
             }
-        
-        
         }
-    }
+}
 
-
-
-
+/**
+ *
+ * @param inMapChanges
+ * @param inChangePosList
+ */
 void stepMap( SimpleVector<MapChangeRecord> *inMapChanges, 
               SimpleVector<ChangePosition> *inChangePosList ) {
     
@@ -8067,13 +7639,18 @@ void stepMap( SimpleVector<MapChangeRecord> *inMapChanges,
 
     
     mapChangePosSinceLastStep.deleteAll();
-    }
+}
 
-
-
-
+/**
+ *
+ * @param inNumDecays
+ * @param inDecayEtas
+ * @param inOldContainerID
+ * @param inNewContainerID
+ */
 void restretchDecays( int inNumDecays, timeSec_t *inDecayEtas,
-                      int inOldContainerID, int inNewContainerID ) {
+                      int inOldContainerID, int inNewContainerID )
+{
     
     float oldStrech = getObject( inOldContainerID )->slotTimeStretch;
     float newStetch = getObject( inNewContainerID )->slotTimeStretch;
@@ -8091,13 +7668,20 @@ void restretchDecays( int inNumDecays, timeSec_t *inDecayEtas,
                 }
             }    
         }
-    }
+}
 
-
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inOldContainerID
+ * @param inNewContainerID
+ * @param inSubCont
+ */
 void restretchMapContainedDecays( int inX, int inY,
                                   int inOldContainerID, 
-                                  int inNewContainerID, int inSubCont ) {
+                                  int inNewContainerID, int inSubCont )
+{
     
     float oldStrech = getObject( inOldContainerID )->slotTimeStretch;
     float newStetch = getObject( inNewContainerID )->slotTimeStretch;
@@ -8114,12 +7698,15 @@ void restretchMapContainedDecays( int inX, int inY,
         setContainedEtaDecay( inX, inY, oldNum, oldContDecay, inSubCont );
         delete [] oldContDecay;
         }
-    }
+}
 
-
-
-
-doublePair computeRecentCampAve( int *outNumPosFound ) {
+/**
+ *
+ * @param outNumPosFound
+ * @return
+ */
+doublePair computeRecentCampAve( int *outNumPosFound )
+{
     SimpleVector<doublePair> pos;
     SimpleVector<double> weight;
     
@@ -8208,20 +7795,23 @@ doublePair computeRecentCampAve( int *outNumPosFound ) {
     
     // ave is now center of camp
     return ave;
-    }
+}
 
-
-
-
-extern char doesEveLineExist( int inEveID );
-
-
-
+/**
+ *
+ * @param inEmail
+ * @param inID
+ * @param outX
+ * @param outY
+ * @param inOtherPeoplePos
+ * @param inAllowRespawn
+ * @param inIncrementPosition
+ */
 void getEvePosition( const char *inEmail, int inID, int *outX, int *outY, 
                      SimpleVector<GridPos> *inOtherPeoplePos,
                      char inAllowRespawn,
-                     char inIncrementPosition ) {
-
+                     char inIncrementPosition )
+{
     int currentEveRadius = eveRadius;
 
     char forceEveToBorder = false;
@@ -8751,13 +8341,16 @@ void getEvePosition( const char *inEmail, int inID, int *outX, int *outY,
     // later
 
     clearRecentPlacements();
-    }
+}
 
-
-
-
-void mapEveDeath( const char *inEmail, double inAge, GridPos inDeathMapPos ) {
-    
+/**
+ *
+ * @param inEmail
+ * @param inAge
+ * @param inDeathMapPos
+ */
+void mapEveDeath( const char *inEmail, double inAge, GridPos inDeathMapPos )
+{
     // record exists?
 
     int pX, pY, pR;
@@ -8812,16 +8405,20 @@ void mapEveDeath( const char *inEmail, double inAge, GridPos inDeathMapPos ) {
             pX, pY, pR, inEmail );
     
     eveDBPut( inEmail, pX, pY, pR );
-    }
+}
 
 
-
-
-static unsigned int nextLoadID = 0;
-
-
+/**
+ *
+ * @param inTutorialLoad
+ * @param inMapFileName
+ * @param inX
+ * @param inY
+ * @return
+ */
 char loadTutorialStart( TutorialLoadProgress *inTutorialLoad, 
-                        const char *inMapFileName, int inX, int inY ) {
+                        const char *inMapFileName, int inX, int inY )
+{
 
     // don't open file yet, because we don't want to have the same
     // file open in parallel
@@ -8838,13 +8435,17 @@ char loadTutorialStart( TutorialLoadProgress *inTutorialLoad,
     inTutorialLoad->stepCount = 0;
 
     return true;
-    }
+}
 
-
-
-
+/**
+ *
+ * @param inTutorialLoad
+ * @param inTimeLimitSec
+ * @return
+ */
 char loadTutorialStep( TutorialLoadProgress *inTutorialLoad,
-                       double inTimeLimitSec ) {
+                       double inTimeLimitSec )
+{
 
     if( ! inTutorialLoad->fileOpened ) {
         // first step, open file
@@ -8902,16 +8503,16 @@ char loadTutorialStep( TutorialLoadProgress *inTutorialLoad,
         inTutorialLoad->file = NULL;
         }
     return moreLeft;
-    }
+}
 
-
-
-
-
-
-
-
-char getMetadata( int inMapID, unsigned char *inBuffer ) {
+/**
+ *
+ * @param inMapID
+ * @param inBuffer
+ * @return
+ */
+char getMetadata( int inMapID, unsigned char *inBuffer )
+{
     int metaID = extractMetadataID( inMapID );
     
     if( metaID == 0 ) {
@@ -8928,13 +8529,17 @@ char getMetadata( int inMapID, unsigned char *inBuffer ) {
         }
 
     return false;
-    }
+}
 
-    
-
-
+/**
+ *
+ * @param inObjectID
+ * @param inBuffer
+ * @return
+ */
 // returns full map ID with embedded metadata ID for new metadata record
-int addMetadata( int inObjectID, unsigned char *inBuffer ) {
+int addMetadata( int inObjectID, unsigned char *inBuffer )
+{
     int metaID = getNewMetadataID();
     
     int mapID = packMetadataID( inObjectID, metaID );
@@ -8946,22 +8551,31 @@ int addMetadata( int inObjectID, unsigned char *inBuffer ) {
 
     
     return mapID;
-    }
+}
 
-
-
-
-void removeLandingPos( GridPos inPos ) {
+/**
+ *
+ * @param inPos
+ */
+void removeLandingPos( GridPos inPos )
+{
     for( int i=0; i<flightLandingPos.size(); i++ ) {
         if( equal( inPos, flightLandingPos.getElementDirect( i ) ) ) {
             flightLandingPos.deleteElement( i );
             return;
             }
         }
-    }
+}
 
-
-char isInDir( GridPos inPos, GridPos inOtherPos, doublePair inDir ) {
+/**
+ *
+ * @param inPos
+ * @param inOtherPos
+ * @param inDir
+ * @return
+ */
+char isInDir( GridPos inPos, GridPos inOtherPos, doublePair inDir )
+{
     double dX = (double)inOtherPos.x - (double)inPos.x;
     double dY = (double)inOtherPos.y - (double)inPos.y;
     
@@ -8978,13 +8592,19 @@ char isInDir( GridPos inPos, GridPos inOtherPos, doublePair inDir ) {
         return true;
         }
     return false;
-    }
+}
 
-
-
+/**
+ *
+ * @param inCurPos
+ * @param inDir
+ * @param outFound
+ * @return
+ */
 GridPos getNextCloseLandingPos( GridPos inCurPos, 
                                 doublePair inDir, 
-                                char *outFound ) {
+                                char *outFound )
+{
     
     int closestIndex = -1;
     GridPos closestPos;
@@ -9037,12 +8657,16 @@ GridPos getNextCloseLandingPos( GridPos inCurPos,
         }
     
     return closestPos;
-    }
+}
 
-
-
-
-GridPos getClosestLandingPos( GridPos inTargetPos, char *outFound ) {
+/**
+ *
+ * @param inTargetPos
+ * @param outFound
+ * @return
+ */
+GridPos getClosestLandingPos( GridPos inTargetPos, char *outFound )
+{
 
     int closestIndex = -1;
     GridPos closestPos;
@@ -9087,12 +8711,16 @@ GridPos getClosestLandingPos( GridPos inTargetPos, char *outFound ) {
         }
     
     return closestPos;
-    }
+}
 
-                
-
-
-
+/**
+ *
+ * @param inCurrentX
+ * @param inCurrentY
+ * @param inDir
+ * @param inRadiusLimit
+ * @return
+ */
 GridPos getNextFlightLandingPos( int inCurrentX, int inCurrentY, 
                                  doublePair inDir, 
                                  int inRadiusLimit ) {
@@ -9194,16 +8822,18 @@ GridPos getNextFlightLandingPos( int inCurrentX, int inCurrentY,
         returnVal.x = 0;
         returnVal.y = 0;
         }
-    
-          
-
 
     return returnVal;
-    }
+}
 
-
-
-int getGravePlayerID( int inX, int inY ) {
+/**
+ *
+ * @param inX
+ * @param inY
+ * @return
+ */
+int getGravePlayerID( int inX, int inY )
+{
     unsigned char key[9];
     unsigned char value[4];
 
@@ -9221,10 +8851,16 @@ int getGravePlayerID( int inX, int inY ) {
     else {
         return 0;
         }
-    }
+}
 
-
-void setGravePlayerID( int inX, int inY, int inPlayerID ) {
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inPlayerID
+ */
+void setGravePlayerID( int inX, int inY, int inPlayerID )
+{
     unsigned char key[8];
     unsigned char value[4];
     
@@ -9234,34 +8870,7 @@ void setGravePlayerID( int inX, int inY, int inPlayerID ) {
             
     
     DB_put( &graveDB, key, value );
-    }
-
-
-
-
-
-
-static char tileCullingIteratorSet = false;
-static DB_Iterator tileCullingIterator;
-
-static char floorCullingIteratorSet = false;
-static DB_Iterator floorCullingIterator;
-
-static double lastSettingsLoadTime = 0;
-static double settingsLoadInterval = 5 * 60;
-
-static int numTilesExaminedPerCullStep = 10;
-static int longTermCullingSeconds = 3600 * 12;
-
-static int minActivePlayersForLongTermCulling = 15;
-
-
-
-static SimpleVector<int> noCullItemList;
-
-
-static int numTilesSeenByIterator = 0;
-static int numFloorsSeenByIterator = 0;
+}
 
 void stepMapLongTermCulling( int inNumCurrentPlayers ) {
 
@@ -9444,12 +9053,17 @@ void stepMapLongTermCulling( int inNumCurrentPlayers ) {
                 }
             }
         }
-    }
+}
 
-
-
-
-int isHomeland( int inX, int inY, int inLineageEveID ) {
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inLineageEveID
+ * @return
+ */
+int isHomeland( int inX, int inY, int inLineageEveID )
+{
     Homeland *h = getHomeland( inX, inY );
     
     if( h != NULL ) {
@@ -9475,14 +9089,16 @@ int isHomeland( int inX, int inY, int inLineageEveID ) {
     // never found one, and they aren't inside someone else's
     // report that they don't have one
     return 0;
-    }
+}
 
-
-
-
-#include "specialBiomes.h"
-
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inLineageEveID
+ * @param inDisplayID
+ * @return
+ */
 int isBirthland( int inX, int inY, int inLineageEveID, int inDisplayID ) {
     if( specialBiomeBandMode && 
         getNumPlayers() >= minActivePlayersForBirthlands ) {
@@ -9524,12 +9140,15 @@ int isBirthland( int inX, int inY, int inLineageEveID, int inDisplayID ) {
     else {
         return isHomeland( inX, inY, inLineageEveID );
         }
-    }
+}
 
-
-
-
-int getSpecialBiomeBandYCenterForRace( int inRace ) {
+/**
+ *
+ * @param inRace
+ * @return
+ */
+int getSpecialBiomeBandYCenterForRace( int inRace )
+{
     int bandIndex = -1;
     
     for( int i=0; i<specialBiomeBandOrder.size(); i++ ) {
@@ -9565,12 +9184,16 @@ int getSpecialBiomeBandYCenterForRace( int inRace ) {
         }
     
     return specialBiomeBandYCenter.getElementDirect( bandIndex );
-    }
+}
 
-
-
-
-void logHomelandBirth( int inX, int inY, int inLineageEveID ) {
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param inLineageEveID
+ */
+void logHomelandBirth( int inX, int inY, int inLineageEveID )
+{
     Homeland *h = getHomeland( inX, inY );
     
     if( h != NULL ) {
@@ -9578,11 +9201,15 @@ void logHomelandBirth( int inX, int inY, int inLineageEveID ) {
             h->lastBabyBirthTime = Time::getCurrentTime();
             }
         }
-    }
+}
 
 
-
-void homelandsDead( int inLineageEveID ) {
+/**
+ *
+ * @param inLineageEveID
+ */
+void homelandsDead( int inLineageEveID )
+{
     for( int i=0; i<homelands.size(); i++ ) {
         Homeland *h = homelands.getElement( i );
         
@@ -9590,13 +9217,19 @@ void homelandsDead( int inLineageEveID ) {
             expireHomeland( h );
             }
         }
-    }
+}
 
-
-
+/**
+ *
+ * @param inX
+ * @param inY
+ * @param outCenter
+ * @param outLineageEveID
+ * @return
+ */
 char getHomelandCenter( int inX, int inY, 
-                        GridPos *outCenter, int *outLineageEveID ) {
-    
+                        GridPos *outCenter, int *outLineageEveID )
+{
     // include expired
     Homeland *h = getHomeland( inX, inY, true );
 
@@ -9616,11 +9249,14 @@ char getHomelandCenter( int inX, int inY,
     else {
         return false;
         }
-    }
+}
 
-
-
-SimpleVector<HomelandInfo> getHomelandChanges() {
+/**
+ *
+ * @return
+ */
+SimpleVector<HomelandInfo> getHomelandChanges()
+{
     SimpleVector<HomelandInfo> list;
     
     for( int i=0; i<homelands.size(); i++ ) {
@@ -9647,14 +9283,19 @@ SimpleVector<HomelandInfo> getHomelandChanges() {
             }
         }
     return list;
-    }
+}
 
-
-
-
+/**
+ *
+ * @param inPosX
+ * @param inPosY
+ * @param outMovingDestX
+ * @param outMovingDestY
+ * @return
+ */
 int getDeadlyMovingMapObject( int inPosX, int inPosY,
-                              int *outMovingDestX, int *outMovingDestY ) {
-    
+                              int *outMovingDestX, int *outMovingDestY )
+{
     double curTime = Time::getCurrentTime();
     
     int numMoving = liveMovements.size();
@@ -9689,4 +9330,4 @@ int getDeadlyMovingMapObject( int inPosX, int inPosY,
     
 
     return 0;
-    }
+}
