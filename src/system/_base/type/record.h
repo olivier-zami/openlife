@@ -5,7 +5,7 @@
 #ifndef OPENLIFE_SYSTEM_TYPE_RECORD_H
 #define OPENLIFE_SYSTEM_TYPE_RECORD_H
 
-namespace openlife::system::type::record
+namespace openLife::system::type::record
 {
 	typedef struct{
 		int value;

@@ -1520,7 +1520,7 @@ char initMap()
 static void biomeDBPut( int inX, int inY, int inValue, int inSecondPlace,
 						double inSecondPlaceGap )
 						{
-	openlife::system::type::record::Biome biomeRecord;
+	openLife::system::type::record::Biome biomeRecord;
 	biomeRecord.value = inValue;
 	biomeRecord.secondPlace = inSecondPlace;
 	biomeRecord.secondPlaceGap = inSecondPlaceGap;
@@ -3170,7 +3170,7 @@ char loadIntoMapFromFile( FILE *inFile,
 
 
         // set all test map directly in database
-        openlife::system::type::record::Biome biomeRecord;
+        openLife::system::type::record::Biome biomeRecord;
         biomeRecord.value = r.biome;
         biomeRecord.secondPlace = r.biome;
         biomeRecord.secondPlaceGap = 0.5;
@@ -5453,7 +5453,7 @@ int getTweakedBaseMap( int inX, int inY ) {
             
             // naturally-occurring object that forces a biome
             // stick into floorDB
-            openlife::system::type::record::Biome biomeRecord;
+            openLife::system::type::record::Biome biomeRecord;
             biomeRecord.value = o->forceBiome;
             biomeRecord.secondPlace = o->forceBiome;
             biomeRecord.secondPlaceGap = 0.5;

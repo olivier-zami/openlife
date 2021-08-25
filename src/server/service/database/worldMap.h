@@ -27,9 +27,10 @@ namespace openLife::server::service::database
 
 			int init();
 			WorldMap* select(int posX, int posY);
-			void insert(openlife::system::type::record::Biome biome);
+			void insert(openLife::system::type::record::Biome biome);
 			void insert(common::object::entity::MapZone* mapZone);
 			int getBiome();
+			openLife::system::type::record::Biome getBiomeRecord();
 
 			void useBiomeStorehouse(openLife::system::object::store::device::random::LinearDB* biomeStoreHouse);
 

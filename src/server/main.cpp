@@ -40,6 +40,14 @@ openLife::server::service::database::WorldMap* worldMap;
 
 int main()
 {
+	if(!openLife::system::isFileWritable())
+	{
+		openLife::system::notice("File system read-only.  Server exiting.");
+		return 1;
+	}
+
+	openLife::system::notice("Attempt to start the server ...");
+
 	try
 	{
 		//!new
@@ -62,20 +70,7 @@ int main()
 		worldMap = new openLife::server::service::database::WorldMap(worldMapSetting);
 		worldMap->handleBiomeDB(&biomeDB);
 
-		//worldMap->select(-256,-256)->insert(mapZone);
-		//server->useService("worldMap");
-
-		if(!openLife::system::isFileWritable())
-		{
-			openLife::system::notice("File system read-only.  Server exiting.");
-			return 1;
-		}
-
-		openLife::system::notice("Attempt to start the server ...");
-
-
-
-
+		worldMap->select(0, 0)->getBiomeRecord();
 
 
 		//!net map biome around spawning zone
