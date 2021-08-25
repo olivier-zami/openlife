@@ -1517,7 +1517,7 @@ char initMap()
 }
 
 /**********************************************************************************************************************/
-static void biomeDBPut( int inX, int inY, int inValue, int inSecondPlace,
+void biomeDBPut( int inX, int inY, int inValue, int inSecondPlace,
 						double inSecondPlaceGap )
 						{
 	openLife::system::type::record::Biome biomeRecord;
@@ -2128,8 +2128,12 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
             int secondPlace;
             double secondPlaceGap;
 
-            //int pickedBiome = worldMap->select(inX, inY)->getBiome();
-            int pickedBiome = getMapBiomeIndex( inX, inY, &secondPlace, &secondPlaceGap );
+            openLife::system::type::record::Biome biomeRecord;
+            biomeRecord = worldMap->select(inX, inY)->getBiomeRecord();
+            int pickedBiome = biomeRecord.value;
+            secondPlace = biomeRecord.secondPlace;
+            secondPlaceGap = biomeRecord.secondPlaceGap;
+            //int pickedBiome = getMapBiomeIndex( inX, inY, &secondPlace, &secondPlaceGap );
 
         
             if( pickedBiome == -1 ) {
@@ -2175,8 +2179,12 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
         int secondPlace;
         double secondPlaceGap;
 
-        //int pickedBiome = worldMap->select(inX, inY)->getBiome();
-        int pickedBiome = getMapBiomeIndex( inX, inY, &secondPlace, &secondPlaceGap );
+        openLife::system::type::record::Biome biomeRecord;
+        biomeRecord = worldMap->select(inX, inY)->getBiomeRecord();
+        int pickedBiome = biomeRecord.value;
+        secondPlace = biomeRecord.secondPlace;
+        secondPlaceGap = biomeRecord.secondPlaceGap;
+        //int pickedBiome = getMapBiomeIndex( inX, inY, &secondPlace, &secondPlaceGap );
         
         if( pickedBiome == -1 ) {
             mapCacheInsert( inX, inY, 0 );
@@ -2446,8 +2454,8 @@ void outputMapImage() {
             
             int id = getBaseMap( x - h/2, - ( y - h/2 ) );
 
-            //int biomeInd = worldMap->select(x - h/2, -( y - h/2 ))->getBiome();
-            int biomeInd = getMapBiomeIndex( x - h/2, -( y - h/2 ) );
+            int biomeInd = worldMap->select(x - h/2, -( y - h/2 ) )->getBiomeRecord().value;
+            //int biomeInd = getMapBiomeIndex( x - h/2, -( y - h/2 ) );
 
             if( id > 0 ) {
                 for( int i=0; i<allNaturalMapIDs.size(); i++ ) {
@@ -5709,8 +5717,8 @@ char isMapObjectInTransit( int inX, int inY ) {
  */
 int getMapBiome( int inX, int inY )
 {
-	//return biomes[worldMap->select(inX, inY)->getBiome()];
-    return biomes[getMapBiomeIndex( inX, inY )];
+	return biomes[worldMap->select( inX, inY )->getBiomeRecord().value];
+    //return biomes[getMapBiomeIndex( inX, inY )];
 }
 
 /**
@@ -5789,8 +5797,8 @@ unsigned char *getChunkMessage( int inStartX, int inStartY,
 
                 // get it ourselves
 
-               // lastCheckedBiome = biomes[worldMap->select(x, y)->getBiome()];
-                lastCheckedBiome = biomes[getMapBiomeIndex( x, y )];
+                lastCheckedBiome = biomes[worldMap->select( x, y )->getBiomeRecord().value];
+                //lastCheckedBiome = biomes[getMapBiomeIndex( x, y )];
                 }
             chunkBiomes[ cI ] = lastCheckedBiome;
 

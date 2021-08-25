@@ -8,6 +8,8 @@
 namespace openLife::system::type::record
 {
 	typedef struct{
+		int x;
+		int y;
 		int value;
 		int secondPlace;
 		double secondPlaceGap;

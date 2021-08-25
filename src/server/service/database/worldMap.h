@@ -22,8 +22,9 @@ namespace openLife::server::service::database
 			~WorldMap();
 
 			//!temporary methods
-			void handleBiomeDB(LINEARDB3* biomeDB);
+			void legacy(LINEARDB3* biomeDB, char* notEmptyDB);
 			openLife::system::settings::database::WorldMap settings;
+			char* notEmptyDB;
 
 			int init();
 			WorldMap* select(int posX, int posY);
@@ -60,7 +61,8 @@ int biomeDBGet( int inX, int inY,
 				int *outSecondPlaceBiome = nullptr,
 				double *outSecondPlaceGap = nullptr);
 
+/*
 int getMapBiomeIndex( int inX, int inY,
 					  int *outSecondPlaceIndex = nullptr,
-					  double *outSecondPlaceGap = nullptr);
+					  double *outSecondPlaceGap = nullptr);*/
 #endif //OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H

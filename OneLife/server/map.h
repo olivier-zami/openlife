@@ -15,7 +15,6 @@
 extern openLife::server::service::database::WorldMap* worldMap;
 
 extern int* biomes;
-extern char anyBiomesInDB;
 extern int maxBiomeXLoc;
 extern int maxBiomeYLoc;
 extern int minBiomeXLoc;

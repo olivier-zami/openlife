@@ -12,6 +12,8 @@
 #include "src/system/_base/settings/linearDB.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/system/_base/object/entity/exception.h"
+#include "minorGems/util/SettingsManager.h"
+#include "src/third_party/nlohmann/json.hpp"
 
 openLife::Server* server;
 
@@ -21,10 +23,8 @@ int maxBiomeXLoc = -2000000000;//legacy: static int maxBiomeXLoc = -2000000000;
 int maxBiomeYLoc = -2000000000;//legacy: static int maxBiomeYLoc = -2000000000;
 int minBiomeXLoc = 2000000000;//legacy: static int minBiomeXLoc = 2000000000;
 int minBiomeYLoc = 2000000000;//legacy: static int minBiomeYLoc = 2000000000;
-
 char lookTimeDBEmpty = false;
 char skipLookTimeCleanup = 0;
-
 // if lookTimeDBEmpty, then we init all map cell look times to NOW
 int cellsLookedAtToInit = 0;
 
@@ -68,10 +68,26 @@ int main()
 		worldMapSetting.mapSize.width = 10;
 		worldMapSetting.mapSize.height = 10;
 		worldMap = new openLife::server::service::database::WorldMap(worldMapSetting);
-		worldMap->handleBiomeDB(&biomeDB);
+		worldMap->legacy(&biomeDB, &anyBiomesInDB);
 
-		worldMap->select(0, 0)->getBiomeRecord();
-
+		//!test
+		/*
+		const char* someJson = "{\"title\":\"document title\"}";
+		nlohmann::json config = nlohmann::json::parse(someJson);
+		SimpleVector<int> *testBiomeOrderList = SettingsManager::getIntSettingMulti( "biomeOrder" );
+		biomes = testBiomeOrderList->getElementArray();
+		openLife::system::type::record::Biome testedBiome;
+		testedBiome = worldMap->select(0, 0)->getBiomeRecord();
+		std::cout << "\n################### Test ####### => Biome ("<<testedBiome.x<<", "<<testedBiome.y<<")" << " value = " << testedBiome.value;
+		std::cout << "\n################### Test ####### => BiomeLine [";
+		for(int i=-12; i<=0; i++)
+		{
+			testedBiome = worldMap->select(i, 0)->getBiomeRecord();
+			std::cout << "("<<i<<", 0):"<<  testedBiome.value << " ";
+		}
+		std::cout << "]";
+		std::cout << "\n################### Test ####### => Config title " << config["title"];
+		*/
 
 		//!net map biome around spawning zone
 		common::object::entity::MapZone* mapZone;
@@ -92,7 +108,6 @@ int main()
 				case 16776960:	mapZone->p(i) = 5; break;//desert
 				case 32512:		mapZone->p(i) = 4; break;//jungle
 				default:
-					std::cout << "\nConvert biome (default) value " << mapZone->p(i) << " to " << 1;
 					mapZone->p(i) = 1;
 					break;
 			}

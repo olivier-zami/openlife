@@ -16,7 +16,6 @@
 #include "OneLife/server/map.h"
 
 
-extern char anyBiomesInDB;
 extern int maxBiomeXLoc;
 extern int maxBiomeYLoc;
 extern int minBiomeXLoc;

@@ -58,9 +58,10 @@ openLife::server::service::database::WorldMap::~WorldMap() {}
  * @param biomeDB
  * @note temporary methods
  */
-void openLife::server::service::database::WorldMap::handleBiomeDB(LINEARDB3* biomeDB)
+void openLife::server::service::database::WorldMap::legacy(LINEARDB3* biomeDB, char* notEmptyDB)
 {
 	this->biomeDB = biomeDB;
+	this->notEmptyDB = notEmptyDB;
 }
 
 /**
@@ -295,7 +296,7 @@ void openLife::server::service::database::WorldMap::insert(openLife::system::typ
 	intToValue( lrint( biome.secondPlaceGap * gapIntScale ),
 				&( value[8] ) );
 
-	anyBiomesInDB = true;
+	(*this->notEmptyDB) = true;
 
 	if( this->query.x > maxBiomeXLoc ) {
 		maxBiomeXLoc = this->query.x;
@@ -336,19 +337,22 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 {
 	//!legacy int getMapBiomeIndex( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap)
 	openLife::system::type::record::Biome biomeRecord;
-	 /*
 	int pickedBiome;
 	int secondPlaceBiome = -1;
 	int dbBiome = -1;
+	biomeRecord.x = this->query.x;
+	biomeRecord.y = this->query.y;
+	biomeRecord.value = - 1;
+	biomeRecord.secondPlace = - 1;
+	biomeRecord.secondPlaceGap = 0;
 
-	if( anyBiomesInDB && inX >= minBiomeXLoc && inX <= maxBiomeXLoc && inY >= minBiomeYLoc && inY <= maxBiomeYLoc )
+	if( *(this->notEmptyDB) && this->query.x >= minBiomeXLoc && this->query.x <= maxBiomeXLoc && this->query.y >= minBiomeYLoc && this->query.y <= maxBiomeYLoc )
 	{
 		// don't bother with this call unless biome DB has
 		// something in it, and this inX,inY is in the region where biomes
 		// exist in the database (tutorial loading, or test maps)
-		dbBiome = biomeDBGet( inX, inY,
-							  &secondPlaceBiome,
-							  outSecondPlaceGap );
+		dbBiome = biomeDBGet( this->query.x, this->query.y, &secondPlaceBiome, &(biomeRecord.secondPlaceGap) );
+		//std::cout << "\n######################## base index : " << biomeRecord.value;
 	}
 	if( dbBiome != -1 )
 	{
@@ -357,24 +361,19 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 		{
 			// biome still exists!
 			char secondPlaceFailed = false;
-			if( outSecondPlaceIndex != NULL ) {
+			//if( outSecondPlaceIndex != NULL ) //TODO: delete cond since biome.secondPlace is not a pointer anymore
+			//{
 				int secondIndex = getBiomeIndex( secondPlaceBiome );
-				if( secondIndex != -1 ) {
-					*outSecondPlaceIndex = secondIndex;
-				}
-				else {
-					secondPlaceFailed = true;
-				}
-			}
-
-			if( ! secondPlaceFailed ) {
-				//return index;
-				return biomeRecord;
+				if( secondIndex != -1 ) biomeRecord.secondPlace = secondIndex;
+				else secondPlaceFailed = true;
+			//}
+			if(!secondPlaceFailed)
+			{
+				//std::cout << "\n######################## First return : " << biomeRecord.value;
+				return biomeRecord;//return index;
 			}
 		}
-		else {
-			dbBiome = -1;
-		}
+		else dbBiome = -1;
 
 		// else a biome or second place in biome.db that isn't in game anymore
 		// ignore it
@@ -382,22 +381,22 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 
 	int secondPlace = -1;
 	double secondPlaceGap = 0;
-	pickedBiome = computeMapBiomeIndex( inX, inY,
-										&secondPlace, &secondPlaceGap );
-	if( outSecondPlaceIndex != NULL ) {
-		*outSecondPlaceIndex = secondPlace;
-	}
-	if( outSecondPlaceGap != NULL ) {
-		*outSecondPlaceGap = secondPlaceGap;
-	}
+	pickedBiome = computeMapBiomeIndex( this->query.x, this->query.y, &secondPlace, &secondPlaceGap );
+	biomeRecord.value = pickedBiome;
+	//if( outSecondPlaceIndex != NULL )
+	//{
+		biomeRecord.secondPlace = secondPlace;
+	//}
+	//if(outSecondPlaceGap != NULL)
+	//{
+		biomeRecord.secondPlaceGap = secondPlaceGap;
+	//}
 
 	if( dbBiome == -1 || secondPlaceBiome == -1 )
 	{
 		// not stored, OR some part of stored stale, re-store it
 		secondPlaceBiome = 0;
-		if( secondPlace != -1 ) {
-			secondPlaceBiome = biomes[ secondPlace ];
-		}
+		if( secondPlace != -1 ) secondPlaceBiome = biomes[ secondPlace ];
 		// skip saving proc-genned biomes for now
 		// huge RAM impact as players explore distant areas of map
 
@@ -405,7 +404,7 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 		//biomeDBPut( inX, inY, biomes[pickedBiome], secondPlaceBiome, secondPlaceGap );
 	}
 	//return pickedBiome;
-	*/
+	//std::cout << "\n######################## Second return : " << biomeRecord.value;
 	return biomeRecord;
 }
 
@@ -439,6 +438,7 @@ void openLife::server::service::database::WorldMap::updateSecondPlaceGap(double 
 
 extern openLife::server::service::database::WorldMap* worldMap;
 
+/*
 int getMapBiomeIndex( int inX, int inY,
 					  int *outSecondPlaceIndex,
 					  double *outSecondPlaceGap)
@@ -509,8 +509,10 @@ int getMapBiomeIndex( int inX, int inY,
 		// we still check the biomeDB above for loading test maps
 		//biomeDBPut( inX, inY, biomes[pickedBiome], secondPlaceBiome, secondPlaceGap );
 	}
+	if(!inX&&!inY)pickedBiome;
 	return pickedBiome;
 }
+*/
 
 /**
  *
