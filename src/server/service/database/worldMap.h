@@ -13,6 +13,9 @@
 #include "src/common/type/database/lineardb3.h"
 #include "src/common/object/entity/mapZone.h"
 
+//!legacy
+#include "OneLife/server/map.h"
+
 namespace openLife::server::service::database
 {
 	class WorldMap
@@ -61,8 +64,8 @@ int biomeDBGet( int inX, int inY,
 				int *outSecondPlaceBiome = nullptr,
 				double *outSecondPlaceGap = nullptr);
 
-/*
-int getMapBiomeIndex( int inX, int inY,
-					  int *outSecondPlaceIndex = nullptr,
-					  double *outSecondPlaceGap = nullptr);*/
+int computeMapBiomeIndex( int inX, int inY,
+						  int *outSecondPlaceIndex = nullptr,
+						  double *outSecondPlaceGap = nullptr);
+
 #endif //OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H

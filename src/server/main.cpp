@@ -16,7 +16,7 @@
 
 openLife::Server* server;
 
-
+char allowSecondPlaceBiomes = false;
 char anyBiomesInDB = false;//legacy: static char anyBiomesInDB = false;
 int maxBiomeXLoc = -2000000000;//legacy: static int maxBiomeXLoc = -2000000000;
 int maxBiomeYLoc = -2000000000;//legacy: static int maxBiomeYLoc = -2000000000;
@@ -26,9 +26,16 @@ char lookTimeDBEmpty = false;
 char skipLookTimeCleanup = 0;
 // if lookTimeDBEmpty, then we init all map cell look times to NOW
 int cellsLookedAtToInit = 0;
-
+int specialBiomeBandMode;
+int numSpecialBiomes;
 LINEARDB3 biomeDB;
 char biomeDBOpen = false;
+int regularBiomeLimit;
+float *biomeCumuWeights;
+float biomeTotalWeight;
+int numBiomes;
+unsigned int biomeRandSeedA = 727;
+unsigned int biomeRandSeedB = 941;
 
 #include "src/server/definition/services.h"
 

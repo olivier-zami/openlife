@@ -12,7 +12,7 @@
 
 #include "src/server/service/database/worldMap.h"
 
-extern openLife::server::service::database::WorldMap* worldMap;
+
 
 extern int* biomes;
 extern int maxBiomeXLoc;
@@ -380,9 +380,7 @@ int getDeadlyMovingMapObject( int inPosX, int inPosY,
 
 int getSpecialBiomeBandYCenterForRace( int inRace );
 
-int computeMapBiomeIndex( int inX, int inY,
-								 int *outSecondPlaceIndex,
-								 double *outSecondPlaceGap);
+
 
 
 int getBiomeIndex( int inBiome );
@@ -430,4 +428,8 @@ typedef struct GlobalTriggerState {
 	// what we revert to when global trigger turns off (back to receiver)
 	SimpleVector<int> triggeredRevertIDs;
 } GlobalTriggerState;
+
+void biomePutCached( int inX, int inY, int inBiome, int inSecondPlace, double inSecondPlaceGap );
+int getSpecialBiomeIndexForYBand( int inY, char *outOfBand = nullptr);
+int biomeGetCached( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap );
 #endif
