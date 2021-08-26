@@ -8,7 +8,6 @@
 #include "src/common/system.h"
 #include "src/common/object/entity/mapZone.h"
 #include "src/server/service/database/worldMap.h"
-#include "src/common/process/convert/image.h"
 #include "src/system/_base/settings/linearDB.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/system/_base/object/entity/exception.h"
@@ -90,6 +89,7 @@ int main()
 		*/
 
 		//!net map biome around spawning zone
+		/*
 		common::object::entity::MapZone* mapZone;
 		mapZone = common::process::convert::image::getMapZoneFromBitmap("/home/olivier/Projets/OpenLife/data/images/maps/mini_map.bmp");
 		for(long unsigned int i=0; i<mapZone->getSize(); i++)
@@ -98,9 +98,7 @@ int main()
 			{
 
 				case 16777215:	mapZone->p(i) = 6; break;//polar
-				/*
-				case 255:		mapZone->p(i) = -1; break;//water
-				 */
+				//case 255:		mapZone->p(i) = -1; break;//water
 				case 8355711:	mapZone->p(i) = 3; break;//montain/taiga/toundra
 				case 65280:		mapZone->p(i) = 1; break;//grassland
 				case 32639:		mapZone->p(i) = 0; break;//swamp
@@ -112,8 +110,7 @@ int main()
 					break;
 			}
 		}
-
-		/*******/
+		*******/
 
 		//!old
 		//feature family stuff
