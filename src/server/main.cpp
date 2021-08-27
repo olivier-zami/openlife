@@ -2,6 +2,7 @@
 // Created by olivier on 07/08/2021.
 //
 
+#include "main.h"
 #include <iostream>
 #include <SDL/SDL.h>
 #include "server.h"
@@ -11,6 +12,7 @@
 #include "src/system/_base/settings/linearDB.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/system/_base/object/entity/exception.h"
+#include "src/system/_base/object/store/memory/random/biome.h"
 #include "minorGems/util/SettingsManager.h"
 #include "src/third_party/nlohmann/json.hpp"
 
@@ -36,6 +38,7 @@ float biomeTotalWeight;
 int numBiomes;
 unsigned int biomeRandSeedA = 727;
 unsigned int biomeRandSeedB = 941;
+openLife::system::object::store::memory::random::Biome* cachedBiome;
 
 #include "src/server/definition/services.h"
 
@@ -67,6 +70,9 @@ int main()
 		openLife::system::settings::LinearDB biomeDBSettings;
 		newBiomeDB = new openLife::system::object::store::device::random::LinearDB(biomeDBSettings);
 		newBiomeDB->init(&biomeDB);
+
+		//openLife::system::object::store::memory::random::Biome* cachedBiome;
+		cachedBiome = new openLife::system::object::store::memory::random::Biome(BIOME_CACHE_SIZE);
 
 		//!set worldMap
 		openLife::system::settings::database::WorldMap worldMapSetting;

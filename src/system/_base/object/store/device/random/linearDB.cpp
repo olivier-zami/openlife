@@ -8,9 +8,9 @@
 #include <cstring>
 #include <cmath>
 
-#include "src/system/_base/hash/murmurhash.h"
+#include "src/system/_base/process/hash/murmurhash.h"
 
-#include "src/common/process/hash.h"
+//#include "src/common/process/hash.h"
 #include "OneLife/server/lineardb3.h"
 #include "OneLife/server/dbCommon.h"
 #include "OneLife/server/map.h"

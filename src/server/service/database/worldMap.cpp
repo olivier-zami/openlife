@@ -8,6 +8,7 @@
 #include <cmath>
 
 #include "src/system/_base/object/store/device/random/linearDB.h"
+#include "src/system/_base/object/store/memory/random/biome.h"
 
 //!legacy
 #include "minorGems/util/log/AppLog.h"
@@ -38,6 +39,7 @@ extern float biomeTotalWeight;
 extern int numBiomes;
 extern unsigned int biomeRandSeedA;
 extern unsigned int biomeRandSeedB;
+extern openLife::system::object::store::memory::random::Biome* cachedBiome;
 
 /**
  *
@@ -461,12 +463,21 @@ int computeMapBiomeIndex( int inX, int inY,
 						  int *outSecondPlaceIndex,
 						  double *outSecondPlaceGap )
 						  {
-
+	//!legacy computeMapBiomeIndex( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap )
+	//!legacy computeMapBiomeIndexOld(int, int, int*, double*)
 	int secondPlace = -1;
 	double secondPlaceGap = 0;
-	int pickedBiome = biomeGetCached( inX, inY, &secondPlace, &secondPlaceGap );
 
-	if( pickedBiome != -2 )
+	//!test
+	openLife::system::type::record::Biome tmpBiome;
+	tmpBiome = cachedBiome->get(inX, inY);
+	int pickedBiome = tmpBiome.value;
+	secondPlace = tmpBiome.secondPlace;
+	secondPlaceGap = tmpBiome.secondPlaceGap;
+	//std::cout << "\nget {"<<tmpBiome.x<<", "<<tmpBiome.y<<", "<<tmpBiome.value<<", "<<tmpBiome.secondPlace<<", "<<tmpBiome.secondPlaceGap<<"}";
+	//int pickedBiome = biomeGetCached( inX, inY, &secondPlace, &secondPlaceGap );
+
+	if( pickedBiome != -1 )
 	{
 		// hit cached
 		if( outSecondPlaceIndex != NULL ) {
@@ -478,16 +489,15 @@ int computeMapBiomeIndex( int inX, int inY,
 		std::cout << "\n######################## biomeGetCached("<<inX<<", "<<inY<<")";
 		return pickedBiome;
 	}
+
+
 	// else cache miss
 	pickedBiome = -1;
 
 
 	// try topographical altitude mapping
 	setXYRandomSeed( biomeRandSeedA, biomeRandSeedB );
-	double randVal =
-			( getXYFractal( inX, inY,
-							0.55,
-							0.83332 + 0.08333 * numBiomes ) );
+	double randVal =( getXYFractal( inX, inY, 0.55, 0.83332 + 0.08333 * numBiomes ) );
 
 	// push into range 0..1, based on sampled min/max values
 	randVal -= 0.099668;
@@ -497,21 +507,14 @@ int computeMapBiomeIndex( int inX, int inY,
 	// flatten middle
 	//randVal = ( pow( 2*(randVal - 0.5 ), 3 ) + 1 ) / 2;
 
-
 	// push into range 0..1 with manually tweaked values
 	// these values make it pretty even in terms of distribution:
 	//randVal -= 0.319;
 	//randVal *= 3;
 
-
-
 	// these values are more intuitve to make a map that looks good
 	//randVal -= 0.23;
 	//randVal *= 1.9;
-
-
-
-
 
 	// apply gamma correction
 	//randVal = pow( randVal, 1.5 );
@@ -531,14 +534,12 @@ int computeMapBiomeIndex( int inX, int inY,
 	// sin version
 	//randVal += 0.3 * sin( 0.5 * M_PI * inY / 354.0 );
 
-
 	/*
         ( sin( M_PI * inY / 708 ) +
           (1/3.0) * sin( 3 * M_PI * inY / 708 ) );
     */
 	//randVal += 0.5;
 	//randVal /= 2.0;
-
 
 
 	float i = randVal * biomeTotalWeight;
@@ -625,8 +626,10 @@ int computeMapBiomeIndex( int inX, int inY,
 		secondPlaceGap = 10.0;
 	}
 
-
-	biomePutCached( inX, inY, pickedBiome, secondPlace, secondPlaceGap );
+	//!test
+	openLife::system::type::record::Biome tmpBiome1 = {inX, inY, pickedBiome, secondPlace, secondPlaceGap};
+	cachedBiome->put(tmpBiome1);
+	//biomePutCached( inX, inY, pickedBiome, secondPlace, secondPlaceGap );
 
 
 	if( outSecondPlaceIndex != NULL )

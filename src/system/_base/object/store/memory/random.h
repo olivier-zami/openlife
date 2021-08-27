@@ -5,13 +5,13 @@
 #ifndef OPENLIFE_RANDOMACCESS_H
 #define OPENLIFE_RANDOMACCESS_H
 
-namespace common::object::store::memory
+namespace openLife::system::object::store::memory
 {
-	class RandomAccess
+	class Random
 	{
 		public:
-			RandomAccess();
-			~RandomAccess();
+			Random();
+			~Random();
 
 			void put(int idx, int value);
 			int get(int idx);

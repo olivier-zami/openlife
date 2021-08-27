@@ -360,12 +360,6 @@ typedef struct Homeland {
 } Homeland;
 static SimpleVector<Homeland> homelands;
 static void dbFloorPut( int inX, int inY, int inValue );
-// optimization:
-// cache biomeIndex results in RAM
-
-// 3.1 MB of RAM for this.
-#define BIOME_CACHE_SIZE 131072
-
 typedef struct BiomeCacheRecord {
 	int x, y;
 	int biome, secondPlace;
@@ -1701,7 +1695,8 @@ double sigmoid( double inInput, double inKnee ) {
     return ( out + 1 ) * 0.5;
     }
 
-static int computeXYCacheHash( int inKeyA, int inKeyB ) {
+static int computeXYCacheHash( int inKeyA, int inKeyB )
+{
     
     int hashKey = ( inKeyA * CACHE_PRIME_A + 
                     inKeyB * CACHE_PRIME_B ) % BIOME_CACHE_SIZE;
@@ -1709,7 +1704,7 @@ static int computeXYCacheHash( int inKeyA, int inKeyB ) {
         hashKey += BIOME_CACHE_SIZE;
         }
     return hashKey;
-    }
+}
 
 void initBiomeCache() {
     BiomeCacheRecord blankRecord = { 0, 0, -2, 0, 0 };
@@ -1718,7 +1713,9 @@ void initBiomeCache() {
         }
     }
 
+
 // returns -2 on miss
+/*
 int biomeGetCached( int inX, int inY,
                            int *outSecondPlaceIndex,
                            double *outSecondPlaceGap ) {
@@ -1735,13 +1732,14 @@ int biomeGetCached( int inX, int inY,
         return -2;
         }
     }
+*/
 
-void biomePutCached( int inX, int inY, int inBiome, int inSecondPlace,
+/*void biomePutCached( int inX, int inY, int inBiome, int inSecondPlace,
                             double inSecondPlaceGap ) {
     BiomeCacheRecord r = { inX, inY, inBiome, inSecondPlace, inSecondPlaceGap };
     
     biomeCache[ computeXYCacheHash( inX, inY ) ] = r;
-    }
+    }*/
 
 int getSpecialBiomeIndexForYBand( int inY, char *outOfBand)
 {
@@ -1767,80 +1765,6 @@ int getSpecialBiomeIndexForYBand( int inY, char *outOfBand)
         }
     
     return specialBiomeBandDefaultIndex;
-    }
-
-// old code, separate height fields per biome that compete
-// and create a patchwork layout
-static int computeMapBiomeIndexOld( int inX, int inY, 
-                                 int *outSecondPlaceIndex = NULL,
-                                 double *outSecondPlaceGap = NULL ) {
-        
-    int secondPlace = -1;
-    
-    double secondPlaceGap = 0;
-
-
-    int pickedBiome = biomeGetCached( inX, inY, &secondPlace, &secondPlaceGap );
-        
-    if( pickedBiome != -2 ) {
-        // hit cached
-
-        if( outSecondPlaceIndex != NULL ) {
-            *outSecondPlaceIndex = secondPlace;
-            }
-        if( outSecondPlaceGap != NULL ) {
-            *outSecondPlaceGap = secondPlaceGap;
-            }
-    
-        return pickedBiome;
-        }
-
-    // else cache miss
-    pickedBiome = -1;
-
-
-    double maxValue = -DBL_MAX;
-
-    
-    for( int i=0; i<numBiomes; i++ ) {
-        int biome = biomes[i];
-        
-        setXYRandomSeed( biome * 263 + biomeRandSeedA, biomeRandSeedB );
-
-        double randVal = getXYFractal(  inX,
-                                        inY,
-                                        0.55, 
-                                        0.83332 + 0.08333 * numBiomes );
-        
-        if( randVal > maxValue ) {
-            // a new first place
-            
-            // old first moves into second
-            secondPlace = pickedBiome;
-            secondPlaceGap = randVal - maxValue;
-            
-
-            maxValue = randVal;
-            pickedBiome = i;
-            }
-        else if( randVal > maxValue - secondPlaceGap ) {
-            // a better second place
-            secondPlace = i;
-            secondPlaceGap = maxValue - randVal;
-            }
-        }
-    
-    biomePutCached( inX, inY, pickedBiome, secondPlace, secondPlaceGap );
-    
-    
-    if( outSecondPlaceIndex != NULL ) {
-        *outSecondPlaceIndex = secondPlace;
-        }
-    if( outSecondPlaceGap != NULL ) {
-        *outSecondPlaceGap = secondPlaceGap;
-        }
-    
-    return pickedBiome;
     }
 
 void mapCacheClear() {

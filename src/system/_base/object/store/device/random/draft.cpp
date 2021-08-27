@@ -15,7 +15,7 @@
 #include <cstring>
 #include <cmath>
 
-#include "src/common/process/hash.h"
+//#include "src/common/process/hash.h"
 #include "OneLife/server/lineardb3.h"
 #include "src/common/type/database/lineardb3.h"
 #include "OneLife/server/dbCommon.h"

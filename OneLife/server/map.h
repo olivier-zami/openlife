@@ -429,7 +429,7 @@ typedef struct GlobalTriggerState {
 	SimpleVector<int> triggeredRevertIDs;
 } GlobalTriggerState;
 
-void biomePutCached( int inX, int inY, int inBiome, int inSecondPlace, double inSecondPlaceGap );
+//void biomePutCached( int inX, int inY, int inBiome, int inSecondPlace, double inSecondPlaceGap );
 int getSpecialBiomeIndexForYBand( int inY, char *outOfBand = nullptr);
-int biomeGetCached( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap );
+//int biomeGetCached( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap );
 #endif
