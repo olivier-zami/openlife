@@ -27,6 +27,7 @@ LAYER_SOURCE = \
 ${DIR_APP_SERVER}/server.cpp \
 ${DIR_APP_SERVER}/map.cpp \
 ${DIR_APP_SERVER}/../../minorGems/io/file/File.cpp \
+${DIR_APP_SERVER}/../../src/system/_base/object/process/handler/image.cpp \
 ${DIR_APP_SERVER}/../../src/common/object/entity/mapZone.cpp \
 ${DIR_APP_SERVER}/../../src/server/process/newBiome.cpp \
 ${DIR_APP_SERVER}/../../src/server/service/database/worldMap.cpp \

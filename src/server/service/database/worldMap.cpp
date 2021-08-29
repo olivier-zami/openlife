@@ -11,6 +11,9 @@
 #include "src/system/_base/object/store/memory/random/biome.h"
 #include "src/system/_base/process/scalar.h"
 
+//!debug
+#include "src/system/_base/object/process/handler/image.h"
+
 //!legacy
 #include "minorGems/util/log/AppLog.h"
 #include "minorGems/io/file/File.h"
@@ -60,6 +63,8 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::system::settin
 	std::fill(this->biome.begin(), this->biome.end(), -1);
 
 	this->settings = settings;
+
+	this->debugged = false;
 }
 
 /**
@@ -77,6 +82,66 @@ void openLife::server::service::database::WorldMap::legacy(LINEARDB3* biomeDB, c
 	this->biomeDB = biomeDB;
 	this->notEmptyDB = notEmptyDB;
 }
+
+/**
+ *
+ */
+void openLife::server::service::database::WorldMap::debug()
+{
+	openLife::system::object::process::handler::Image* imageHandler;
+	imageHandler = new openLife::system::object::process::handler::Image();
+	imageHandler->load("/home/olivier/Projets/OpenLife/data/images/maps/mini_map.bmp");
+	Image image = imageHandler->getImageInfo();
+	std::cout << "\nModification image de dimension ("<<image.width<<","<<image.height<<")";
+	imageHandler->clean();
+	for(int y=-256; y<256; y++)
+	{
+		for(int x=-256; x<256; x++)
+		{
+			/*
+			 int *outSecondPlaceIndex,
+									  double *outSecondPlaceGap
+			 */
+			ColorRGB color;
+			int pickedBiome = computeMapBiomeIndex(x, y);
+			unsigned int offset = (!x || !y) ? 50 : 0;
+			switch(pickedBiome)
+			{
+				case 0://swamp
+				color = {95+offset, 0, 125+offset};
+				break;
+				case 1://grassland
+				color = {0, 190+offset, 0};
+				break;
+				case 2://savannah
+				color = {190+offset, 95+offset, 0};
+				break;
+				case 3://mountain
+				color = {95+offset, 95+offset, 95+offset};
+				break;
+				case 4://jungle
+				color = {0, 95+offset, 0};
+				break;
+				case 5://desert
+				color = {190+offset, 190+offset, 0};
+				break;
+				case 6://polar
+				color = {190+offset, 190+offset, 190+offset};
+				break;
+				default://unknown
+				color = {0, 0, 255+offset};
+				break;
+			}
+
+			int imgX = (image.width/2)+x;
+			int imgY = (image.height/2)-y;
+			if(imgX>=0&&imgX<512&&imgY>=0&&imgY<512) imageHandler->select(imgX, imgY)->setPixel(color);
+			//imageHandler->select(x, y)->setPixel(color);
+		}
+	}
+	imageHandler->save("/home/olivier/Projets/OpenLife/var/images/maps/game_starting_zone.bmp");
+}
+
 
 /**
  *
@@ -271,7 +336,6 @@ int openLife::server::service::database::WorldMap::init()
 						   hash_table_size,
 						   key_size,
 						   value_size );
-	/***/
 }
 
 /**
@@ -347,10 +411,15 @@ void openLife::server::service::database::WorldMap::insert(common::object::entit
 	}
 }
 
+/**
+ *
+ * @return
+ */
 openLife::system::type::record::Biome openLife::server::service::database::WorldMap::getBiomeRecord()
 {
 	//!legacy int getMapBiomeIndex( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap)
 	openLife::system::type::record::Biome biomeRecord;
+
 	int pickedBiome;
 	int secondPlaceBiome = -1;
 	int dbBiome = -1;
@@ -396,6 +465,11 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 	int secondPlace = -1;
 	double secondPlaceGap = 0;
 	std::cout << "\n==========>Compute biome("<<this->query.x<<", "<<this->query.y<<")";
+	if(!this->debugged)
+	{
+		this->debug();
+		this->debugged = true;
+	}
 	pickedBiome = computeMapBiomeIndex( this->query.x, this->query.y, &secondPlace, &secondPlaceGap );
 	biomeRecord.value = pickedBiome;
 	//if( outSecondPlaceIndex != NULL )
@@ -644,7 +718,7 @@ int computeMapBiomeIndex( int inX, int inY,
 	{
 		*outSecondPlaceGap = secondPlaceGap;
 	}
-	std::cout << "\n######################## biomePutCached("<<inX<<", "<<inY<<")";
+	//std::cout << "\n######################## biomePutCached("<<inX<<", "<<inY<<")";
 	return pickedBiome;
 }
 

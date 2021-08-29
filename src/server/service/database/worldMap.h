@@ -26,6 +26,8 @@ namespace openLife::server::service::database
 
 			//!temporary methods
 			void legacy(LINEARDB3* biomeDB, char* notEmptyDB);
+			void debug();
+			int debugged;
 			openLife::system::settings::database::WorldMap settings;
 			char* notEmptyDB;
 
