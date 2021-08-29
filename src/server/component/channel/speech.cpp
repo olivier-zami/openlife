@@ -7,7 +7,7 @@
 #include "OneLife/gameSource/GridPos.h"
 
 int numSpeechPipes = 0;
-int maxSpeechPipeIndex = 0;
+extern int maxSpeechPipeIndex;
 SimpleVector<GridPos> *speechPipesIn = NULL;
 SimpleVector<GridPos> *speechPipesOut = NULL;
 

@@ -57,6 +57,7 @@
 #include "minorGems/io/file/Path.h"
 
 #include "minorGems/crypto/hashes/sha1.h"
+#include "minorGems/io/file/File.h"
 
 
 

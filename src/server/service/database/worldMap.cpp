@@ -9,6 +9,7 @@
 
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
+#include "src/system/_base/process/scalar.h"
 
 //!legacy
 #include "minorGems/util/log/AppLog.h"
@@ -40,6 +41,7 @@ extern int numBiomes;
 extern unsigned int biomeRandSeedA;
 extern unsigned int biomeRandSeedB;
 extern openLife::system::object::store::memory::random::Biome* cachedBiome;
+extern openLife::system::type::Value2D_U32 mapGenSeed;
 
 /**
  *
@@ -393,6 +395,7 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 
 	int secondPlace = -1;
 	double secondPlaceGap = 0;
+	std::cout << "\n==========>Compute biome("<<this->query.x<<", "<<this->query.y<<")";
 	pickedBiome = computeMapBiomeIndex( this->query.x, this->query.y, &secondPlace, &secondPlaceGap );
 	biomeRecord.value = pickedBiome;
 	//if( outSecondPlaceIndex != NULL )
@@ -490,6 +493,7 @@ int computeMapBiomeIndex( int inX, int inY,
 		return pickedBiome;
 	}
 
+	/******************************************************************************************************************/
 
 	// else cache miss
 	pickedBiome = -1;
@@ -497,7 +501,7 @@ int computeMapBiomeIndex( int inX, int inY,
 
 	// try topographical altitude mapping
 	setXYRandomSeed( biomeRandSeedA, biomeRandSeedB );
-	double randVal =( getXYFractal( inX, inY, 0.55, 0.83332 + 0.08333 * numBiomes ) );
+	double randVal =( openLife::system::process::scalar::getXYFractal( inX, inY, 0.55, 0.83332 + 0.08333 * numBiomes, mapGenSeed ) );
 
 	// push into range 0..1, based on sampled min/max values
 	randVal -= 0.099668;
@@ -575,11 +579,11 @@ int computeMapBiomeIndex( int inX, int inY,
 				setXYRandomSeed( biome * 263 + biomeRandSeedA + 38475,
 								 biomeRandSeedB );
 
-				double randVal = getXYFractal(  inX,
+				double randVal = openLife::system::process::scalar::getXYFractal(  inX,
 												inY,
 												0.55,
-												2.4999 +
-												0.2499 * numSpecialBiomes );
+												2.4999 + 0.2499 * numSpecialBiomes,
+												mapGenSeed );
 
 				if( randVal > maxValue ) {
 					if( maxValue != -10 ) {

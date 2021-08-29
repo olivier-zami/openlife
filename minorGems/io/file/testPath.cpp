@@ -19,7 +19,7 @@ int main() {
     printf( "using path string = %s\n", pathString );
 
     printf( "Constructing path.\n" );
-    Path *path = new Path( pathString );
+    Path *path = new openLife::system::Path( pathString );
 
     
     printf( "Extracting path string.\n" );

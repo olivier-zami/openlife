@@ -69,7 +69,7 @@ int main() {
 	stepLength[0] = 4;
 	stepLength[1] = 4;
 	
-	Path *path = new Path( pathSteps, 2, stepLength, false );
+	Path *path = new openLife::system::Path( pathSteps, 2, stepLength, false );
 	
 	File *file = new File( path, "test.out", 8 );
 	FileOutputStream *outStream = new FileOutputStream( file, false );
@@ -99,7 +99,7 @@ int main() {
 	stepLength[0] = 4;
 	stepLength[1] = 4;
 	
-	path = new Path( pathSteps, 2, stepLength, false );
+	path = new openLife::system::Path( pathSteps, 2, stepLength, false );
 	
 	
 	file = new File( path, "test.out", 8 );

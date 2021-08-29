@@ -5,6 +5,8 @@
 #ifndef OPENLIFE_SYSTEM_TYPE_H
 #define OPENLIFE_SYSTEM_TYPE_H
 
+#include <cstdint>
+
 namespace openLife::system::type
 {
 	typedef struct {
@@ -16,6 +18,12 @@ namespace openLife::system::type
 		unsigned long int width;
 		unsigned long int height;
 	}Dimension2D;
+
+	typedef struct
+	{
+		uint32_t x;
+		uint32_t y;
+	}Value2D_U32;
 }
 
 #endif //OPENLIFE_SYSTEM_TYPE_H

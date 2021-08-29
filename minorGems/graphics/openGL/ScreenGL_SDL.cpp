@@ -161,6 +161,7 @@
 
 #include "minorGems/crypto/hashes/sha1.h"
 #include "minorGems/formats/encodingUtils.h"
+#include "minorGems/io/file/Path.h"
 
 #ifdef __mac__
 #include "minorGems/game/platforms/SDL/mac/SDLMain_Ext.h"
@@ -213,6 +214,8 @@ void callbackPreDisplay();
 void callbackDisplay();
 void callbackIdle();
 */
+
+/**********************************************************************************************************************/
 
 ScreenGL::ScreenGL( int inWide, int inHigh, char inFullScreen,
                     char inDoNotChangeNativeResolution,

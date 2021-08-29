@@ -42,10 +42,10 @@ MimeTyper::MimeTyper( char *inConfigFileName ) {
     
     
     if( inConfigFileName == NULL ) {
-        configFile = new File( new Path( pathSteps, 1, false ), "mime.ini" );
+    	configFile = new File( new openLife::system::Path( pathSteps, 1, false ), "mime.ini" );
         }
     else {
-        configFile = new File( new Path( pathSteps, 1, false ),
+    	configFile = new File( new openLife::system::Path( pathSteps, 1, false ),
                                inConfigFileName );
         }
 

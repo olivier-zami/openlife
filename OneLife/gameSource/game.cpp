@@ -101,15 +101,11 @@ CustomRandomSource randSource( 34957197 );
 //#include "TestPage.h"
 
 #include "ServerActionPage.h"
-
 #include "ageControl.h"
-
 #include "musicPlayer.h"
-
 #include "whiteSprites.h"
-
 #include "message.h"
-
+#include "src/system/_base/process/scalar.h"
 
 // should we pull the map
 static char mapPullMode = 0;
@@ -339,7 +335,10 @@ static char *currentUserTypedMessage = NULL;
 static int holdDeleteKeySteps = -1;
 static int stepsBetweenDeleteRepeat;
 
+openLife::system::type::Value2D_U32 mapGenSeed;
+int maxSpeechPipeIndex = 0;
 
+/**********************************************************************************************************************/
 
 static void updateDataVersionNumber() {
     File file( NULL, "dataVersionNumber.txt" );

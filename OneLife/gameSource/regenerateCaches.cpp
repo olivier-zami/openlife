@@ -400,7 +400,7 @@ static Image *readTGAFile( File *inFile ) {
 
 Image *readTGAFile( const char *inTGAFileName ) {
 
-    File tgaFile( new Path( "graphics" ), inTGAFileName );
+	File tgaFile( new openLife::system::Path( "graphics" ), inTGAFileName );
     
     return readTGAFile( &tgaFile );
     }
@@ -465,7 +465,7 @@ static RawRGBAImage *readTGAFileRaw( File *inFile ) {
 
 RawRGBAImage *readTGAFileRaw( const char *inTGAFileName ) {
 
-    File tgaFile( new Path( "graphics" ), inTGAFileName );
+	File tgaFile( new openLife::system::Path( "graphics" ), inTGAFileName );
     
     return readTGAFileRaw( &tgaFile );
     }

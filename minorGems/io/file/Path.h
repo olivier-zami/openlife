@@ -556,7 +556,7 @@ inline openLife::system::Path *openLife::system::Path::append( const char *inSte
 	// append final step
 	newPathSteps[ mNumSteps ] = (char*)inStepString;
 
-	Path *newPath = new Path( newPathSteps, mNumSteps + 1, mAbsolute,
+	Path *newPath = new openLife::system::Path( newPathSteps, mNumSteps + 1, mAbsolute,
                               mRootString );
 
 	// shallow delete, because of shallow copy above
@@ -585,7 +585,7 @@ inline openLife::system::Path *openLife::system::Path::truncate() {
 		newPathSteps[i] = mPathSteps[i];
 		}
 
-	Path *newPath = new Path( newPathSteps, mNumSteps - 1, mAbsolute,
+	Path *newPath = new openLife::system::Path( newPathSteps, mNumSteps - 1, mAbsolute,
                               mRootString );
 
 	// shallow delete, because of shallow copy above

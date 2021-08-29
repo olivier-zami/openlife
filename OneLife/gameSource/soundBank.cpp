@@ -20,6 +20,7 @@
 #include "minorGems/system/Time.h"
 
 #include "binFolderCache.h"
+#include "minorGems/io/file/FileOutputStream.h"
 
 
 

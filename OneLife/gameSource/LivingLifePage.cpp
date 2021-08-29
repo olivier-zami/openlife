@@ -49,6 +49,7 @@
 #include "minorGems/crypto/hashes/sha1.h"
 
 #include <stdlib.h>//#include <math.h>
+#include "src/system/_base/process/scalar.h"
 
 
 #define OHOL_NON_EDITOR 1
@@ -326,7 +327,8 @@ static SimpleVector<HomePos> oldHomePosStack;
 // used on reconnect to decide whether to delete old home positions
 static int lastPlayerID = -1;
 
-
+extern openLife::system::type::Value2D_U32 mapGenSeed;
+/**********************************************************************************************************************/
 
 static void processHomePosStack() {
     int num = homePosStack.size();
@@ -6822,10 +6824,10 @@ void LivingLifePage::draw( doublePair inViewCenter,
                                 stoneJigglePos.y -= 16;
                                 
                                 stoneJigglePos.y +=
-                                    getXYFractal( stoneJigglePos.x,
+                                		openLife::system::process::scalar::getXYFractal( stoneJigglePos.x,
                                                   stoneJigglePos.y,
                                                   culvertFractalRoughness, 
-                                                  culvertFractalScale ) * 
+                                                  culvertFractalScale, mapGenSeed ) *
                                     culvertFractalAmp;
 
                                 drawSprite( getSprite( stoneSpriteID ), 

@@ -117,6 +117,7 @@
 #include "../gameSource/GridPos.h"
 #include "../gameSource/objectMetadata.h"
 #include "../commonSource/fractalNoise.h"
+#include "src/system/_base/process/scalar.h"
 
 // can replace with frozenTime to freeze time
 // or slowTime to slow it down
@@ -451,6 +452,9 @@ extern openLife::server::service::database::WorldMap* worldMap;
 
 extern openLife::server::component::channel::SpeechService* speechService;
 extern openLife::server::component::database::GameFeatures* gameFeatures;
+extern openLife::system::type::Value2D_U32 mapGenSeed;
+
+/**********************************************************************************************************************/
 
 char initMap()
 {
@@ -1154,7 +1158,8 @@ char initMap()
 	specialBiomeBandOrder.push_back_other( specialBiomeOrderList );
 
 	// look up biome index for each special biome
-	for( int i=0; i<specialBiomeBandOrder.size(); i++ ) {
+	for( int i=0; i<specialBiomeBandOrder.size(); i++ )
+	{
 		int biomeNumber = specialBiomeBandOrder.getElementDirect( i );
 
 		int biomeIndex = 0;
@@ -1167,6 +1172,7 @@ char initMap()
 		}
 		specialBiomeBandIndexOrder.push_back( biomeIndex );
 	}
+	/************/
 
 	delete specialBiomeOrderList;
 
@@ -1765,7 +1771,7 @@ int getSpecialBiomeIndexForYBand( int inY, char *outOfBand)
         }
     
     return specialBiomeBandDefaultIndex;
-    }
+}
 
 void mapCacheClear() {
     for( int y=0; y<BASE_MAP_CACHE_SIZE; y++ ) {
@@ -1838,13 +1844,13 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
 
 
         /*
-        double gridWiggleX = getXYFractal( inX / gp->spacingX, 
+        double gridWiggleX = openLife::system::process::scalar::getXYFractal( inX / gp->spacingX,
                                            inY / gp->spacingY, 
-                                           0.1, 0.25 );
+                                           0.1, 0.25, mapGenSeed );
         
-        double gridWiggleY = getXYFractal( inX / gp->spacingX, 
+        double gridWiggleY = openLife::system::process::scalar::getXYFractal( inX / gp->spacingX,
                                            inY / gp->spacingY + 392387, 
-                                           0.1, 0.25 );
+                                           0.1, 0.25, mapGenSeed );
         */
         // turn wiggle off for now
         double gridWiggleX = 0;
@@ -1891,7 +1897,7 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
     
     // first step:  save rest of work if density tells us that
     // nothing is here anyway
-    double density = getXYFractal( inX, inY, 0.1, 0.25 );
+    double density = openLife::system::process::scalar::getXYFractal( inX, inY, 0.1, 0.25, mapGenSeed );
     
     // correction
     density = sigmoid( density, 0.1 );
@@ -1985,10 +1991,11 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
             
             setXYRandomSeed( 793 * i + 123 );
         
-            double randVal = getXYFractal(  inX, 
+            double randVal = openLife::system::process::scalar::getXYFractal(  inX,
                                             inY, 
                                             0.3, 
-                                            0.15 + 0.016666 * numObjects );
+                                            0.15 + 0.016666 * numObjects,
+                                            mapGenSeed);
 
             if( randVal > maxValue ) {
                 maxValue = randVal;
@@ -2158,17 +2165,17 @@ void outputMapImage() {
         
         for( int x = 0; x<w; x++ ) {
 
-            /*
+        	/*
             // raw rand output and correlation test
-            uint32_t xHit = xxTweakedHash2D( x, y );
-            uint32_t yHit = xxTweakedHash2D( x+1, y+1 );
+            uint32_t xHit = openLife::system::process::scalar::xxTweakedHash2D( x, y );
+            uint32_t yHit = openLife::system::process::scalar::xxTweakedHash2D( x+1, y+1 );
             //uint32_t xHit = getXYRandom_test( x, y );
             //uint32_t yHit = getXYRandom_test( x+1, y );
             
             xHit = xHit % w;
             yHit = yHit % h;
             
-            double val = xxTweakedHash2D( x, y ) * oneOverIntMax;
+            double val = openLife::system::process::scalar::xxTweakedHash2D( x, y ) * oneOverIntMax;
             
             Color c = im.getColor( yHit * w + xHit );
             c.r += 0.1;
@@ -2285,10 +2292,11 @@ void outputBiomeFractals() {
             for( int y=-r; y<r; y++ ) {
                 for( int x=-r; x<r; x++ ) {
                     
-                    double v = getXYFractal(  x, 
+                	double v = openLife::system::process::scalar::getXYFractal(  x,
                                               y, 
                                               0.55, 
-                                              scale );
+                                              scale,
+                                              mapGenSeed);
                     Color c( v, v, v, 1 );
 
                     int imX = x + r;

@@ -8,6 +8,7 @@
 #include "minorGems/util/SimpleVector.h"
 #include "minorGems/util/SettingsManager.h"
 #include "minorGems/io/file/File.h"
+#include "src/system/_base/process/scalar.h"
 
 
 
@@ -30,6 +31,9 @@ static File groundTileCacheDir( NULL, "groundTileCache" );
 static SimpleVector<int> allBiomes;
     
 static char printSteps = false;
+
+extern openLife::system::type::Value2D_U32 mapGenSeed;
+/**********************************************************************************************************************/
 
 
 int initGroundSpritesStart( char inPrintSteps ) {
@@ -338,7 +342,7 @@ float initGroundSpritesStep() {
                                         int p = y * tileD + x;
                                 
                                         double wiggle = 
-                                            getXYFractal( x, y, 0, .5 );
+                                        		openLife::system::process::scalar::getXYFractal( x, y, 0, .5, mapGenSeed );
                                 
                                         wiggle *= wiggleScale;
  

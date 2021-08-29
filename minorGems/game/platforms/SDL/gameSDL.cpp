@@ -83,10 +83,9 @@ int main( int inArgCount, char **inArgs )
 #include "minorGems/game/drawUtils.h"
 
 #include "minorGems/game/diffBundle/client/diffBundleClient.h"
-
-
-
 #include "minorGems/util/random/CustomRandomSource.h"
+#include "minorGems/io/file/Path.h"
+#include "minorGems/io/file/FileOutputStream.h"
 
 // static seed
 static CustomRandomSource randSource( 34957197 );
@@ -145,6 +144,7 @@ static BinarySemaphore newFileDoneReadingSem;
 
 static SimpleVector<AsyncFileRecord> asyncFiles;
 
+/**********************************************************************************************************************/
 
 class AsyncFileThread : public StopSignalThread {
     
@@ -752,7 +752,7 @@ SoundSpriteHandle loadSoundSprite( const char *inAIFFFileName ) {
 SoundSpriteHandle loadSoundSprite( const char *inFolderName,
                                    const char *inAIFFFileName ) {
     
-    File aiffFile( new Path( inFolderName ), inAIFFFileName );
+	File aiffFile( new openLife::system::Path( inFolderName ), inAIFFFileName );
 
     if( ! aiffFile.exists() ) {
         printf( "File does not exist in sounds folder: %s\n", 
@@ -4024,7 +4024,7 @@ static Image *readTGAFile( File *inFile ) {
 
 Image *readTGAFile( const char *inTGAFileName ) {
 
-    File tgaFile( new Path( "graphics" ), inTGAFileName );
+	File tgaFile( new openLife::system::Path( "graphics" ), inTGAFileName );
     
     return readTGAFile( &tgaFile );
     }
@@ -4094,7 +4094,7 @@ static RawRGBAImage *readTGAFileRaw( File *inFile ) {
 
 RawRGBAImage *readTGAFileRaw( const char *inTGAFileName ) {
 
-    File tgaFile( new Path( "graphics" ), inTGAFileName );
+	File tgaFile( new openLife::system::Path( "graphics" ), inTGAFileName );
     
     return readTGAFileRaw( &tgaFile );
     }

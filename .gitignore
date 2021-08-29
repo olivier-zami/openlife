@@ -12,6 +12,7 @@ core*
 test/
 
 build/server/Makefile.minorGems_dependencies
+build/client/Makefile.minorGems_dependencies
 
 OneLife/gameSource/log.txt
 OneLife/gameSource/OneLife

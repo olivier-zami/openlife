@@ -13,6 +13,7 @@
 #include "minorGems/graphics/converters/TGAImageConverter.h"
 
 #include "minorGems/game/game.h"
+#include "minorGems/io/file/FileOutputStream.h"
 
 
 #include "folderCache.h"
@@ -65,6 +66,8 @@ static char *loadingFailureFileName = NULL;
 
 
 
+
+/**********************************************************************************************************************/
 
 int getMaxSpriteID() {
     return maxID;

@@ -11,6 +11,7 @@
 
 
 #include "minorGems/util/random/JenkinsRandomSource.h"
+#include "minorGems/io/file/Directory.h"
 
 
 

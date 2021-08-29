@@ -74,6 +74,9 @@ ${DIR_SRC_CLIENT}/lifeTokens.cpp \
 ${DIR_SRC_CLIENT}/PollPage.cpp \
 ${DIR_SRC_CLIENT}/fitnessScore.cpp \
 ${DIR_SRC_CLIENT}/GeneticHistoryPage.cpp \
+${DIR_SRC_CLIENT}/../../minorGems/io/file/File.cpp \
+${DIR_SRC_CLIENT}/../../src/system/_base/process/scalar.cpp \
+
 
 
 

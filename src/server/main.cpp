@@ -15,6 +15,7 @@
 #include "src/system/_base/object/store/memory/random/biome.h"
 #include "minorGems/util/SettingsManager.h"
 #include "src/third_party/nlohmann/json.hpp"
+#include "src/server/process/newBiome.h"
 
 openLife::Server* server;
 
@@ -39,6 +40,8 @@ int numBiomes;
 unsigned int biomeRandSeedA = 727;
 unsigned int biomeRandSeedB = 941;
 openLife::system::object::store::memory::random::Biome* cachedBiome;
+openLife::system::type::Value2D_U32 mapGenSeed;
+int maxSpeechPipeIndex = 0;
 
 #include "src/server/definition/services.h"
 
