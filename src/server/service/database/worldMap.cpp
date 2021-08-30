@@ -7,8 +7,8 @@
 #include <iostream>
 #include <cmath>
 
+#include "src/server/main.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
-#include "src/system/_base/object/store/memory/random/biome.h"
 #include "src/system/_base/process/scalar.h"
 
 //!debug
@@ -77,10 +77,15 @@ openLife::server::service::database::WorldMap::~WorldMap() {}
  * @param biomeDB
  * @note temporary methods
  */
-void openLife::server::service::database::WorldMap::legacy(LINEARDB3* biomeDB, char* notEmptyDB)
+void openLife::server::service::database::WorldMap::legacy(
+		LINEARDB3* biomeDB,
+		char* notEmptyDB,
+		openLife::system::object::store::memory::random::Biome* dbCacheBiome
+	)
 {
 	this->biomeDB = biomeDB;
 	this->notEmptyDB = notEmptyDB;
+	this->dbCacheBiome = dbCacheBiome;
 }
 
 /**
@@ -103,7 +108,11 @@ void openLife::server::service::database::WorldMap::debug()
 									  double *outSecondPlaceGap
 			 */
 			ColorRGB color;
-			int pickedBiome = computeMapBiomeIndex(x, y);
+
+			/**********************************************************************************************************/
+			int pickedBiome = this->select(x, y)->getNewBiome().value;
+
+
 			unsigned int offset = (!x || !y) ? 50 : 0;
 			switch(pickedBiome)
 			{
@@ -362,6 +371,109 @@ openLife::server::service::database::WorldMap* openLife::server::service::databa
 	return this;
 }
 
+/**
+ *
+ * @return
+ * @note topographic rings
+ */
+openLife::system::type::record::Biome openLife::server::service::database::WorldMap::getNewBiome()
+{
+	//!legacy : int computeMapBiomeIndex(x, y);
+	openLife::system::type::record::Biome newBiome = {this->query.x, this->query.y, 0, -1, 0};
+
+	// try topographical altitude mapping
+	setXYRandomSeed( biomeRandSeedA, biomeRandSeedB );
+	double randVal =( openLife::system::process::scalar::getXYFractal( this->query.x, this->query.y, 0.55, 0.83332 + 0.08333 * numBiomes, mapGenSeed ) );
+
+	// push into range 0..1, based on sampled min/max values
+	randVal -= 0.099668;
+	randVal *= 1.268963;
+
+	float i = randVal * biomeTotalWeight;
+	while( newBiome.value < numBiomes && i > biomeCumuWeights[newBiome.value] ) newBiome.value++;
+
+	if( newBiome.value >= numBiomes ) newBiome.value = numBiomes - 1;
+
+	if( newBiome.value >= regularBiomeLimit && numSpecialBiomes > 0 )
+	{
+		// special case:  on a peak, place a special biome here
+		if( specialBiomeBandMode )
+		{
+			// use band mode for these
+			newBiome.value = getSpecialBiomeIndexForYBand( this->query.y );
+
+			newBiome.secondPlace = regularBiomeLimit - 1;
+			newBiome.secondPlaceGap = 0.1;
+		}
+		else
+		{
+			// use patches mode for these
+			newBiome.value = -1;
+
+			double maxValue = -10;
+			double secondMaxVal = -10;
+
+			for( int i=regularBiomeLimit; i<numBiomes; i++ )
+			{
+				int biome = biomes[i];
+				setXYRandomSeed( biome * 263 + biomeRandSeedA + 38475, biomeRandSeedB );
+				double randVal = openLife::system::process::scalar::getXYFractal(  this->query.x,
+																				   this->query.y,
+																				   0.55,
+																				   2.4999 + 0.2499 * numSpecialBiomes,
+																				   mapGenSeed );
+
+				if( randVal > maxValue )
+				{
+					if( maxValue != -10 )
+					{
+						secondMaxVal = maxValue;
+					}
+					maxValue = randVal;
+					newBiome.value = i;
+				}
+			}
+
+			if( maxValue - secondMaxVal < 0.03 )
+			{
+				// close!  that means we're on a boundary between special biomes
+
+				// stick last regular biome on this boundary, so special
+				// biomes never touch
+				newBiome.secondPlace = newBiome.value;
+				newBiome.secondPlaceGap = 0.1;
+				newBiome.value = regularBiomeLimit - 1;
+			}
+			else {
+				newBiome.secondPlace = regularBiomeLimit - 1;
+				newBiome.secondPlaceGap = 0.1;
+			}
+		}
+	}
+	else
+	{
+		// second place for regular biome rings
+
+		newBiome.secondPlace = newBiome.value - 1;
+		if( newBiome.secondPlace < 0 ) {
+			newBiome.secondPlace = newBiome.value + 1;
+		}
+		newBiome.secondPlaceGap = 0.1;
+	}
+
+
+	if( ! allowSecondPlaceBiomes ) {
+		// make the gap ridiculously big, so that second-place placement
+		// never happens.
+		// but keep secondPlace set different from pickedBiome
+		// (elsewhere in code, we avoid placing animals if
+		// secondPlace == picked
+		newBiome.secondPlaceGap = 10.0;
+	}
+
+	return newBiome;
+}
+
 void openLife::server::service::database::WorldMap::insert(openLife::system::type::record::Biome biome)
 {
 	//!legacy biomeDBPut( int inX, int inY, int inValue, int inSecondPlace, double inSecondPlaceGap )
@@ -411,6 +523,7 @@ void openLife::server::service::database::WorldMap::insert(common::object::entit
 	}
 }
 
+
 /**
  *
  * @return
@@ -418,82 +531,54 @@ void openLife::server::service::database::WorldMap::insert(common::object::entit
 openLife::system::type::record::Biome openLife::server::service::database::WorldMap::getBiomeRecord()
 {
 	//!legacy int getMapBiomeIndex( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap)
-	openLife::system::type::record::Biome biomeRecord;
-
-	int pickedBiome;
-	int secondPlaceBiome = -1;
-	int dbBiome = -1;
-	biomeRecord.x = this->query.x;
-	biomeRecord.y = this->query.y;
-	biomeRecord.value = - 1;
-	biomeRecord.secondPlace = - 1;
-	biomeRecord.secondPlaceGap = 0;
+	openLife::system::type::record::Biome biomeRecord = {this->query.x, this->query.y, -1, -1, 0};
 
 	if( *(this->notEmptyDB) && this->query.x >= minBiomeXLoc && this->query.x <= maxBiomeXLoc && this->query.y >= minBiomeYLoc && this->query.y <= maxBiomeYLoc )
 	{
 		// don't bother with this call unless biome DB has
 		// something in it, and this inX,inY is in the region where biomes
 		// exist in the database (tutorial loading, or test maps)
-		dbBiome = biomeDBGet( this->query.x, this->query.y, &secondPlaceBiome, &(biomeRecord.secondPlaceGap) );
-		//std::cout << "\n######################## base index : " << biomeRecord.value;
+		biomeRecord.value = biomeDBGet( this->query.x, this->query.y, &(biomeRecord.secondPlace), &(biomeRecord.secondPlaceGap) );
 	}
-	if( dbBiome != -1 )
+	if( biomeRecord.value != -1 )
 	{
-		int index = getBiomeIndex( dbBiome );
+		int index = getBiomeIndex( biomeRecord.value );
 		if( index != -1 )
 		{
 			// biome still exists!
 			char secondPlaceFailed = false;
-			//if( outSecondPlaceIndex != NULL ) //TODO: delete cond since biome.secondPlace is not a pointer anymore
-			//{
-				int secondIndex = getBiomeIndex( secondPlaceBiome );
-				if( secondIndex != -1 ) biomeRecord.secondPlace = secondIndex;
-				else secondPlaceFailed = true;
-			//}
-			if(!secondPlaceFailed)
-			{
-				//std::cout << "\n######################## First return : " << biomeRecord.value;
-				return biomeRecord;//return index;
-			}
+			int secondIndex = getBiomeIndex( biomeRecord.secondPlace );
+
+			if( secondIndex != -1 ) biomeRecord.secondPlace = secondIndex;
+			else secondPlaceFailed = true;
+
+			if(!secondPlaceFailed) return biomeRecord;//TODO: unique return principle
 		}
-		else dbBiome = -1;
+		else biomeRecord.value = -1;
 
 		// else a biome or second place in biome.db that isn't in game anymore
 		// ignore it
 	}
 
-	int secondPlace = -1;
-	double secondPlaceGap = 0;
-	std::cout << "\n==========>Compute biome("<<this->query.x<<", "<<this->query.y<<")";
-	if(!this->debugged)
+	biomeRecord = this->dbCacheBiome->get(this->query.x, this->query.y);
+	if(biomeRecord.value == -1)
 	{
-		this->debug();
-		this->debugged = true;
+		biomeRecord = this->getNewBiome();
+		this->dbCacheBiome->put(biomeRecord);
 	}
-	pickedBiome = computeMapBiomeIndex( this->query.x, this->query.y, &secondPlace, &secondPlaceGap );
-	biomeRecord.value = pickedBiome;
-	//if( outSecondPlaceIndex != NULL )
-	//{
-		biomeRecord.secondPlace = secondPlace;
-	//}
-	//if(outSecondPlaceGap != NULL)
-	//{
-		biomeRecord.secondPlaceGap = secondPlaceGap;
-	//}
 
-	if( dbBiome == -1 || secondPlaceBiome == -1 )
+
+	if( biomeRecord.value == -1 || biomeRecord.secondPlace == -1 )
 	{
 		// not stored, OR some part of stored stale, re-store it
-		secondPlaceBiome = 0;
-		if( secondPlace != -1 ) secondPlaceBiome = biomes[ secondPlace ];
+		biomeRecord.secondPlace = 0;
+		if( biomeRecord.secondPlace != -1 ) biomeRecord.secondPlace = biomes[ biomeRecord.secondPlace ];
 		// skip saving proc-genned biomes for now
 		// huge RAM impact as players explore distant areas of map
 
 		// we still check the biomeDB above for loading test maps
 		//biomeDBPut( inX, inY, biomes[pickedBiome], secondPlaceBiome, secondPlaceGap );
 	}
-	//return pickedBiome;
-	//std::cout << "\n######################## Second return : " << biomeRecord.value;
 	return biomeRecord;
 }
 
@@ -523,203 +608,6 @@ void openLife::server::service::database::WorldMap::updateSecondPlaceIndex(int *
 void openLife::server::service::database::WorldMap::updateSecondPlaceGap(double *outSecondPlaceGap)
 {
 	this->tmp.outSecondPlaceGap = outSecondPlaceGap;
-}
-
-
-
-/**
- *
- * @param inX
- * @param inY
- * @param outSecondPlaceIndex
- * @param outSecondPlaceGap
- * @return
- */
-// new code, topographic rings
-int computeMapBiomeIndex( int inX, int inY,
-						  int *outSecondPlaceIndex,
-						  double *outSecondPlaceGap )
-						  {
-	//!legacy computeMapBiomeIndex( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap )
-	//!legacy computeMapBiomeIndexOld(int, int, int*, double*)
-	int secondPlace = -1;
-	double secondPlaceGap = 0;
-
-	//!test
-	openLife::system::type::record::Biome tmpBiome;
-	tmpBiome = cachedBiome->get(inX, inY);
-	int pickedBiome = tmpBiome.value;
-	secondPlace = tmpBiome.secondPlace;
-	secondPlaceGap = tmpBiome.secondPlaceGap;
-	//std::cout << "\nget {"<<tmpBiome.x<<", "<<tmpBiome.y<<", "<<tmpBiome.value<<", "<<tmpBiome.secondPlace<<", "<<tmpBiome.secondPlaceGap<<"}";
-	//int pickedBiome = biomeGetCached( inX, inY, &secondPlace, &secondPlaceGap );
-
-	if( pickedBiome != -1 )
-	{
-		// hit cached
-		if( outSecondPlaceIndex != NULL ) {
-			*outSecondPlaceIndex = secondPlace;
-		}
-		if( outSecondPlaceGap != NULL ) {
-			*outSecondPlaceGap = secondPlaceGap;
-		}
-		std::cout << "\n######################## biomeGetCached("<<inX<<", "<<inY<<")";
-		return pickedBiome;
-	}
-
-	/******************************************************************************************************************/
-
-	// else cache miss
-	pickedBiome = -1;
-
-
-	// try topographical altitude mapping
-	setXYRandomSeed( biomeRandSeedA, biomeRandSeedB );
-	double randVal =( openLife::system::process::scalar::getXYFractal( inX, inY, 0.55, 0.83332 + 0.08333 * numBiomes, mapGenSeed ) );
-
-	// push into range 0..1, based on sampled min/max values
-	randVal -= 0.099668;
-	randVal *= 1.268963;
-
-
-	// flatten middle
-	//randVal = ( pow( 2*(randVal - 0.5 ), 3 ) + 1 ) / 2;
-
-	// push into range 0..1 with manually tweaked values
-	// these values make it pretty even in terms of distribution:
-	//randVal -= 0.319;
-	//randVal *= 3;
-
-	// these values are more intuitve to make a map that looks good
-	//randVal -= 0.23;
-	//randVal *= 1.9;
-
-	// apply gamma correction
-	//randVal = pow( randVal, 1.5 );
-	/*
-    randVal += 0.4* sin( inX / 40.0 );
-    randVal += 0.4 *sin( inY / 40.0 );
-
-    randVal += 0.8;
-    randVal /= 2.6;
-    */
-
-	// slow arc n to s:
-
-	// pow version has flat area in middle
-	//randVal += 0.7 * pow( ( inY / 354.0 ), 3 ) ;
-
-	// sin version
-	//randVal += 0.3 * sin( 0.5 * M_PI * inY / 354.0 );
-
-	/*
-        ( sin( M_PI * inY / 708 ) +
-          (1/3.0) * sin( 3 * M_PI * inY / 708 ) );
-    */
-	//randVal += 0.5;
-	//randVal /= 2.0;
-
-
-	float i = randVal * biomeTotalWeight;
-
-	pickedBiome = 0;
-	while( pickedBiome < numBiomes && i > biomeCumuWeights[pickedBiome] ) pickedBiome++;
-
-	if( pickedBiome >= numBiomes ) pickedBiome = numBiomes - 1;
-
-	if( pickedBiome >= regularBiomeLimit && numSpecialBiomes > 0 )
-	{
-		// special case:  on a peak, place a special biome here
-		if( specialBiomeBandMode )
-		{
-			// use band mode for these
-			pickedBiome = getSpecialBiomeIndexForYBand( inY );
-
-			secondPlace = regularBiomeLimit - 1;
-			secondPlaceGap = 0.1;
-		}
-		else
-		{
-			// use patches mode for these
-			pickedBiome = -1;
-
-
-			double maxValue = -10;
-			double secondMaxVal = -10;
-
-			for( int i=regularBiomeLimit; i<numBiomes; i++ ) {
-				int biome = biomes[i];
-
-				setXYRandomSeed( biome * 263 + biomeRandSeedA + 38475,
-								 biomeRandSeedB );
-
-				double randVal = openLife::system::process::scalar::getXYFractal(  inX,
-												inY,
-												0.55,
-												2.4999 + 0.2499 * numSpecialBiomes,
-												mapGenSeed );
-
-				if( randVal > maxValue ) {
-					if( maxValue != -10 ) {
-						secondMaxVal = maxValue;
-					}
-					maxValue = randVal;
-					pickedBiome = i;
-				}
-			}
-
-			if( maxValue - secondMaxVal < 0.03 ) {
-				// close!  that means we're on a boundary between special biomes
-
-				// stick last regular biome on this boundary, so special
-				// biomes never touch
-				secondPlace = pickedBiome;
-				secondPlaceGap = 0.1;
-				pickedBiome = regularBiomeLimit - 1;
-			}
-			else {
-				secondPlace = regularBiomeLimit - 1;
-				secondPlaceGap = 0.1;
-			}
-		}
-	}
-	else
-	{
-		// second place for regular biome rings
-
-		secondPlace = pickedBiome - 1;
-		if( secondPlace < 0 ) {
-			secondPlace = pickedBiome + 1;
-		}
-		secondPlaceGap = 0.1;
-	}
-
-
-	if( ! allowSecondPlaceBiomes ) {
-		// make the gap ridiculously big, so that second-place placement
-		// never happens.
-		// but keep secondPlace set different from pickedBiome
-		// (elsewhere in code, we avoid placing animals if
-		// secondPlace == picked
-		secondPlaceGap = 10.0;
-	}
-
-	//!test
-	openLife::system::type::record::Biome tmpBiome1 = {inX, inY, pickedBiome, secondPlace, secondPlaceGap};
-	cachedBiome->put(tmpBiome1);
-	//biomePutCached( inX, inY, pickedBiome, secondPlace, secondPlaceGap );
-
-
-	if( outSecondPlaceIndex != NULL )
-	{
-		*outSecondPlaceIndex = secondPlace;
-	}
-	if( outSecondPlaceGap != NULL )
-	{
-		*outSecondPlaceGap = secondPlaceGap;
-	}
-	//std::cout << "\n######################## biomePutCached("<<inX<<", "<<inY<<")";
-	return pickedBiome;
 }
 
 /**

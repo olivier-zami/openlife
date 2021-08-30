@@ -10,6 +10,7 @@
 #include "src/system/_base/settings/database/worldMap.h"
 #include "src/system/_base/type/record.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
+#include "src/system/_base/object/store/memory/random/biome.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/common/object/entity/mapZone.h"
 
@@ -25,7 +26,7 @@ namespace openLife::server::service::database
 			~WorldMap();
 
 			//!temporary methods
-			void legacy(LINEARDB3* biomeDB, char* notEmptyDB);
+			void legacy(LINEARDB3* biomeDB, char* notEmptyDB, openLife::system::object::store::memory::random::Biome* dbCacheBiome);
 			void debug();
 			int debugged;
 			openLife::system::settings::database::WorldMap settings;
@@ -35,6 +36,7 @@ namespace openLife::server::service::database
 			WorldMap* select(int posX, int posY);
 			void insert(openLife::system::type::record::Biome biome);
 			void insert(common::object::entity::MapZone* mapZone);
+			openLife::system::type::record::Biome getNewBiome();
 			int getBiome();
 			openLife::system::type::record::Biome getBiomeRecord();
 
@@ -51,6 +53,7 @@ namespace openLife::server::service::database
 			struct {int x; int y;} query;
 			struct {unsigned int x; unsigned int y;} center;
 			std::vector<int> biome;
+			openLife::system::object::store::memory::random::Biome* dbCacheBiome;
 			openLife::system::object::store::device::random::LinearDB* biomeStoreHouse;
 
 			LINEARDB3* biomeDB;
@@ -65,9 +68,5 @@ namespace openLife::server::service::database
 int biomeDBGet( int inX, int inY,
 				int *outSecondPlaceBiome = nullptr,
 				double *outSecondPlaceGap = nullptr);
-
-int computeMapBiomeIndex( int inX, int inY,
-						  int *outSecondPlaceIndex = nullptr,
-						  double *outSecondPlaceGap = nullptr);
 
 #endif //OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H

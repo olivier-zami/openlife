@@ -1512,6 +1512,8 @@ char initMap()
 
 	//outputBiomeFractals();
 
+	worldMap->debug();
+
 
 	return true;
 }
@@ -1701,17 +1703,6 @@ double sigmoid( double inInput, double inKnee ) {
     return ( out + 1 ) * 0.5;
     }
 
-static int computeXYCacheHash( int inKeyA, int inKeyB )
-{
-    
-    int hashKey = ( inKeyA * CACHE_PRIME_A + 
-                    inKeyB * CACHE_PRIME_B ) % BIOME_CACHE_SIZE;
-    if( hashKey < 0 ) {
-        hashKey += BIOME_CACHE_SIZE;
-        }
-    return hashKey;
-}
-
 void initBiomeCache() {
     BiomeCacheRecord blankRecord = { 0, 0, -2, 0, 0 };
     for( int i=0; i<BIOME_CACHE_SIZE; i++ ) {
@@ -1864,8 +1855,8 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
             // hits this grid
 
             // make sure this biome is on the list for this object
-            int secondPlace;
-            double secondPlaceGap;
+            int secondPlace; //TODO: uncomment if needed
+            double secondPlaceGap; //TODO: uncomment if needed
 
             openLife::system::type::record::Biome biomeRecord;
             biomeRecord = worldMap->select(inX, inY)->getBiomeRecord();
@@ -2382,12 +2373,12 @@ void printBiomeSamples() {
 
     int range = 2000;
 
-    for( int i=0; i<numSamples; i++ ) {
+    for( int i=0; i<numSamples; i++ )
+    {
         int x = sampleRandSource.getRandomBoundedInt( -range, range );
         int y = sampleRandSource.getRandomBoundedInt( -range, range );
-        
-        biomeSamples[ computeMapBiomeIndex( x, y ) ] ++;
-        }
+        biomeSamples[ worldMap->select( x, y )->getNewBiome().value ] ++;
+	}
     
     for( int i=0; i<numBiomes; i++ ) {
         printf( "Biome %d:  %d (%.2f)\n",

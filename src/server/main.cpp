@@ -73,8 +73,6 @@ int main()
 		openLife::system::settings::LinearDB biomeDBSettings;
 		newBiomeDB = new openLife::system::object::store::device::random::LinearDB(biomeDBSettings);
 		newBiomeDB->init(&biomeDB);
-
-		//openLife::system::object::store::memory::random::Biome* cachedBiome;
 		cachedBiome = new openLife::system::object::store::memory::random::Biome(BIOME_CACHE_SIZE);
 
 		//!set worldMap
@@ -83,7 +81,7 @@ int main()
 		worldMapSetting.mapSize.width = 10;
 		worldMapSetting.mapSize.height = 10;
 		worldMap = new openLife::server::service::database::WorldMap(worldMapSetting);
-		worldMap->legacy(&biomeDB, &anyBiomesInDB);
+		worldMap->legacy(&biomeDB, &anyBiomesInDB, cachedBiome);
 
 		//!test
 		/*
@@ -540,6 +538,7 @@ int main()
 			}
 		*/
 
+		std::cout << "\nStart Server ...";
 		server->start();
 		while( !quit )
 		{
