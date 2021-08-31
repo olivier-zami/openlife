@@ -16,7 +16,6 @@
 #include "src/system/_base/object/entity/exception.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
 #include "minorGems/util/SettingsManager.h"
-#include "src/server/process/newBiome.h"
 
 openLife::Server* server;
 
@@ -82,6 +81,7 @@ int main()
 
 		//!set worldMap
 		openLife::server::settings::database::WorldMap worldMapSettings;
+		worldMapSettings.specialBiomeBandMode = 1;
 		worldMapSettings.filename = "biome.db";
 		worldMapSettings.mapSize.width = 10;
 		worldMapSettings.mapSize.height = 10;
@@ -99,6 +99,51 @@ int main()
 			climate.label = dataClimate[i]["label"].get<std::string>();
 			worldMapSettings.climate.push_back(climate);
 		}
+
+		worldMapSettings.map.specialBiomeBandThickness = 300;
+
+		for(unsigned int i=0; i<dataWorldMap["biomeOrder"].size(); i++)
+		{
+			worldMapSettings.biome.order.push_back(dataWorldMap["biomeOrder"][i].get<int>());
+		}
+		std::cout << "\nSetting biome order size("<<worldMapSettings.biome.order.size()<<") [";
+		for(unsigned int i=0; i<worldMapSettings.biome.order.size(); i++) std::cout << "  " << worldMapSettings.biome.order[i];
+		std::cout << "]";
+
+
+		for(unsigned int i=0; i<dataWorldMap["specialBiomeBandYCenter"].size(); i++)
+		{
+			worldMapSettings.map.specialBiomeBandYCenter.push_back(dataWorldMap["specialBiomeBandYCenter"][i].get<int>());
+		}
+		std::cout << "\nSetting specialBiomeBandYCenter size("<<worldMapSettings.map.specialBiomeBandYCenter.size()<<") [";
+		for(unsigned int i=0; i<worldMapSettings.map.specialBiomeBandYCenter.size(); i++) std::cout << "  " << worldMapSettings.map.specialBiomeBandYCenter[i];
+		std::cout << "]";
+
+
+		for(unsigned int i=0; i<dataWorldMap["specialBiomeBandOrder"].size(); i++)
+		{
+			worldMapSettings.map.specialBiomeBandOrder.push_back(dataWorldMap["specialBiomeBandOrder"][i].get<int>());
+		}
+		std::cout << "\nSetting specialBiomeBandOrder size("<<worldMapSettings.map.specialBiomeBandOrder.size()<<") [";
+		for(unsigned int i=0; i<worldMapSettings.map.specialBiomeBandOrder.size(); i++) std::cout << "  " << worldMapSettings.map.specialBiomeBandOrder[i];
+		std::cout << "]";
+
+		for(unsigned int i=0; i<dataWorldMap["specialBiomes"].size(); i++)
+		{
+			worldMapSettings.map.specialBiomes.push_back(dataWorldMap["specialBiomes"][i].get<int>());
+		}
+		std::cout << "\nSetting specialBiomes size("<<worldMapSettings.map.specialBiomes.size()<<") [";
+		for(unsigned int i=0; i<worldMapSettings.map.specialBiomes.size(); i++) std::cout << "  " << worldMapSettings.map.specialBiomes[i];
+		std::cout << "]";
+
+		for(unsigned int i=0; i<dataWorldMap["biomeWeight"].size(); i++)
+		{
+			worldMapSettings.map.biomeWeight.push_back(dataWorldMap["biomeWeight"][i].get<float>());
+		}
+		std::cout << "\nSetting biomeWeight size("<<worldMapSettings.map.biomeWeight.size()<<") [";
+		for(unsigned int i=0; i<worldMapSettings.map.biomeWeight.size(); i++) std::cout << "  " <<worldMapSettings.map.biomeWeight[i];
+		std::cout << "]";
+
 		std::cout << "\nall biome should be set ...";
 		worldMap = new openLife::server::service::database::WorldMap(worldMapSettings);
 		worldMap->legacy(&biomeDB, &anyBiomesInDB, cachedBiome);
@@ -558,8 +603,8 @@ int main()
 			}
 		*/
 
-		std::cout << "\nStart Server ...";
 		server->start();
+		std::cout << "\n\nStart main routine";
 		while( !quit )
 		{
 			double curStepTime = Time::getCurrentTime();
@@ -567,6 +612,7 @@ int main()
 			// flush past players hourly
 			if( curStepTime - lastPastPlayerFlushTime > 3600 )
 			{
+				//std::cout << "\n===>flush past players hourly";
 
 				// default one week
 				int pastPlayerFlushTime =
@@ -588,16 +634,13 @@ int main()
 				lastPastPlayerFlushTime = curStepTime;
 			}
 
-
+//!
 			char periodicStepThisStep = false;
-
 			if( curStepTime - lastPeriodicStepTime > periodicStepTime )
 			{
 				periodicStepThisStep = true;
 				lastPeriodicStepTime = curStepTime;
 			}
-
-
 			if( periodicStepThisStep )
 			{
 				shutdownMode = SettingsManager::getIntSetting( "shutdownMode", 0 );
@@ -620,7 +663,7 @@ int main()
 				}
 			}
 
-
+//!check shutdown + force shutdown?
 			if( forceShutdownMode )
 			{
 				shutdownMode = 1;
@@ -671,7 +714,7 @@ int main()
 				}
 			}
 
-
+//!periodic steps
 			if( periodicStepThisStep )
 			{
 
@@ -799,8 +842,7 @@ int main()
 
 			int numLive = players.size();
 
-
-
+//!
 			if( shouldRunObjectSurvey() )
 			{
 				SimpleVector<GridPos> livePlayerPos;
@@ -817,12 +859,11 @@ int main()
 
 				startObjectSurvey( &livePlayerPos );
 			}
-
 			stepObjectSurvey();
 
 			stepLanguage();
 
-
+//!
 			double secPerYear = 1.0 / getAgeRate();
 
 
@@ -9542,13 +9583,16 @@ int main()
 
 			killStatePosseChangedPlayerIDs.deleteAll();
 
-
-
-			if( playerIndicesToSendUpdatesAbout.size() > 0 ) {
+/**********************************************************************************************************************/
+			//std::cout << "\nstep 1\n";
+			if( playerIndicesToSendUpdatesAbout.size() > 0 )
+			{
 
 				SimpleVector<char> updateList;
 
-				for( int i=0; i<playerIndicesToSendUpdatesAbout.size(); i++ ) {
+				//std::cout << "\nupdateList.getElementString";
+				for( int i=0; i<playerIndicesToSendUpdatesAbout.size(); i++ )
+				{
 					LiveObject *nextPlayer = players.getElement(
 							playerIndicesToSendUpdatesAbout.getElementDirect( i ) );
 
@@ -9558,18 +9602,18 @@ int main()
 					delete [] playerString;
 				}
 
+				//std::cout << "\nupdateList.getElementString";
 				char *updateListString = updateList.getElementString();
 
-				AppLog::infoF( "Need to send updates about these %d players: %s",
+				AppLog::infoF( "\nNeed to send updates about these %d players: %s",
 							   playerIndicesToSendUpdatesAbout.size(),
 							   updateListString );
 				delete [] updateListString;
 			}
 
-
-
+/**********************************************************************************************************************/
+			//std::cout << "\nstep 2";
 			double currentTimeHeat = Time::getCurrentTime();
-
 			if( currentTimeHeat - lastHeatUpdateTime >= heatUpdateTimeStep ) {
 				// a heat step has passed
 
@@ -9595,9 +9639,7 @@ int main()
 				lastHeatUpdateTime = currentTimeHeat;
 			}
 
-
-
-
+			//std::cout << "\nstep 3";
 			// update personal heat value of any player that is due
 			// once every 2 seconds
 			currentTime = Time::getCurrentTime();
@@ -9778,9 +9820,9 @@ int main()
 				nextPlayer->lastHeatUpdate = currentTime;
 			}
 
-
-
-			for( int i=0; i<playerIndicesToSendUpdatesAbout.size(); i++ ) {
+			//std::cout << "\nstep 4";
+			for( int i=0; i<playerIndicesToSendUpdatesAbout.size(); i++ )
+			{
 				LiveObject *nextPlayer = players.getElement(
 						playerIndicesToSendUpdatesAbout.getElementDirect( i ) );
 
@@ -9832,8 +9874,6 @@ int main()
 				nextPlayer->updateGlobal = false;
 			}
 
-
-
 			if( newUpdates.size() > 0 ) {
 
 				SimpleVector<char> trueUpdateList;
@@ -9854,24 +9894,9 @@ int main()
 				delete [] updateListString;
 			}
 
-
-
-
 			SimpleVector<ChangePosition> movesPos;
 
 			SimpleVector<MoveRecord> moveList = getMoveRecords( true, &movesPos );
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 			// add changes from auto-decays on map,

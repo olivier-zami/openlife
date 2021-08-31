@@ -1,5 +1,6 @@
 #include "map.h"
 
+#include <iostream>
 #include "src/server/main.h"
 #include "minorGems/io/file/FileOutputStream.h"
 #include "src/server/server.h"
@@ -1511,7 +1512,7 @@ char initMap()
 	//outputMapImage();
 	//outputBiomeFractals();
 
-	worldMap->debug();
+	//worldMap->debug();
 
 	return true;
 }
@@ -3070,20 +3071,21 @@ static void setupMapChangeLogFile() {
 
 void reseedMap( char inForceFresh )
 {
-
 	FILE *seedFile = NULL;
 	if( ! inForceFresh ) {
 		seedFile = fopen( "biomeRandSeed.txt", "r" );
 	}
+
 	char set = false;
+	unsigned int dummyBiomeRandSeedA, dummyBiomeRandSeedB;//!legacy biomeRandSeedA, biomeRandSeedB
 	if( seedFile != NULL )
 	{
-		int numRead = fscanf( seedFile, "%u %u", &biomeRandSeedA, &biomeRandSeedB );
+		int numRead = fscanf( seedFile, "%u %u", &dummyBiomeRandSeedA, &dummyBiomeRandSeedB );
 		fclose( seedFile );
 
 		if( numRead == 2 )
 		{
-			AppLog::infoF( "Reading map rand seed from file: %u %u\n", biomeRandSeedA, biomeRandSeedB );
+			AppLog::infoF( "Reading map rand seed from file: %u %u\n", dummyBiomeRandSeedA, dummyBiomeRandSeedB );
 			set = true;
 		}
 	}
@@ -3092,6 +3094,7 @@ void reseedMap( char inForceFresh )
 
 	if( !set )
 	{
+		//std::cout << "\n=====> Generate new map (rand seed no set)";
 		// no seed set, or ignoring it, make a new one
 
 		if( !inForceFresh ) {
@@ -3236,7 +3239,7 @@ void reseedMap( char inForceFresh )
 		delete [] allObjects;
 	}
 
-
+	//std::cout << "\n\n=====> setupMapChangeLogFile()";
 	setupMapChangeLogFile();
 
 	if( !set && mapChangeLogFile != NULL ) {
@@ -3264,6 +3267,7 @@ void reseedMap( char inForceFresh )
 
 		fclose( seedFile );
 	}
+	//std::cout << "\nmapReseed done ...";
 }
 
 

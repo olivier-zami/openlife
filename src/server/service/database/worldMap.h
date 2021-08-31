@@ -11,21 +11,31 @@
 #include "src/system/_base/type/record.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
+#include "src/system/_base/type.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/common/object/entity/mapZone.h"
 
 //!legacy
 #include "OneLife/server/map.h"
-#include "src/system/_base/type.h"
+
 
 namespace openLife::server::settings::database
 {
 	typedef struct{
 		std::string filename;
 		openLife::system::type::Dimension2D mapSize;
+		int specialBiomeBandMode;
 		struct{
 			openLife::system::type::Value2D_U32 seed;
+			std::vector<int> specialBiomeBandYCenter;
+			int specialBiomeBandThickness;
+			std::vector<int> specialBiomeBandOrder;
+			std::vector<int> specialBiomes;
+			std::vector<float> biomeWeight;
 		}map;
+		struct{
+			std::vector<int> order;
+		}biome;
 		std::vector<openLife::system::type::entity::Climate> climate;
 	}WorldMap;
 }
@@ -73,12 +83,25 @@ namespace openLife::server::service::database
 			struct {int x; int y;} query;
 			struct {unsigned int x; unsigned int y;} center;
 			std::vector<int> mapTile;
+
 			struct{
+				int specialBiomeBandMode;
 				openLife::system::type::Value2D_U32 seed;
+				char allowSecondPlaceBiomes;
+				int specialBiomeBandThickness;
+				std::vector<int> specialBiomeBandYCenter;
+				std::vector<int> specialBiomeBandOrder;
+				std::vector<int> specialBiomes;
+				std::vector<float> biomeWeight;
 			}map;
+
 			openLife::system::object::store::memory::random::Biome* dbCacheBiome;
 			openLife::system::object::store::device::random::LinearDB* dbBiome;
 
+			struct
+			{
+				std::vector<int> order;
+			}dataBiome;
 			std::vector<openLife::server::service::database::worldMap::Biome> biome;
 
 			struct mapSettings{

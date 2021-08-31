@@ -10,6 +10,7 @@
 #include "src/server/main.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/process/scalar.h"
+#include "src/server/process/newBiome_v1.h"
 
 //!debug
 #include "src/system/_base/object/process/handler/image.h"
@@ -59,9 +60,27 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 	this->center.x = (unsigned int)this->width/2;
 	this->center.y = (unsigned int)this->height/2;
 	this->idxMax = this->width*this->height;
+	this->map.specialBiomeBandMode = settings.specialBiomeBandMode;
 	this->map.seed.x = settings.map.seed.x;
 	this->map.seed.y = settings.map.seed.y;
-	std::cout << "\nseed : ("<<this->map.seed.x<<", "<<this->map.seed.y<<")";
+	this->map.allowSecondPlaceBiomes = allowSecondPlaceBiomes;
+	this->map.specialBiomeBandThickness = settings.map.specialBiomeBandThickness;
+	for(unsigned int i=0; i<settings.map.specialBiomeBandYCenter.size(); i++)
+	{
+		this->map.specialBiomeBandYCenter.push_back(settings.map.specialBiomeBandYCenter[i]);
+	}
+	for(unsigned int i=0; i<settings.map.specialBiomes.size(); i++)
+	{
+		this->map.specialBiomes.push_back(settings.map.specialBiomes[i]);
+	}
+	for(unsigned int i=0; i<settings.map.biomeWeight.size(); i++)
+	{
+		this->map.biomeWeight.push_back(settings.map.biomeWeight[i]);
+	}
+	for(unsigned int i=0; i<settings.map.specialBiomeBandOrder.size(); i++)
+	{
+		this->map.specialBiomeBandOrder.push_back(settings.map.specialBiomeBandOrder[i]);
+	}
 
 	this->biome.reserve(settings.climate.size());
 	std::cout << "\nregister " << settings.climate.size() << " biomes in size " << this->biome.capacity();
@@ -71,6 +90,8 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 		dataBiome.label = settings.climate[i].label;
 		this->biome.push_back(dataBiome);
 	}
+
+	for(unsigned int i=0; i<settings.biome.order.size(); i++) this->dataBiome.order.push_back(settings.biome.order[i]);
 
 	this->mapTile = std::vector<int>(this->idxMax);
 	std::fill(this->mapTile.begin(), this->mapTile.end(), -1);
@@ -389,100 +410,18 @@ openLife::server::service::database::WorldMap* openLife::server::service::databa
  */
 openLife::system::type::record::Biome openLife::server::service::database::WorldMap::getNewBiome()
 {
-	//!legacy : int computeMapBiomeIndex(x, y);
-	openLife::system::type::record::Biome newBiome = {this->query.x, this->query.y, 0, -1, 0};
-
-	// try topographical altitude mapping
-	openLife::system::type::Value2D_U32 biomeGenSeed = {this->map.seed.x, this->map.seed.y};
-	double randVal =( openLife::system::process::scalar::getXYFractal( this->query.x, this->query.y, 0.55, 0.83332 + 0.08333 * numBiomes, biomeGenSeed ) );
-
-	// push into range 0..1, based on sampled min/max values
-	randVal -= 0.099668;
-	randVal *= 1.268963;
-
-	float i = randVal * biomeTotalWeight;
-	while( newBiome.value < numBiomes && i > biomeCumuWeights[newBiome.value] ) newBiome.value++;
-
-	if( newBiome.value >= numBiomes ) newBiome.value = numBiomes - 1;
-
-	if( newBiome.value >= regularBiomeLimit && numSpecialBiomes > 0 )
-	{
-		// special case:  on a peak, place a special biome here
-		if( specialBiomeBandMode )
-		{
-			// use band mode for these
-			newBiome.value = getSpecialBiomeIndexForYBand( this->query.y );
-
-			newBiome.secondPlace = regularBiomeLimit - 1;
-			newBiome.secondPlaceGap = 0.1;
-		}
-		else
-		{
-			// use patches mode for these
-			newBiome.value = -1;
-
-			double maxValue = -10;
-			double secondMaxVal = -10;
-
-			for( int i=regularBiomeLimit; i<numBiomes; i++ )
-			{
-				int biome = biomes[i];
-				biomeGenSeed = {biome * 263 + this->map.seed.x + 38475, this->map.seed.y};
-				double randVal = openLife::system::process::scalar::getXYFractal(  this->query.x,
-																				   this->query.y,
-																				   0.55,
-																				   2.4999 + 0.2499 * numSpecialBiomes,
-																				   biomeGenSeed );
-
-				if( randVal > maxValue )
-				{
-					if( maxValue != -10 )
-					{
-						secondMaxVal = maxValue;
-					}
-					maxValue = randVal;
-					newBiome.value = i;
-				}
-			}
-
-			if( maxValue - secondMaxVal < 0.03 )
-			{
-				// close!  that means we're on a boundary between special biomes
-
-				// stick last regular biome on this boundary, so special
-				// biomes never touch
-				newBiome.secondPlace = newBiome.value;
-				newBiome.secondPlaceGap = 0.1;
-				newBiome.value = regularBiomeLimit - 1;
-			}
-			else {
-				newBiome.secondPlace = regularBiomeLimit - 1;
-				newBiome.secondPlaceGap = 0.1;
-			}
-		}
-	}
-	else
-	{
-		// second place for regular biome rings
-
-		newBiome.secondPlace = newBiome.value - 1;
-		if( newBiome.secondPlace < 0 ) {
-			newBiome.secondPlace = newBiome.value + 1;
-		}
-		newBiome.secondPlaceGap = 0.1;
-	}
-
-
-	if( ! allowSecondPlaceBiomes ) {
-		// make the gap ridiculously big, so that second-place placement
-		// never happens.
-		// but keep secondPlace set different from pickedBiome
-		// (elsewhere in code, we avoid placing animals if
-		// secondPlace == picked
-		newBiome.secondPlaceGap = 10.0;
-	}
-
-	return newBiome;
+	return openLife::server::process::newBiome_v1(
+			this->query.x,
+			this->query.y,
+			this->map.seed,
+			this->map.allowSecondPlaceBiomes,
+			this->dataBiome.order,
+			this->map.specialBiomeBandThickness,
+			this->map.specialBiomeBandYCenter,
+			this->map.specialBiomeBandOrder,
+			this->map.specialBiomeBandMode,
+			this->map.specialBiomes,
+			this->map.biomeWeight);
 }
 
 void openLife::server::service::database::WorldMap::insert(openLife::system::type::record::Biome biome)
