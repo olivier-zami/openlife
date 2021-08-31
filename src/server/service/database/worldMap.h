@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <array>
-#include "src/system/_base/settings/database/worldMap.h"
+#include "src/system/_base/type/entity.h"
 #include "src/system/_base/type/record.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
@@ -16,31 +16,51 @@
 
 //!legacy
 #include "OneLife/server/map.h"
+#include "src/system/_base/type.h"
+
+namespace openLife::server::settings::database
+{
+	typedef struct{
+		std::string filename;
+		openLife::system::type::Dimension2D mapSize;
+		struct{
+			openLife::system::type::Value2D_U32 seed;
+		}map;
+		std::vector<openLife::system::type::entity::Climate> climate;
+	}WorldMap;
+}
+
+namespace openLife::server::service::database::worldMap
+{
+	typedef struct
+	{
+		std::string label;
+	}Biome;
+}
 
 namespace openLife::server::service::database
 {
 	class WorldMap
 	{
 		public:
-			WorldMap(openLife::system::settings::database::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail*/);
+			WorldMap(openLife::server::settings::database::WorldMap settings);
 			~WorldMap();
 
 			//!temporary methods
 			void legacy(LINEARDB3* biomeDB, char* notEmptyDB, openLife::system::object::store::memory::random::Biome* dbCacheBiome);
 			void debug();
 			int debugged;
-			openLife::system::settings::database::WorldMap settings;
 			char* notEmptyDB;
 
 			int init();
+			void setMapSeed(unsigned int x, unsigned int y);
+
 			WorldMap* select(int posX, int posY);
 			void insert(openLife::system::type::record::Biome biome);
 			void insert(common::object::entity::MapZone* mapZone);
 			openLife::system::type::record::Biome getNewBiome();
 			int getBiome();
 			openLife::system::type::record::Biome getBiomeRecord();
-
-			void useBiomeStorehouse(openLife::system::object::store::device::random::LinearDB* biomeStoreHouse);
 
 			void updateSecondPlaceIndex(int *outSecondPlaceIndex);
 			void updateSecondPlaceGap(double *outSecondPlaceGap);
@@ -52,9 +72,18 @@ namespace openLife::server::service::database
 			unsigned int idxMax;
 			struct {int x; int y;} query;
 			struct {unsigned int x; unsigned int y;} center;
-			std::vector<int> biome;
+			std::vector<int> mapTile;
+			struct{
+				openLife::system::type::Value2D_U32 seed;
+			}map;
 			openLife::system::object::store::memory::random::Biome* dbCacheBiome;
-			openLife::system::object::store::device::random::LinearDB* biomeStoreHouse;
+			openLife::system::object::store::device::random::LinearDB* dbBiome;
+
+			std::vector<openLife::server::service::database::worldMap::Biome> biome;
+
+			struct mapSettings{
+				float *biomeCumuWeights;
+			};
 
 			LINEARDB3* biomeDB;
 

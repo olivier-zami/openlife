@@ -7,6 +7,8 @@
 #include <SDL/SDL.h>
 #include "server.h"
 #include "src/common/system.h"
+#include "src/system/_extension/nlohmann.h"
+
 #include "src/common/object/entity/mapZone.h"
 #include "src/server/service/database/worldMap.h"
 #include "src/system/_base/settings/linearDB.h"
@@ -14,7 +16,6 @@
 #include "src/system/_base/object/entity/exception.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
 #include "minorGems/util/SettingsManager.h"
-#include "src/third_party/nlohmann/json.hpp"
 #include "src/server/process/newBiome.h"
 
 openLife::Server* server;
@@ -60,6 +61,10 @@ int main()
 
 	openLife::system::notice("Attempt to start the server ...");
 
+	nlohmann::json dataClimate = openLife::system::nlohmann::getJsonFromFile("/home/olivier/Projets/OpenLife/conf/entity/climate.json");
+
+	nlohmann::json dataWorldMap = openLife::system::nlohmann::getJsonFromFile("/home/olivier/Projets/OpenLife/conf/server/map.json");
+
 	try
 	{
 		//!new
@@ -76,11 +81,26 @@ int main()
 		cachedBiome = new openLife::system::object::store::memory::random::Biome(BIOME_CACHE_SIZE);
 
 		//!set worldMap
-		openLife::system::settings::database::WorldMap worldMapSetting;
-		worldMapSetting.filename = "biome.db";
-		worldMapSetting.mapSize.width = 10;
-		worldMapSetting.mapSize.height = 10;
-		worldMap = new openLife::server::service::database::WorldMap(worldMapSetting);
+		openLife::server::settings::database::WorldMap worldMapSettings;
+		worldMapSettings.filename = "biome.db";
+		worldMapSettings.mapSize.width = 10;
+		worldMapSettings.mapSize.height = 10;
+		worldMapSettings.map.seed.x = dataWorldMap["mapGenerator"]["seed"]["x"];
+		worldMapSettings.map.seed.y = dataWorldMap["mapGenerator"]["seed"]["y"];
+		std::cout << "\nworldMapSettings.climate.capacity()" << worldMapSettings.climate.capacity();
+		worldMapSettings.climate.reserve(dataClimate.size());
+		std::cout << "\nworldMapSettings.climate.capacity()" << worldMapSettings.climate.capacity();
+		std::cout << "\n";
+		std::cout << "\nworldMapSettings.climate.size() : " << worldMapSettings.climate.size();
+		for(unsigned int i=0; i<dataClimate.size(); i++)
+		{
+			openLife::system::type::entity::Climate climate;
+			std::cout << "\nsetting " << dataClimate[i]["label"] << " climate";
+			climate.label = dataClimate[i]["label"].get<std::string>();
+			worldMapSettings.climate.push_back(climate);
+		}
+		std::cout << "\nall biome should be set ...";
+		worldMap = new openLife::server::service::database::WorldMap(worldMapSettings);
 		worldMap->legacy(&biomeDB, &anyBiomesInDB, cachedBiome);
 
 		//!test

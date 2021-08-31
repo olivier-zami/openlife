@@ -1509,11 +1509,9 @@ char initMap()
 	// printObjectSamples();
 	// printBiomeSamples();
 	//outputMapImage();
-
 	//outputBiomeFractals();
 
 	worldMap->debug();
-
 
 	return true;
 }
@@ -3070,32 +3068,30 @@ static void setupMapChangeLogFile() {
 	fprintf( mapChangeLogFile, "startTime: %.2f\n", mapChangeLogTimeStart );
 }
 
-void reseedMap( char inForceFresh ) {
+void reseedMap( char inForceFresh )
+{
 
 	FILE *seedFile = NULL;
-
 	if( ! inForceFresh ) {
 		seedFile = fopen( "biomeRandSeed.txt", "r" );
 	}
-
-
 	char set = false;
-
-	if( seedFile != NULL ) {
-		int numRead =
-				fscanf( seedFile, "%u %u", &biomeRandSeedA, &biomeRandSeedB );
+	if( seedFile != NULL )
+	{
+		int numRead = fscanf( seedFile, "%u %u", &biomeRandSeedA, &biomeRandSeedB );
 		fclose( seedFile );
 
-		if( numRead == 2 ) {
-			AppLog::infoF( "Reading map rand seed from file: %u %u\n",
-						   biomeRandSeedA, biomeRandSeedB );
+		if( numRead == 2 )
+		{
+			AppLog::infoF( "Reading map rand seed from file: %u %u\n", biomeRandSeedA, biomeRandSeedB );
 			set = true;
 		}
 	}
 
 
 
-	if( !set ) {
+	if( !set )
+	{
 		// no seed set, or ignoring it, make a new one
 
 		if( !inForceFresh ) {

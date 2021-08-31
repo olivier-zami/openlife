@@ -52,17 +52,31 @@ extern openLife::system::type::Value2D_U32 mapGenSeed;
  * @param height
  * @param detail
  */
-openLife::server::service::database::WorldMap::WorldMap(openLife::system::settings::database::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail=4*/)
+openLife::server::service::database::WorldMap::WorldMap(openLife::server::settings::database::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail=4*/)
 {
 	this->width = settings.mapSize.width;
 	this->height = settings.mapSize.height;
 	this->center.x = (unsigned int)this->width/2;
 	this->center.y = (unsigned int)this->height/2;
 	this->idxMax = this->width*this->height;
-	this->biome = std::vector<int>(this->idxMax);
-	std::fill(this->biome.begin(), this->biome.end(), -1);
+	this->map.seed.x = settings.map.seed.x;
+	this->map.seed.y = settings.map.seed.y;
+	std::cout << "\nseed : ("<<this->map.seed.x<<", "<<this->map.seed.y<<")";
 
-	this->settings = settings;
+	this->biome.reserve(settings.climate.size());
+	std::cout << "\nregister " << settings.climate.size() << " biomes in size " << this->biome.capacity();
+	for(unsigned int i=0; i<settings.climate.size(); i++)
+	{
+		openLife::server::service::database::worldMap::Biome dataBiome;
+		dataBiome.label = settings.climate[i].label;
+		this->biome.push_back(dataBiome);
+	}
+
+	this->mapTile = std::vector<int>(this->idxMax);
+	std::fill(this->mapTile.begin(), this->mapTile.end(), -1);
+
+	openLife::system::settings::LinearDB dbBiomeSettings;
+	this->dbBiome = new openLife::system::object::store::device::random::LinearDB(dbBiomeSettings);
 
 	this->debugged = false;
 }
@@ -88,9 +102,7 @@ void openLife::server::service::database::WorldMap::legacy(
 	this->dbCacheBiome = dbCacheBiome;
 }
 
-/**
- *
- */
+
 void openLife::server::service::database::WorldMap::debug()
 {
 	openLife::system::object::process::handler::Image* imageHandler;
@@ -103,13 +115,9 @@ void openLife::server::service::database::WorldMap::debug()
 	{
 		for(int x=-256; x<256; x++)
 		{
-			/*
-			 int *outSecondPlaceIndex,
-									  double *outSecondPlaceGap
-			 */
+			 //int *outSecondPlaceIndex; double *outSecondPlaceGap;
 			ColorRGB color;
 
-			/**********************************************************************************************************/
 			int pickedBiome = this->select(x, y)->getNewBiome().value;
 
 
@@ -152,25 +160,26 @@ void openLife::server::service::database::WorldMap::debug()
 }
 
 
+
 /**
  *
  */
-int openLife::server::service::database::WorldMap::init()
+int openLife::server::service::database::WorldMap::init()//TODO: put code in constructor
 {
 	//!legacy => DB_open_timeShrunk(db=>this->biomeDB, path=>s.filename, mode=>KISSDB_OPEN_MODE_RWCREAT, hash_table_size=>80000, key_size=>8, value_size=>12)
+	//error = DB_open_timeShrunk( &biomeDB,
+	//"biome.db",
+	//KISSDB_OPEN_MODE_RWCREAT,
+	//80000,
+	//8, // two 32-bit ints, xy
+	//12 // three ints,
+	// 1: biome number at x,y
+	// 2: second place biome number at x,y
+	// 3: second place biome gap as int (float gap
+	//    multiplied by 1,000,000)
+	//);
+
 	/*
-    error = DB_open_timeShrunk( &biomeDB,
-                         "biome.db",
-                         KISSDB_OPEN_MODE_RWCREAT,
-                         80000,
-                         8, // two 32-bit ints, xy
-                         12 // three ints,
-                         // 1: biome number at x,y
-                         // 2: second place biome number at x,y
-                         // 3: second place biome gap as int (float gap
-                         //    multiplied by 1,000,000)
-                         );
-                         */
 	const char* path = this->settings.filename.c_str();
 	int mode = 3;//#define KISSDB_OPEN_MODE_RWCREAT 3
 	unsigned long hash_table_size = 80000;
@@ -345,6 +354,19 @@ int openLife::server::service::database::WorldMap::init()
 						   hash_table_size,
 						   key_size,
 						   value_size );
+   */
+	return 0;
+}
+
+/**
+ *
+ * @param x
+ * @param y
+ */
+void openLife::server::service::database::WorldMap::setMapSeed(unsigned int x, unsigned int y)
+{
+	this->map.seed.x = x;
+	this->map.seed.y = y;
 }
 
 /**
@@ -357,17 +379,6 @@ openLife::server::service::database::WorldMap* openLife::server::service::databa
 {
 	this->query.x = posX;
 	this->query.y = posY;
-	/*
-	unsigned int x = (unsigned)((signed)this->center.x+posX);
-	if(x<0) x = 0;
-	if(x>=this->width) x = this->width-1;
-	this->query.x = x;
-
-	unsigned int y = ((signed)this->center.y+posY);
-	if(y<0) y = 0;
-	if(y>=this->height) y = this->height-1;
-	this->query.y = y;
-	*/
 	return this;
 }
 
@@ -382,8 +393,8 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 	openLife::system::type::record::Biome newBiome = {this->query.x, this->query.y, 0, -1, 0};
 
 	// try topographical altitude mapping
-	setXYRandomSeed( biomeRandSeedA, biomeRandSeedB );
-	double randVal =( openLife::system::process::scalar::getXYFractal( this->query.x, this->query.y, 0.55, 0.83332 + 0.08333 * numBiomes, mapGenSeed ) );
+	openLife::system::type::Value2D_U32 biomeGenSeed = {this->map.seed.x, this->map.seed.y};
+	double randVal =( openLife::system::process::scalar::getXYFractal( this->query.x, this->query.y, 0.55, 0.83332 + 0.08333 * numBiomes, biomeGenSeed ) );
 
 	// push into range 0..1, based on sampled min/max values
 	randVal -= 0.099668;
@@ -416,12 +427,12 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 			for( int i=regularBiomeLimit; i<numBiomes; i++ )
 			{
 				int biome = biomes[i];
-				setXYRandomSeed( biome * 263 + biomeRandSeedA + 38475, biomeRandSeedB );
+				biomeGenSeed = {biome * 263 + this->map.seed.x + 38475, this->map.seed.y};
 				double randVal = openLife::system::process::scalar::getXYFractal(  this->query.x,
 																				   this->query.y,
 																				   0.55,
 																				   2.4999 + 0.2499 * numSpecialBiomes,
-																				   mapGenSeed );
+																				   biomeGenSeed );
 
 				if( randVal > maxValue )
 				{
@@ -519,7 +530,7 @@ void openLife::server::service::database::WorldMap::insert(common::object::entit
 		y = i/mapZone->getWidth();
 		if((targetCoord.x=x+this->query.x)>=this->width)continue;
 		if((targetCoord.y=y+this->query.y)>=this->height)continue;
-		this->biome[targetCoord.x+(this->width*targetCoord.y)] = mapZone->p(i);
+		this->mapTile[targetCoord.x+(this->width*targetCoord.y)] = mapZone->p(i);
 	}
 }
 
@@ -590,12 +601,7 @@ int openLife::server::service::database::WorldMap::getBiome()
 {
 	unsigned int idx;
 	idx = this->query.x+(this->query.y*this->width);
-	return this->biome[idx];
-}
-
-void openLife::server::service::database::WorldMap::useBiomeStorehouse(openLife::system::object::store::device::random::LinearDB* biomeStoreHouse)
-{
-	this->biomeStoreHouse = biomeStoreHouse;
+	return this->mapTile[idx];
 }
 
 //!
