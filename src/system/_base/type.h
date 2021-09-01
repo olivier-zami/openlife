@@ -19,6 +19,11 @@ namespace openLife::system::type
 		unsigned long int height;
 	}Dimension2D;
 
+	typedef struct{
+		int32_t x;
+		int32_t y;
+	}Value2D_32;
+
 	typedef struct
 	{
 		uint32_t x;

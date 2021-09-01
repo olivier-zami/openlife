@@ -58,8 +58,6 @@ namespace openLife::server::service::database
 
 			//!temporary methods
 			void legacy(LINEARDB3* biomeDB, char* notEmptyDB, openLife::system::object::store::memory::random::Biome* dbCacheBiome);
-			void debug();
-			int debugged;
 			char* notEmptyDB;
 
 			int init();

@@ -1512,8 +1512,6 @@ char initMap()
 	//outputMapImage();
 	//outputBiomeFractals();
 
-	//worldMap->debug();
-
 	return true;
 }
 

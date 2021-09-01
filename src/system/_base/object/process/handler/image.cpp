@@ -25,15 +25,19 @@ openLife::system::object::process::handler::Image::~Image()
 	if(this->surface) SDL_FreeSurface(this->surface);
 }
 
+void openLife::system::object::process::handler::Image::create(int width, int height, int depth, Uint32 rMask, Uint32 gMask, Uint32 bMask, Uint32 aMask)
+{
+
+	this->surface = SDL_CreateRGBSurface(0, width, height, depth, rMask, gMask, bMask, aMask);
+	if(!this->surface){std::cout << "SDL_CreateRGBSurface() failed: " << SDL_GetError(); exit(1);}
+	this->initImageInfo();
+}
+
 void openLife::system::object::process::handler::Image::load(const char* filename)
 {
 	this->surface = SDL_LoadBMP(filename);
 	if(!this->surface) {std::cout << SDL_GetError() << "\n";exit(1);}
-	this->imageInfo.bytesPerPixel = this->surface->format->BytesPerPixel;
-	this->imageInfo.width = this->surface->w;
-	this->imageInfo.height = this->surface->h;
-	this->imageInfo.pixelNumber = this->surface->w * this->surface->h;
-	this->bytePtr = (unsigned char*)this->surface->pixels;
+	this->initImageInfo();
 }
 
 void openLife::system::object::process::handler::Image::save(const char* filename)
@@ -61,7 +65,7 @@ void openLife::system::object::process::handler::Image::setPixel(ColorRGB color)
 	this->bytePtr[idx+2] = (unsigned char)color.r;
 }
 
-void openLife::system::object::process::handler::Image::clean()
+void openLife::system::object::process::handler::Image::clean()//TODO: test validity of image before
 {
 	if(!this->surface) {std::cout << "\nno image set "; exit(1);}
 	unsigned char *ptr;
@@ -71,6 +75,15 @@ void openLife::system::object::process::handler::Image::clean()
 		ptr[0] = 0; ptr[1] = 0; ptr[2] = 0;
 		ptr+=this->imageInfo.bytesPerPixel;
 	}
+}
+
+void openLife::system::object::process::handler::Image::initImageInfo()
+{
+	this->imageInfo.bytesPerPixel = this->surface->format->BytesPerPixel;
+	this->imageInfo.width = this->surface->w;
+	this->imageInfo.height = this->surface->h;
+	this->imageInfo.pixelNumber = this->surface->w * this->surface->h;
+	this->bytePtr = (unsigned char*)this->surface->pixels;
 }
 
 /*

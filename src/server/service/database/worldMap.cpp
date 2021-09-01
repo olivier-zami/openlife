@@ -123,65 +123,6 @@ void openLife::server::service::database::WorldMap::legacy(
 	this->dbCacheBiome = dbCacheBiome;
 }
 
-
-void openLife::server::service::database::WorldMap::debug()
-{
-	openLife::system::object::process::handler::Image* imageHandler;
-	imageHandler = new openLife::system::object::process::handler::Image();
-	imageHandler->load("/home/olivier/Projets/OpenLife/data/images/maps/mini_map.bmp");
-	Image image = imageHandler->getImageInfo();
-	std::cout << "\nModification image de dimension ("<<image.width<<","<<image.height<<")";
-	imageHandler->clean();
-	for(int y=-256; y<256; y++)
-	{
-		for(int x=-256; x<256; x++)
-		{
-			 //int *outSecondPlaceIndex; double *outSecondPlaceGap;
-			ColorRGB color;
-
-			int pickedBiome = this->select(x, y)->getNewBiome().value;
-
-
-			unsigned int offset = (!x || !y) ? 50 : 0;
-			switch(pickedBiome)
-			{
-				case 0://swamp
-				color = {95+offset, 0, 125+offset};
-				break;
-				case 1://grassland
-				color = {0, 190+offset, 0};
-				break;
-				case 2://savannah
-				color = {190+offset, 95+offset, 0};
-				break;
-				case 3://mountain
-				color = {95+offset, 95+offset, 95+offset};
-				break;
-				case 4://jungle
-				color = {0, 95+offset, 0};
-				break;
-				case 5://desert
-				color = {190+offset, 190+offset, 0};
-				break;
-				case 6://polar
-				color = {190+offset, 190+offset, 190+offset};
-				break;
-				default://unknown
-				color = {0, 0, 255+offset};
-				break;
-			}
-
-			int imgX = (image.width/2)+x;
-			int imgY = (image.height/2)-y;
-			if(imgX>=0&&imgX<512&&imgY>=0&&imgY<512) imageHandler->select(imgX, imgY)->setPixel(color);
-			//imageHandler->select(x, y)->setPixel(color);
-		}
-	}
-	imageHandler->save("/home/olivier/Projets/OpenLife/var/images/maps/game_starting_zone.bmp");
-}
-
-
-
 /**
  *
  */

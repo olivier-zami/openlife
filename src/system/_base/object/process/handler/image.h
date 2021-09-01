@@ -34,6 +34,7 @@ namespace openLife::system::object::process::handler
 			Image();
 			~Image();
 
+			void create(int width, int height, int depth=32, Uint32 rMask=0, Uint32 gMask=0, Uint32 bMask=0, Uint32 aMask=0);
 			void load(const char* filename);
 			void save(const char* filename);
 			::Image getImageInfo();
@@ -43,6 +44,7 @@ namespace openLife::system::object::process::handler
 			void clean();
 
 		private:
+			void initImageInfo();
 			SDL_Surface* surface = nullptr;
 			::Image imageInfo;
 			unsigned char* bytePtr;
@@ -50,10 +52,6 @@ namespace openLife::system::object::process::handler
 				unsigned int pixelIdx;
 			}query;
 	};
-	/*
-	common::object::entity::MapZone* getMapZoneFromBitmap(const char *filename);
-	common::type::color::RGB getRGBFromInt(int rgbColor);
-	*/
 }
 
 
