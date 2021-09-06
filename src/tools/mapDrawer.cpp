@@ -39,7 +39,6 @@ int main()
 	std::vector<int> specialBiomeBandIndexOrder;
 	for(unsigned int i=0; i<data["map"]["specialBiomeBandIndexOrder"].size(); i++) specialBiomeBandIndexOrder.push_back(data["map"]["specialBiomeBandIndexOrder"][i]);
 
-
 	//!
 	openLife::system::type::Value2D_32 minMapLimit = {(int32_t)mapCenter.x-(int32_t)mapSize.x, (int32_t)mapCenter.y-(int32_t)mapSize.y};
 	openLife::system::type::Value2D_32 maxMapLimit = {(int32_t)mapSize.x-(int32_t)mapCenter.x, (int32_t)mapSize.y-(int32_t)mapCenter.y};

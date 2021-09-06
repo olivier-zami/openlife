@@ -9,15 +9,21 @@
 
 namespace openLife::system::type
 {
-	typedef struct {
-		long int x;
-		long int y;
-	}Coord2D;
-
 	typedef struct{
 		unsigned long int width;
 		unsigned long int height;
 	}Dimension2D;
+
+	/*
+	typedef struct{
+		int32_t x;
+		int32_t y;
+	}Point2D_32;
+*/
+	typedef struct{
+		uint32_t width;
+		uint32_t height;
+	}Size2D_32;
 
 	typedef struct{
 		int32_t x;
