@@ -55,6 +55,7 @@ extern openLife::system::type::Value2D_U32 mapGenSeed;
  */
 openLife::server::service::database::WorldMap::WorldMap(openLife::server::settings::database::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail=4*/)
 {
+	this->mapGenerator.type = (int)settings.mapGenerator.type;
 	this->width = settings.mapSize.width;
 	this->height = settings.mapSize.height;
 	this->center.x = (unsigned int)this->width/2;
@@ -82,7 +83,7 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 		this->map.specialBiomeBandOrder.push_back(settings.map.specialBiomeBandOrder[i]);
 	}
 
-	this->biome.reserve(settings.climate.size());
+	this->biome.reserve(settings.climate.size());//TODO: climate.size() must be the same size of biomeOrder
 	std::cout << "\nregister " << settings.climate.size() << " biomes in size " << this->biome.capacity();
 	for(unsigned int i=0; i<settings.climate.size(); i++)
 	{
@@ -98,8 +99,6 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 
 	openLife::system::settings::LinearDB dbBiomeSettings;
 	this->dbBiome = new openLife::system::object::store::device::random::LinearDB(dbBiomeSettings);
-
-	this->debugged = false;
 }
 
 /**
@@ -392,7 +391,7 @@ void openLife::server::service::database::WorldMap::insert(openLife::system::typ
 		minBiomeYLoc = this->query.y;
 	}
 
-	LINEARDB3_put(biomeDB, key, value);
+	LINEARDB3_put(biomeDB, key, value);//TODO: divide by zero bug must corrected
 }
 
 /**
@@ -516,7 +515,8 @@ int biomeDBGet( int inX, int inY,
 	intPairToKey( inX, inY, key );
 
 	//int result = newBiomeDB->get(key);
-	int result = LINEARDB3_get( &biomeDB, key, value );//TODO: search LINEARDB3_get ans replace with newBiomeDB->get(...)
+	int result = LINEARDB3_get( &biomeDB, key, value );//TODO: search LINEARDB3_get ans replace with newBiomeDB->get(...) & may cause divide by zedo exception if some biome added
+	//int result = -1;
 
 	if( result == 0 ) {
 		// found

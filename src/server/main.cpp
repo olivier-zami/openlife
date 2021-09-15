@@ -45,6 +45,8 @@ int maxSpeechPipeIndex = 0;
 
 #include "src/server/definition/services.h"
 
+#define REL_PATH_CONFIG_MAP "../../conf/server/map.json"
+
 
 openLife::system::object::store::device::random::LinearDB *newBiomeDB;
 
@@ -60,9 +62,9 @@ int main()
 
 	openLife::system::notice("Attempt to start the server ...");
 
-	nlohmann::json dataClimate = openLife::system::nlohmann::getJsonFromFile("/home/olivier/Projets/OpenLife/conf/entity/climate.json");
+	nlohmann::json dataClimate = openLife::system::nlohmann::getJsonFromFile("../../conf/entity/climate.json");
 
-	nlohmann::json dataWorldMap = openLife::system::nlohmann::getJsonFromFile("/home/olivier/Projets/OpenLife/conf/server/map.json");
+	nlohmann::json dataWorldMap = openLife::system::nlohmann::getJsonFromFile(REL_PATH_CONFIG_MAP);
 
 	try
 	{

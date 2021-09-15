@@ -22,6 +22,9 @@
 namespace openLife::server::settings::database
 {
 	typedef struct{
+		struct{
+			int type;
+		}mapGenerator;
 		std::string filename;
 		openLife::system::type::Dimension2D mapSize;
 		int specialBiomeBandMode;
@@ -81,6 +84,10 @@ namespace openLife::server::service::database
 			struct {int x; int y;} query;
 			struct {unsigned int x; unsigned int y;} center;
 			std::vector<int> mapTile;
+
+			struct{
+				int type;
+			}mapGenerator;
 
 			struct{
 				int specialBiomeBandMode;
