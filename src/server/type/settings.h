@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 #include "src/system/_base/type.h"
-#include "src/system/_base/type/entity.h"
+#include "src/server/type/entities.h"
 
 namespace openLife::server::settings
 {
@@ -30,7 +30,7 @@ namespace openLife::server::settings
 		struct{
 			std::vector<int> order;
 		}biome;
-		std::vector<openLife::system::type::entity::Climate> climate;
+		std::vector<openLife::server::type::entity::Climate> climate;
 	}WorldMap;
 }
 

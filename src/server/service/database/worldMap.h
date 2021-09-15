@@ -7,8 +7,8 @@
 
 #include <vector>
 #include <array>
-#include "src/server/settings.h"
-#include "src/system/_base/type/entity.h"
+#include "src/server/type/settings.h"
+#include "src/server/type/entities.h"
 #include "src/system/_base/type/record.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/object/store/memory/random/biome.h"

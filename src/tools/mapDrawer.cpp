@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "src/server/process/newBiome_v1.h"
-#include "src/system/_base/type/entity.h"
+#include "src/server/type/entities.h"
 #include "src/system/_base/process/scalar.h"
 #include "src/system/_base/object/process/handler/image.h"
 #include "src/system/_extension/nlohmann.h"

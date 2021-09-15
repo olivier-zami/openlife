@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace openLife::system::type::entity
+namespace openLife::server::type::entity
 {
 	typedef struct{
 		std::string label;

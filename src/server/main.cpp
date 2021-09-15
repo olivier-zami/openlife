@@ -96,7 +96,7 @@ int main()
 		std::cout << "\nworldMapSettings.climate.size() : " << worldMapSettings.climate.size();
 		for(unsigned int i=0; i<dataClimate.size(); i++)
 		{
-			openLife::system::type::entity::Climate climate;
+			openLife::server::type::entity::Climate climate;
 			std::cout << "\nsetting " << dataClimate[i]["label"] << " climate";
 			climate.label = dataClimate[i]["label"].get<std::string>();
 			worldMapSettings.climate.push_back(climate);
