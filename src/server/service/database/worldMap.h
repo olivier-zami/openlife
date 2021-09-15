@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <array>
+#include "src/server/settings.h"
 #include "src/system/_base/type/entity.h"
 #include "src/system/_base/type/record.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
@@ -17,31 +18,6 @@
 
 //!legacy
 #include "OneLife/server/map.h"
-
-
-namespace openLife::server::settings::database
-{
-	typedef struct{
-		struct{
-			int type;
-		}mapGenerator;
-		std::string filename;
-		openLife::system::type::Dimension2D mapSize;
-		int specialBiomeBandMode;
-		struct{
-			openLife::system::type::Value2D_U32 seed;
-			std::vector<int> specialBiomeBandYCenter;
-			int specialBiomeBandThickness;
-			std::vector<int> specialBiomeBandOrder;
-			std::vector<int> specialBiomes;
-			std::vector<float> biomeWeight;
-		}map;
-		struct{
-			std::vector<int> order;
-		}biome;
-		std::vector<openLife::system::type::entity::Climate> climate;
-	}WorldMap;
-}
 
 namespace openLife::server::service::database::worldMap
 {
@@ -56,7 +32,7 @@ namespace openLife::server::service::database
 	class WorldMap
 	{
 		public:
-			WorldMap(openLife::server::settings::database::WorldMap settings);
+			WorldMap(openLife::server::settings::WorldMap settings);
 			~WorldMap();
 
 			//!temporary methods

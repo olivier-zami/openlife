@@ -53,7 +53,7 @@ extern openLife::system::type::Value2D_U32 mapGenSeed;
  * @param height
  * @param detail
  */
-openLife::server::service::database::WorldMap::WorldMap(openLife::server::settings::database::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail=4*/)
+openLife::server::service::database::WorldMap::WorldMap(openLife::server::settings::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail=4*/)
 {
 	this->mapGenerator.type = (int)settings.mapGenerator.type;
 	this->width = settings.mapSize.width;

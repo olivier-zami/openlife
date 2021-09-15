@@ -7,12 +7,15 @@
 #include <iostream>
 #include "src/server/component/channel/speech.h"
 #include "src/server/component/database/gameFeatures.h"
-#include "src/test/system/object/process/service.h"
 
 openLife::server::component::channel::SpeechService* speechService;
 openLife::server::component::database::GameFeatures* gameFeatures;
 
-openLife::Server::Server() {}
+openLife::Server::Server()
+{
+
+}
+
 openLife::Server::~Server() {}
 
 void openLife::Server::init()
@@ -31,7 +34,6 @@ void openLife::Server::useService(openLife::system::object::process::Service* se
 void openLife::Server::start()
 {
 	std::cout << "\nStart Server ...";
-	((openLife::test::system::object::process::Service*)this->service[1])->start();
 }
 
 int openLife::Server::initMap()

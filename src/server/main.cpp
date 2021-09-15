@@ -82,7 +82,7 @@ int main()
 		cachedBiome = new openLife::system::object::store::memory::random::Biome(BIOME_CACHE_SIZE);
 
 		//!set worldMap
-		openLife::server::settings::database::WorldMap worldMapSettings;
+		openLife::server::settings::WorldMap worldMapSettings;
 		worldMapSettings.specialBiomeBandMode = 1;
 		worldMapSettings.filename = "biome.db";
 		worldMapSettings.mapSize.width = 10;
