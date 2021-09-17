@@ -10,6 +10,7 @@
 #include "src/server/main.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/process/scalar.h"
+#include "src/server/process/mapGenerator/newBiome_v0.h"
 #include "src/server/process/newBiome_v1.h"
 
 //!debug
@@ -56,6 +57,7 @@ extern openLife::system::type::Value2D_U32 mapGenSeed;
 openLife::server::service::database::WorldMap::WorldMap(openLife::server::settings::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail=4*/)
 {
 	this->mapGenerator.type = (int)settings.mapGenerator.type;
+	this->mapGenerator.sketch.filename = settings.mapGenerator.sketch.filename;
 	this->width = settings.mapSize.width;
 	this->height = settings.mapSize.height;
 	this->center.x = (unsigned int)this->width/2;
@@ -350,18 +352,38 @@ openLife::server::service::database::WorldMap* openLife::server::service::databa
  */
 openLife::system::type::record::Biome openLife::server::service::database::WorldMap::getNewBiome()
 {
-	return openLife::server::process::newBiome_v1(
-			this->query.x,
-			this->query.y,
-			this->map.seed,
-			this->map.allowSecondPlaceBiomes,
-			this->dataBiome.order,
-			this->map.specialBiomeBandThickness,
-			this->map.specialBiomeBandYCenter,
-			this->map.specialBiomeBandOrder,
-			this->map.specialBiomeBandMode,
-			this->map.specialBiomes,
-			this->map.biomeWeight);
+	openLife::system::type::record::Biome newGround;
+	switch(this->mapGenerator.type)
+	{
+		case 0:
+			newGround = {this->query.x, this->query.y, 1, 0, 0};
+			break;
+		case 1:
+			newGround = openLife::server::process::newBiome_v0(
+				this->query.x,
+				this->query.y,
+				this->mapGenerator.sketch.filename,
+				this->dbCacheBiome);
+			break;
+		case 2:
+			newGround = openLife::server::process::newBiome_v1(
+				this->query.x,
+				this->query.y,
+				this->map.seed,
+				this->map.allowSecondPlaceBiomes,
+				this->dataBiome.order,
+				this->map.specialBiomeBandThickness,
+				this->map.specialBiomeBandYCenter,
+				this->map.specialBiomeBandOrder,
+				this->map.specialBiomeBandMode,
+				this->map.specialBiomes,
+				this->map.biomeWeight);
+			break;
+		case 3:
+			newGround = {this->query.x, this->query.y, -1, 0, 0};
+			break;
+	}
+	return newGround;
 }
 
 void openLife::server::service::database::WorldMap::insert(openLife::system::type::record::Biome biome)

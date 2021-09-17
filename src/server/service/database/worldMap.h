@@ -5,6 +5,7 @@
 #ifndef OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H
 #define OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H
 
+#include <string>
 #include <vector>
 #include <array>
 #include "src/server/type/settings.h"
@@ -43,6 +44,7 @@ namespace openLife::server::service::database
 			void setMapSeed(unsigned int x, unsigned int y);
 
 			WorldMap* select(int posX, int posY);
+			WorldMap* create();
 			void insert(openLife::system::type::record::Biome biome);
 			void insert(common::object::entity::MapZone* mapZone);
 			openLife::system::type::record::Biome getNewBiome();
@@ -63,6 +65,9 @@ namespace openLife::server::service::database
 
 			struct{
 				int type;
+				struct{
+					std::string filename;
+				}sketch;
 			}mapGenerator;
 
 			struct{

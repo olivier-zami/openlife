@@ -50,8 +50,6 @@ int maxSpeechPipeIndex = 0;
 
 openLife::system::object::store::device::random::LinearDB *newBiomeDB;
 
-openLife::server::service::database::WorldMap* worldMap;
-
 int main()
 {
 	if(!openLife::system::isFileWritable())
@@ -62,15 +60,13 @@ int main()
 
 	openLife::system::notice("Attempt to start the server ...");
 
+	nlohmann::json dataSettingsServer = openLife::system::nlohmann::getJsonFromFile("../../conf/server.json");
 	nlohmann::json dataClimate = openLife::system::nlohmann::getJsonFromFile("../../conf/entity/climate.json");
 
 	nlohmann::json dataWorldMap = openLife::system::nlohmann::getJsonFromFile(REL_PATH_CONFIG_MAP);
 
 	try
 	{
-		//!new
-		server = new openLife::Server();
-
 		/**
 		 * InitMap() : server/map.cpp => l2879
 		 **/
@@ -147,8 +143,14 @@ int main()
 		std::cout << "]";
 
 		std::cout << "\nall biome should be set ...";
-		worldMap = new openLife::server::service::database::WorldMap(worldMapSettings);
-		worldMap->legacy(&biomeDB, &anyBiomesInDB, cachedBiome);
+
+
+
+		//!new
+		openLife::server::Settings serverSettings;
+		serverSettings.mapGenerator.type = dataSettingsServer["mapGenerator"]["type"];
+		serverSettings.mapGenerator.sketch.filename = dataSettingsServer["mapGenerator"]["sketch"]["filename"];
+		server = new openLife::Server(serverSettings, worldMapSettings, &biomeDB, &anyBiomesInDB, cachedBiome);
 
 		//!test
 		/*

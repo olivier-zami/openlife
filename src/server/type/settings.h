@@ -2,8 +2,8 @@
 // Created by olivier on 15/09/2021.
 //
 
-#ifndef OPENLIFE_SERVER_SETTINGS_H
-#define OPENLIFE_SERVER_SETTINGS_H
+#ifndef OPENLIFE_SERVER_TYPE_SETTINGS_H
+#define OPENLIFE_SERVER_TYPE_SETTINGS_H
 
 #include <vector>
 #include <string>
@@ -15,6 +15,9 @@ namespace openLife::server::settings
 	typedef struct{
 		struct{
 			int type;
+			struct{
+				std::string filename;
+			}sketch;
 		}mapGenerator;
 		std::string filename;
 		openLife::system::type::Dimension2D mapSize;
@@ -34,4 +37,4 @@ namespace openLife::server::settings
 	}WorldMap;
 }
 
-#endif //OPENLIFE_SERVER_SETTINGS_H
+#endif //OPENLIFE_SERVER_TYPE_SETTINGS_H

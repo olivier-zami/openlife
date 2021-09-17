@@ -96,6 +96,16 @@ void openLife::system::object::process::handler::Image::setPixel(ColorRGB color)
 	}
 }
 
+ColorRGB openLife::system::object::process::handler::Image::getPixel()
+{
+	unsigned int idx = this->query.pixelIdx * this->imageInfo.bytesPerPixel;
+	ColorRGB color;
+	color.b = this->bytePtr[idx];
+	color.g = this->bytePtr[idx+1];
+	color.r = this->bytePtr[idx+2];
+	return color;
+}
+
 void openLife::system::object::process::handler::Image::clean()//TODO: test validity of image before
 {
 	if(!this->surface) {std::cout << "\nno image set "; exit(1);}

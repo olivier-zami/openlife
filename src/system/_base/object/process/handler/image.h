@@ -45,6 +45,7 @@ namespace openLife::system::object::process::handler
 			openLife::system::object::process::handler::Image* select(openLife::system::type::geometric::Line2D_32 line);
 			openLife::system::object::process::handler::Image* select(openLife::system::type::geometric::Circle2D_32 circle);
 			void setPixel(ColorRGB color);
+			ColorRGB getPixel();
 			void clean();
 
 		private:

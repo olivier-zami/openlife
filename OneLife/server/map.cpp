@@ -871,7 +871,7 @@ char initMap()
 
 	/******************************************************************************************************************/
 
-	error = worldMap->init();
+	error = server->getWorldMap()->init();
 
 	if( error ) {
 		AppLog::errorF( "Error %d opening biome KissDB", error );
@@ -1523,7 +1523,7 @@ void biomeDBPut( int inX, int inY, int inValue, int inSecondPlace,
 	biomeRecord.value = inValue;
 	biomeRecord.secondPlace = inSecondPlace;
 	biomeRecord.secondPlaceGap = inSecondPlaceGap;
-	worldMap->select(inX, inY)->insert(biomeRecord);
+	server->getWorldMap()->select(inX, inY)->insert(biomeRecord);
 						}
 /**********************************************************************************************************************/
 
@@ -1856,7 +1856,7 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
             double secondPlaceGap; //TODO: uncomment if needed
 
             openLife::system::type::record::Biome biomeRecord;
-            biomeRecord = worldMap->select(inX, inY)->getBiomeRecord();
+            biomeRecord = server->getWorldMap()->select(inX, inY)->getBiomeRecord();
             int pickedBiome = biomeRecord.value;
             secondPlace = biomeRecord.secondPlace;
             secondPlaceGap = biomeRecord.secondPlaceGap;
@@ -1907,7 +1907,7 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
         double secondPlaceGap;
 
         openLife::system::type::record::Biome biomeRecord;
-        biomeRecord = worldMap->select(inX, inY)->getBiomeRecord();
+        biomeRecord = server->getWorldMap()->select(inX, inY)->getBiomeRecord();
         int pickedBiome = biomeRecord.value;
         secondPlace = biomeRecord.secondPlace;
         secondPlaceGap = biomeRecord.secondPlaceGap;
@@ -2182,7 +2182,7 @@ void outputMapImage() {
             
             int id = getBaseMap( x - h/2, - ( y - h/2 ) );
 
-            int biomeInd = worldMap->select(x - h/2, -( y - h/2 ) )->getBiomeRecord().value;
+            int biomeInd = server->getWorldMap()->select(x - h/2, -( y - h/2 ) )->getBiomeRecord().value;
             //int biomeInd = getMapBiomeIndex( x - h/2, -( y - h/2 ) );
 
             if( id > 0 ) {
@@ -2374,7 +2374,7 @@ void printBiomeSamples() {
     {
         int x = sampleRandSource.getRandomBoundedInt( -range, range );
         int y = sampleRandSource.getRandomBoundedInt( -range, range );
-        biomeSamples[ worldMap->select( x, y )->getNewBiome().value ] ++;
+        biomeSamples[ server->getWorldMap()->select( x, y )->getNewBiome().value ] ++;
 	}
     
     for( int i=0; i<numBiomes; i++ ) {
@@ -2911,7 +2911,7 @@ char loadIntoMapFromFile( FILE *inFile,
         biomeRecord.value = r.biome;
         biomeRecord.secondPlace = r.biome;
         biomeRecord.secondPlaceGap = 0.5;
-        worldMap->select(r.x, r.y)->insert(biomeRecord);//biomeDBPut( r.x, r.y, r.biome, r.biome, 0.5 );
+        server->getWorldMap()->select(r.x, r.y)->insert(biomeRecord);//biomeDBPut( r.x, r.y, r.biome, r.biome, 0.5 );
                 
         dbFloorPut( r.x, r.y, r.floor );
 
@@ -5195,7 +5195,7 @@ int getTweakedBaseMap( int inX, int inY ) {
             biomeRecord.value = o->forceBiome;
             biomeRecord.secondPlace = o->forceBiome;
             biomeRecord.secondPlaceGap = 0.5;
-            worldMap->select(inX, inY)->insert(biomeRecord);//biomeDBPut( inX, inY, o->forceBiome, o->forceBiome, 0.5 );
+            server->getWorldMap()->select(inX, inY)->insert(biomeRecord);//biomeDBPut( inX, inY, o->forceBiome, o->forceBiome, 0.5 );
 
 
             if( lastCheckedBiome != -1 &&
@@ -5447,7 +5447,7 @@ char isMapObjectInTransit( int inX, int inY ) {
  */
 int getMapBiome( int inX, int inY )
 {
-	return biomes[worldMap->select( inX, inY )->getBiomeRecord().value];
+	return biomes[server->getWorldMap()->select( inX, inY )->getBiomeRecord().value];
     //return biomes[getMapBiomeIndex( inX, inY )];
 }
 
@@ -5527,7 +5527,7 @@ unsigned char *getChunkMessage( int inStartX, int inStartY,
 
                 // get it ourselves
 
-                lastCheckedBiome = biomes[worldMap->select( x, y )->getBiomeRecord().value];
+                lastCheckedBiome = biomes[server->getWorldMap()->select( x, y )->getBiomeRecord().value];
                 //lastCheckedBiome = biomes[getMapBiomeIndex( x, y )];
                 }
             chunkBiomes[ cI ] = lastCheckedBiome;
