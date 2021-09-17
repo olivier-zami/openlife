@@ -5186,7 +5186,7 @@ int getTweakedBaseMap( int inX, int inY ) {
             }
 
         if( o->forceBiome != -1 &&
-            biomeDBGet( inX, inY ) == -1 &&
+            server->getWorldMap()->select(inX, inY)->getBiomeRecord(false).value == -1 &&
             getBiomeIndex( o->forceBiome ) != -1 ) {
             
             // naturally-occurring object that forces a biome

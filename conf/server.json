@@ -1,6 +1,6 @@
 {
   "mapGenerator": {
-    "type": 1,
+    "type": 2,
     "sketch": {
       "filename": "../../data/images/maps/mini_map.bmp",
       "center": {"x":  0, "y": 0}

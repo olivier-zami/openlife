@@ -413,7 +413,10 @@ void openLife::server::service::database::WorldMap::insert(openLife::system::typ
 		minBiomeYLoc = this->query.y;
 	}
 
-	LINEARDB3_put(biomeDB, key, value);//TODO: divide by zero bug must corrected
+	if(false)
+	{
+		LINEARDB3_put(biomeDB, key, value);//TODO: divide by zero bug must corrected
+	}
 }
 
 /**
@@ -440,7 +443,7 @@ void openLife::server::service::database::WorldMap::insert(common::object::entit
  *
  * @return
  */
-openLife::system::type::record::Biome openLife::server::service::database::WorldMap::getBiomeRecord()
+openLife::system::type::record::Biome openLife::server::service::database::WorldMap::getBiomeRecord(char forceValue)
 {
 	//!legacy int getMapBiomeIndex( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap)
 	openLife::system::type::record::Biome biomeRecord = {this->query.x, this->query.y, -1, -1, 0};
@@ -450,8 +453,32 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 		// don't bother with this call unless biome DB has
 		// something in it, and this inX,inY is in the region where biomes
 		// exist in the database (tutorial loading, or test maps)
-		biomeRecord.value = biomeDBGet( this->query.x, this->query.y, &(biomeRecord.secondPlace), &(biomeRecord.secondPlaceGap) );
+
+		//!legacy biomeRecord.value = biomeDBGet( this->query.x, this->query.y, &(biomeRecord.secondPlace), &(biomeRecord.secondPlaceGap) );
+		/*******************************/
+		unsigned char key[8];
+		unsigned char value[12];
+
+		// look for changes to default in database
+		intPairToKey( this->query.x, this->query.y, key );
+
+		//int result = newBiomeDB->get(key);
+		//int result = LINEARDB3_get( &biomeDB, key, value );//TODO: search LINEARDB3_get ans replace with newBiomeDB->get(...) & may cause divide by zedo exception if some biome added
+		int result = -1;
+
+		if( result == 0 )
+		{
+			// found
+			biomeRecord.value = valueToInt( &( value[0] ) );
+			biomeRecord.secondPlace = valueToInt( &( value[4] ) );
+			biomeRecord.secondPlaceGap = valueToInt( &( value[8] ) ) / gapIntScale;
+		}
+		else {
+			biomeRecord.value = -1;
+		}
+		/********************/
 	}
+
 	if( biomeRecord.value != -1 )
 	{
 		int index = getBiomeIndex( biomeRecord.value );
@@ -471,14 +498,18 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 		// else a biome or second place in biome.db that isn't in game anymore
 		// ignore it
 	}
-
-	biomeRecord = this->dbCacheBiome->get(this->query.x, this->query.y);
-	if(biomeRecord.value == -1)
+	else
 	{
-		biomeRecord = this->getNewBiome();
-		this->dbCacheBiome->put(biomeRecord);
+		if(forceValue)
+		{
+			biomeRecord = this->dbCacheBiome->get(this->query.x, this->query.y);
+			if(biomeRecord.value == -1)
+			{
+				biomeRecord = this->getNewBiome();
+				this->dbCacheBiome->put(biomeRecord);
+			}
+		}
 	}
-
 
 	if( biomeRecord.value == -1 || biomeRecord.secondPlace == -1 )
 	{
@@ -515,46 +546,4 @@ void openLife::server::service::database::WorldMap::updateSecondPlaceIndex(int *
 void openLife::server::service::database::WorldMap::updateSecondPlaceGap(double *outSecondPlaceGap)
 {
 	this->tmp.outSecondPlaceGap = outSecondPlaceGap;
-}
-
-/**
- *
- * @param inX
- * @param inY
- * @param outSecondPlaceBiome
- * @param outSecondPlaceGap
- * @return
- */
-// returns -1 if not found
-int biomeDBGet( int inX, int inY,
-			  int *outSecondPlaceBiome,
-			  double *outSecondPlaceGap)
-{
-	unsigned char key[8];
-	unsigned char value[12];
-
-	// look for changes to default in database
-	intPairToKey( inX, inY, key );
-
-	//int result = newBiomeDB->get(key);
-	int result = LINEARDB3_get( &biomeDB, key, value );//TODO: search LINEARDB3_get ans replace with newBiomeDB->get(...) & may cause divide by zedo exception if some biome added
-	//int result = -1;
-
-	if( result == 0 ) {
-		// found
-		int biome = valueToInt( &( value[0] ) );
-
-		if( outSecondPlaceBiome != NULL ) {
-			*outSecondPlaceBiome = valueToInt( &( value[4] ) );
-		}
-
-		if( outSecondPlaceGap != NULL ) {
-			*outSecondPlaceGap = valueToInt( &( value[8] ) ) / gapIntScale;
-		}
-
-		return biome;
-	}
-	else {
-		return -1;
-	}
 }

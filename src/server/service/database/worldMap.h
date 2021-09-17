@@ -49,7 +49,7 @@ namespace openLife::server::service::database
 			void insert(common::object::entity::MapZone* mapZone);
 			openLife::system::type::record::Biome getNewBiome();
 			int getBiome();
-			openLife::system::type::record::Biome getBiomeRecord();
+			openLife::system::type::record::Biome getBiomeRecord(char forceValue = true);
 
 			void updateSecondPlaceIndex(int *outSecondPlaceIndex);
 			void updateSecondPlaceGap(double *outSecondPlaceGap);
@@ -102,9 +102,5 @@ namespace openLife::server::service::database
 			}tmp;
 	};
 }
-
-int biomeDBGet( int inX, int inY,
-				int *outSecondPlaceBiome = nullptr,
-				double *outSecondPlaceGap = nullptr);
 
 #endif //OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H
