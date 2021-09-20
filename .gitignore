@@ -20,6 +20,7 @@ OneLife/gameSource/testUser/*
 OneLife/gameSource/testUser2/*
 OneLife/gameSource/recordedGames/*
 OneLife/gameSource/screenShots/*
+OneLife/gameSource/log.txt.backup
 
 OneLife/server/OneLifeServer
 OneLife/server/log.txt
