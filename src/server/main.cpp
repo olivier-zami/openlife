@@ -851,7 +851,8 @@ int main()
 			{
 				SimpleVector<GridPos> livePlayerPos;
 
-				for( int i=0; i<numLive; i++ ) {
+				for( int i=0; i<numLive; i++ )
+				{
 					LiveObject *nextPlayer = players.getElement( i );
 
 					if( nextPlayer->error ) {
@@ -2228,7 +2229,6 @@ int main()
 						message = getNextClientMessage( nextPlayer->sockBuffer );
 					}
 				}
-
 
 				if( message != NULL ) {
 					someClientMessageReceived = true;
@@ -9184,11 +9184,6 @@ int main()
 							// done
 							nextPlayer->xs = nextPlayer->xd;
 							nextPlayer->ys = nextPlayer->yd;
-
-							printf( "Player %d's move is done at %d,%d\n",
-									nextPlayer->id,
-									nextPlayer->xs,
-									nextPlayer->ys );
 
 							if( nextPlayer->pathTruncated ) {
 								// truncated, but never told them about it

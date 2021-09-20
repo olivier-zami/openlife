@@ -100,6 +100,7 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 	std::fill(this->mapTile.begin(), this->mapTile.end(), -1);
 
 	openLife::system::settings::LinearDB dbBiomeSettings;
+	this->dbBiomeCache = new openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::record::Biome>();
 	this->dbBiome = new openLife::system::object::store::device::random::LinearDB(dbBiomeSettings);
 }
 
@@ -360,10 +361,10 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 			break;
 		case 1:
 			newGround = openLife::server::process::newBiome_v0(
-				this->query.x,
-				this->query.y,
-				this->mapGenerator.sketch.filename,
-				this->dbCacheBiome);
+					{this->query.x, this->query.y},
+					{-256, -256},
+					this->mapGenerator.sketch.filename,
+					this->dbBiomeCache);
 			break;
 		case 2:
 			newGround = openLife::server::process::newBiome_v1(

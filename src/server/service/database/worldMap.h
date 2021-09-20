@@ -13,6 +13,7 @@
 #include "src/system/_base/type/record.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
+#include "src/system/_base/object/store/memory/extendedVector2D.h"
 #include "src/system/_base/type.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/common/object/entity/mapZone.h"
@@ -81,6 +82,7 @@ namespace openLife::server::service::database
 				std::vector<float> biomeWeight;
 			}map;
 
+			openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::record::Biome>* dbBiomeCache;
 			openLife::system::object::store::memory::random::Biome* dbCacheBiome;
 			openLife::system::object::store::device::random::LinearDB* dbBiome;
 
