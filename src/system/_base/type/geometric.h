@@ -10,6 +10,7 @@
 namespace openLife::system::type::geometric
 {
 	typedef openLife::system::type::Value2D_32 Point2D_32;
+	typedef openLife::system::type::Value2D_U32 Point2D_U32;
 
 	typedef struct{
 		uint32_t radius;

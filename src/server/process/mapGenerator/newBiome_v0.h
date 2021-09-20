@@ -7,16 +7,17 @@
 
 #include <vector>
 #include <string>
-#include "src/system/_base/object/store/memory/random/biome.h"
+#include "src/system/_base/object/store/memory/extendedVector2D.h"
 #include "src/system/_base/type.h"
 #include "src/system/_base/type/record.h"
 
 namespace openLife::server::process
 {
 	openLife::system::type::record::Biome newBiome_v0(
-			int x, int y,
+			openLife::system::type::Value2D_32 position,
+			openLife::system::type::Value2D_32 localMapPosition,
 			std::string filename,
-			openLife::system::object::store::memory::random::Biome* dbCacheBiome
+			openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::record::Biome>* dbBiomeCache
 			);
 }
 

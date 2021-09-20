@@ -13,5 +13,6 @@ mapDrawer:
 	${DIR_MAIN}/mapDrawer.cpp \
 	${DIR_PROJECT}/src/system/_base/object/process/handler/image.cpp \
 	${DIR_PROJECT}/src/system/_extension/nlohmann.cpp \
+	${DIR_PROJECT}/src/server/process/mapGenerator/newBiome_v0.cpp \
 	${DIR_PROJECT}/src/server/process/newBiome_v1.cpp \
 	${DIR_PROJECT}/src/system/_base/process/scalar.cpp \

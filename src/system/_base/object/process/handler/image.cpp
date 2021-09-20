@@ -53,7 +53,7 @@ Image openLife::system::object::process::handler::Image::getImageInfo()
 
 openLife::system::object::process::handler::Image* openLife::system::object::process::handler::Image::select(openLife::system::type::geometric::Point2D_32 point)
 {
-	if(point.x>=this->imageInfo.width || point.y>=this->imageInfo.height) this->request = 0;//TODO: system level => throw Exception
+	if(point.x>=(int)this->imageInfo.width || point.y>=(int)this->imageInfo.height) this->request = 0;//TODO: system level => throw Exception
 	else
 	{
 		this->request = 1;
