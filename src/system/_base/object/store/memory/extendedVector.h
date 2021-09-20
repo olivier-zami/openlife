@@ -7,11 +7,11 @@
 
 namespace openLife::system::object::store::memory
 {
-	class Random
+	class DirectAccessObject
 	{
 		public:
-			Random();
-			~Random();
+			DirectAccessObject();
+			~DirectAccessObject();
 
 			void put(int idx, int value);
 			int get(int idx);
