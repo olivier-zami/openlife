@@ -15,6 +15,9 @@ DIR_SRC_CLIENT = ../../OneLife/gameSource
 
 LAYER_SOURCE = \
 ../../src/client/main.cpp \
+${DIR_SRC_CLIENT}/../../src/client/game.cpp \
+${DIR_SRC_CLIENT}/../../src/client/component/bank/sprite.cpp \
+${DIR_SRC_CLIENT}/../../src/client/component/bank/sprite/ground.cpp \
 ${DIR_SRC_CLIENT}/game.cpp \
 ${DIR_SRC_CLIENT}/spriteBank.cpp \
 ${DIR_SRC_CLIENT}/objectBank.cpp \
