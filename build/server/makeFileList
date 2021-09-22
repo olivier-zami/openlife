@@ -30,7 +30,8 @@ ${DIR_APP_SERVER}/../../minorGems/io/file/File.cpp \
 ${DIR_APP_SERVER}/../../src/server/service/database/worldMap.cpp \
 ${DIR_APP_SERVER}/../../src/server/process/mapGenerator/newBiome_v0.cpp \
 ${DIR_APP_SERVER}/../../src/server/process/newBiome_v1.cpp \
-${DIR_APP_SERVER}/../../src/system/_base/object/process/service.cpp \
+${DIR_APP_SERVER}/../../src/server/process/message/getMapChunk.cpp \
+${DIR_APP_SERVER}/../../src/system/_base/object/abstract/service.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/file.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/object/entity/exception.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/object/process/handler/image.cpp \

@@ -1,6 +1,9 @@
 {
+  "map": {
+    "relief": [3, 5, 6, 7, 8]
+  },
   "mapGenerator": {
-    "type": 2,
+    "type": 1,
     "sketch": {
       "filename": "../../data/images/maps/mini_map.bmp",
       "center": {"x":  0, "y": 0}

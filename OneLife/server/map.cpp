@@ -378,9 +378,9 @@ static BiomeCacheRecord biomeCache[ BIOME_CACHE_SIZE ];
 // SIDE EFFECT:
 // if biome at x,y needed to be determined in order to compute map
 // at this spot, it is saved into lastCheckedBiome
-static int lastCheckedBiome = -1;
-static int lastCheckedBiomeX = 0;
-static int lastCheckedBiomeY = 0;
+int lastCheckedBiome = -1;
+int lastCheckedBiomeX = 0;
+int lastCheckedBiomeY = 0;
 // 1671 shy of int max
 static int xLimit = 2147481977;
 static int yLimit = 2147481977;
@@ -448,6 +448,7 @@ extern openLife::server::service::database::WorldMap* worldMap;
 
 /**********************************************************************************************************************/
 
+#include "src/server/process/message/getMapChunk.h"
 #include "src/server/component/channel/speech.h"
 #include "src/server/component/database/gameFeatures.h"
 
@@ -1068,31 +1069,33 @@ char initMap()
 	SimpleVector<int> biomeList;
 
 
-	for( int i=0; i<numObjects; i++ ) {
+	//printf("\n=====>Generate biomeList (nbrObjectChecked: %i) (biomeList size : %i)\n\n", numObjects, biomeList.size());
+	for( int i=0; i<numObjects; i++ )
+	{
 		ObjectRecord *o = allObjects[i];
-
-		if( o->mapChance > 0 ) {
-
-			for( int j=0; j< o->numBiomes; j++ ) {
+		if( o->mapChance > 0 )
+		{
+			for( int j=0; j< o->numBiomes; j++ )
+			{
 				int b = o->biomes[j];
-
-				if( biomeList.getElementIndex(b) == -1 ) {
+				if( biomeList.getElementIndex(b) == -1 )
+				{
 					biomeList.push_back( b );
 				}
 			}
 		}
-
 	}
 
 
 	// manually controll order
-	SimpleVector<int> *biomeOrderList =
-			SettingsManager::getIntSettingMulti( "biomeOrder" );
+	SimpleVector<int> *biomeOrderList = SettingsManager::getIntSettingMulti( "biomeOrder" );
+	//printf("\n=====>Setting Biomes from file(biomeOrder.txt) : [");for(int i=0; i<biomeOrderList->size(); i++){printf(" %i", biomeOrderList->getElementDirect(i));}printf(" ]\n\n");
 
-	SimpleVector<float> *biomeWeightList =
-			SettingsManager::getFloatSettingMulti( "biomeWeights" );
 
-	for( int i=0; i<biomeOrderList->size(); i++ ) {
+	SimpleVector<float> *biomeWeightList = SettingsManager::getFloatSettingMulti( "biomeWeights" );
+
+	for( int i=0; i<biomeOrderList->size(); i++ )
+	{
 		int b = biomeOrderList->getElementDirect( i );
 
 		if( biomeList.getElementIndex( b ) == -1 ) {
@@ -1113,7 +1116,16 @@ char initMap()
 	}
 
 	numBiomes = biomeOrderList->size();
+
+	/*******************/
+	//printf("\n=====>Setting Biomes :");
 	biomes = biomeOrderList->getElementArray();
+	//printf("\n==========>biome size : %i\n", biomeOrderList->size());
+	//printf("\n[");
+	for(int i=0; i<biomeOrderList->size(); i++){ printf(" %i", biomes[i]);}printf(" ]\n\n");
+
+
+
 	biomeWeights = biomeWeightList->getElementArray();
 	biomeCumuWeights = new float[ numBiomes ];
 
@@ -1127,8 +1139,7 @@ char initMap()
 	delete biomeWeightList;
 
 
-	SimpleVector<int> *specialBiomeList =
-			SettingsManager::getIntSettingMulti( "specialBiomes" );
+	SimpleVector<int> *specialBiomeList = SettingsManager::getIntSettingMulti( "specialBiomes" );
 
 	numSpecialBiomes = specialBiomeList->size();
 	specialBiomes = specialBiomeList->getElementArray();
@@ -1700,12 +1711,13 @@ double sigmoid( double inInput, double inKnee ) {
     return ( out + 1 ) * 0.5;
     }
 
-void initBiomeCache() {
+void initBiomeCache()//TODO: check for biomeCache building
+{
     BiomeCacheRecord blankRecord = { 0, 0, -2, 0, 0 };
     for( int i=0; i<BIOME_CACHE_SIZE; i++ ) {
         biomeCache[i] = blankRecord;
         }
-    }
+}
 
 
 // returns -2 on miss
@@ -2221,8 +2233,8 @@ void outputMapImage() {
             name = biomeNames[ biomes[j] ];
             }
         int c = biomeCounts.getElementDirect( j );
-        
-        printf( "Biome %d (%s) \tcount = %d\t%.1f%%\n", 
+
+        printf( "Biome %d (%s) \tcount = %d\t%.1f%%\n",
                 biomes[j], name, c, 100 * (float)c / totalBiomeCount );
         }
 
@@ -3092,7 +3104,6 @@ void reseedMap( char inForceFresh )
 
 	if( !set )
 	{
-		//std::cout << "\n=====> Generate new map (rand seed no set)";
 		// no seed set, or ignoring it, make a new one
 
 		if( !inForceFresh ) {
@@ -3217,6 +3228,7 @@ void reseedMap( char inForceFresh )
 									placementRandSource.
 									getRandomBoundedInt( -safeR, safeR );
 
+							//printf("\n(0)=====> pickB context ...");
 							int pickB = getMapBiome( pickX, pickY );
 
 							for( int j=0; j< o->numBiomes; j++ ) {
@@ -3237,7 +3249,6 @@ void reseedMap( char inForceFresh )
 		delete [] allObjects;
 	}
 
-	//std::cout << "\n\n=====> setupMapChangeLogFile()";
 	setupMapChangeLogFile();
 
 	if( !set && mapChangeLogFile != NULL ) {
@@ -4162,17 +4173,20 @@ timeSec_t *getContainedEtaDecay( int inX, int inY, int *outNumContained,
     return containedEta;
     }
 
-int checkDecayObject( int inX, int inY, int inID ) {
-    if( inID == 0 ) {
+int checkDecayObject( int inX, int inY, int inID )
+{
+    if( inID == 0 )
+    {
         return inID;
-        }
+    }
     
     TransRecord *t = getPTrans( -1, inID );
 
-    if( t == NULL ) {
+    if( t == NULL )
+    {
         // no auto-decay for this object
         return inID;
-        }
+    }
     
     
     // else decay exists for this object
@@ -4491,9 +4505,11 @@ int checkDecayObject( int inX, int inY, int inID ) {
                 
                 int curBiome = -1;
                 if( stayInBiome ) {
+					//printf("\n(0)=====> curBiome record context ...");
                     curBiome = getMapBiome( inX, inY );
                     
                     if( newX != inX || newY != inY ) {
+						//printf("\n(0)=====> newBiome record context ...");
                         int newBiome = getMapBiome( newX, newY );
                         
                         if( newBiome != curBiome ) {
@@ -4559,7 +4575,8 @@ int checkDecayObject( int inX, int inY, int inID ) {
                     
                                 if( i >= tryDist && oID == 0 ) {
                                     // found a spot for it to move
-                                    
+
+									//printf("\n(0)=====> testX,testY record context ...");
                                     if( stayInBiome &&
                                         curBiome !=
                                         getMapBiome( testX, testY ) ) {
@@ -4611,8 +4628,7 @@ int checkDecayObject( int inX, int inY, int inID ) {
                 if( newX != inX || newY != inY ) {
                     // a reall move!
                     
-                    printf( "Object moving from (%d,%d) to (%d,%d)\n",
-                            inX, inY, newX, newY );
+                    printf( "Object moving from (%d,%d) to (%d,%d)\n", inX, inY, newX, newY );//TODO: check for agent move algorithm
                     
                     // move object
                     
@@ -4937,7 +4953,7 @@ int checkDecayObject( int inX, int inY, int inID ) {
     else {
         return newID;
         }
-    }
+}
 
 void checkDecayContained( int inX, int inY, int inSubCont ) {
     
@@ -5447,233 +5463,17 @@ char isMapObjectInTransit( int inX, int inY ) {
  */
 int getMapBiome( int inX, int inY )
 {
-	return biomes[server->getWorldMap()->select( inX, inY )->getBiomeRecord().value];
-    //return biomes[getMapBiomeIndex( inX, inY )];
+	int biomeRelief = server->getWorldMap()->select( inX, inY )->getBiomeRecord().value;
+	//printf("\n======>Biome relief=%i value=%i biomes=[", biomeRelief, biomes[biomeRelief]);
+	return biomes[biomeRelief];
+
+	//int test[7] = {1, 0, 2, 3, 6, 5, 4};
+	//int test[7] = {2, 2, 2, 2, 6, 5, 4};
+	//for(unsigned int i=0; i<7; i++){printf(" %i", test[i]);}printf(" ]\n\n");
+	//return test[biomeRelief];
 }
 
-/**
- * @note returns properly formatted chunk message for chunk centered around x,y
- * @param inStartX
- * @param inStartY
- * @param inWidth
- * @param inHeight
- * @param inRelativeToPos
- * @param outMessageLength
- * @return
- */
-unsigned char *getChunkMessage( int inStartX, int inStartY, 
-                                int inWidth, int inHeight,
-                                GridPos inRelativeToPos,
-                                int *outMessageLength ) {
-    
-    int chunkCells = inWidth * inHeight;
-    
-    int *chunk = new int[chunkCells];
 
-    int *chunkBiomes = new int[chunkCells];
-    int *chunkFloors = new int[chunkCells];
-    
-    int *containedStackSizes = new int[ chunkCells ];
-    int **containedStacks = new int*[ chunkCells ];
-
-    int **subContainedStackSizes = new int*[chunkCells];
-    int ***subContainedStacks = new int**[chunkCells];
-    
-
-    int endY = inStartY + inHeight;
-    int endX = inStartX + inWidth;
-
-    if( endY < inStartY ) {
-        // wrapped around in integer space
-        // pull inStartY back from edge
-        inStartY -= inHeight;
-        endY = inStartY + inHeight;
-        }
-    if( endX < inStartX ) {
-        // wrapped around in integer space
-        // pull inStartY back from edge
-        inStartX -= inWidth;
-        endX = inStartX + inWidth;
-        }
-    
-
-
-    timeSec_t curTime = MAP_TIMESEC;
-
-    // look at four corners of chunk whenever we fetch one
-    dbLookTimePut( inStartX, inStartY, curTime );
-    dbLookTimePut( inStartX, endY, curTime );
-    dbLookTimePut( endX, inStartY, curTime );
-    dbLookTimePut( endX, endY, curTime );
-    
-    for( int y=inStartY; y<endY; y++ ) {
-        int chunkY = y - inStartY;
-        
-
-        for( int x=inStartX; x<endX; x++ ) {
-            int chunkX = x - inStartX;
-            
-            int cI = chunkY * inWidth + chunkX;
-            
-            lastCheckedBiome = -1;
-            
-            chunk[cI] = getMapObject( x, y );
-
-            if( lastCheckedBiome == -1 ||
-                lastCheckedBiomeX != x ||
-                lastCheckedBiomeY != y ) {
-                // biome wasn't checked in order to compute
-                // getMapObject
-
-                // get it ourselves
-
-                lastCheckedBiome = biomes[server->getWorldMap()->select( x, y )->getBiomeRecord().value];
-                //lastCheckedBiome = biomes[getMapBiomeIndex( x, y )];
-                }
-            chunkBiomes[ cI ] = lastCheckedBiome;
-
-            chunkFloors[cI] = getMapFloor( x, y );
-            
-
-            int numContained;
-            int *contained = NULL;
-
-            if( chunk[cI] > 0 && getObject( chunk[cI] )->numSlots > 0 ) {
-                contained = getContained( x, y, &numContained );
-                }
-            
-            if( contained != NULL ) {
-                containedStackSizes[cI] = numContained;
-                containedStacks[cI] = contained;
-                
-                subContainedStackSizes[cI] = new int[numContained];
-                subContainedStacks[cI] = new int*[numContained];
-
-                for( int i=0; i<numContained; i++ ) {
-                    subContainedStackSizes[cI][i] = 0;
-                    subContainedStacks[cI][i] = NULL;
-                    
-                    if( containedStacks[cI][i] < 0 ) {
-                        // a sub container
-                        containedStacks[cI][i] *= -1;
-                        
-                        int numSubContained;
-                        int *subContained = getContained( x, y, 
-                                                          &numSubContained,
-                                                          i + 1 );
-                        if( subContained != NULL ) {
-                            subContainedStackSizes[cI][i] = numSubContained;
-                            subContainedStacks[cI][i] = subContained;
-                            }
-                        }
-                    }
-                }
-            else {
-                containedStackSizes[cI] = 0;
-                containedStacks[cI] = NULL;
-                subContainedStackSizes[cI] = NULL;
-                subContainedStacks[cI] = NULL;
-                }
-            }
-        
-        }
-
-
-
-    SimpleVector<unsigned char> chunkDataBuffer;
-
-    for( int i=0; i<chunkCells; i++ ) {
-        
-        if( i > 0 ) {
-            chunkDataBuffer.appendArray( (unsigned char*)" ", 1 );
-            }
-        
-
-        char *cell = autoSprintf( "%d:%d:%d", chunkBiomes[i],
-                                  hideIDForClient( chunkFloors[i] ), 
-                                  hideIDForClient( chunk[i] ) );
-        
-        chunkDataBuffer.appendArray( (unsigned char*)cell, strlen(cell) );
-        delete [] cell;
-
-        if( containedStacks[i] != NULL ) {
-            for( int c=0; c<containedStackSizes[i]; c++ ) {
-                char *containedString = 
-                    autoSprintf( ",%d", 
-                                 hideIDForClient( containedStacks[i][c] ) );
-        
-                chunkDataBuffer.appendArray( (unsigned char*)containedString, 
-                                             strlen( containedString ) );
-                delete [] containedString;
-
-                if( subContainedStacks[i][c] != NULL ) {
-                    
-                    for( int s=0; s<subContainedStackSizes[i][c]; s++ ) {
-                        
-                        char *subContainedString = 
-                            autoSprintf( ":%d", 
-                                         hideIDForClient( 
-                                             subContainedStacks[i][c][s] ) );
-        
-                        chunkDataBuffer.appendArray( 
-                            (unsigned char*)subContainedString, 
-                            strlen( subContainedString ) );
-                        delete [] subContainedString;
-                        }
-                    delete [] subContainedStacks[i][c];
-                    }
-                }
-
-            delete [] subContainedStackSizes[i];
-            delete [] subContainedStacks[i];
-
-            delete [] containedStacks[i];
-            }
-        }
-    
-    delete [] chunk;
-    delete [] chunkBiomes;
-    delete [] chunkFloors;
-
-    delete [] containedStackSizes;
-    delete [] containedStacks;
-
-    delete [] subContainedStackSizes;
-    delete [] subContainedStacks;
-    
-    
-
-    unsigned char *chunkData = chunkDataBuffer.getElementArray();
-    
-    int compressedSize;
-    unsigned char *compressedChunkData =
-        zipCompress( chunkData, chunkDataBuffer.size(),
-                     &compressedSize );
-
-
-
-    char *header = autoSprintf( "MC\n%d %d %d %d\n%d %d\n#", 
-                                inWidth, inHeight,
-                                inStartX - inRelativeToPos.x, 
-                                inStartY - inRelativeToPos.y, 
-                                chunkDataBuffer.size(),
-                                compressedSize );
-    
-    SimpleVector<unsigned char> buffer;
-    buffer.appendArray( (unsigned char*)header, strlen( header ) );
-    delete [] header;
-
-    
-    buffer.appendArray( compressedChunkData, compressedSize );
-    
-    delete [] chunkData;
-    delete [] compressedChunkData;
-    
-
-    
-    *outMessageLength = buffer.size();
-    return buffer.getElementArray();
-    }
 
 
 char isMapSpotBlocking( int inX, int inY ) {

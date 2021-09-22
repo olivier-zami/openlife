@@ -102,6 +102,19 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 	openLife::system::settings::LinearDB dbBiomeSettings;
 	this->dbBiomeCache = new openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::record::Biome>();
 	this->dbBiome = new openLife::system::object::store::device::random::LinearDB(dbBiomeSettings);
+
+	//!
+	this->map.relief = settings.relief;
+
+	//!
+	this->map.biome.push_back(7);
+	this->map.biome.push_back(1);
+	this->map.biome.push_back(0);
+	this->map.biome.push_back(2);
+	this->map.biome.push_back(3);
+	this->map.biome.push_back(6);
+	this->map.biome.push_back(5);
+	this->map.biome.push_back(4);
 }
 
 /**
@@ -386,6 +399,12 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 	}
 	return newGround;
 }
+
+std::vector<int> openLife::server::service::database::WorldMap::getBiomes()
+{
+	return this->map.biome;
+}
+
 
 void openLife::server::service::database::WorldMap::insert(openLife::system::type::record::Biome biome)
 {

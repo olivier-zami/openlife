@@ -148,9 +148,17 @@ int main()
 
 		//!new
 		openLife::server::Settings serverSettings;
+		for(unsigned int i=0; i<dataSettingsServer["map"]["relief"].size();i++)
+		{
+			serverSettings.map.relief.push_back(dataSettingsServer["map"]["relief"][i].get<unsigned int>());
+		}
+
 		serverSettings.mapGenerator.type = dataSettingsServer["mapGenerator"]["type"];
 		serverSettings.mapGenerator.sketch.filename = dataSettingsServer["mapGenerator"]["sketch"]["filename"];
 		server = new openLife::Server(serverSettings, worldMapSettings, &biomeDB, &anyBiomesInDB, cachedBiome);
+
+		std::vector<int> testBiome = server->getWorldMap()->getBiomes();
+		//std::cout << "\n==========> Biomes : [";for(unsigned int i=0; i<testBiome.size();i++){std::cout << " " << testBiome[i];}std::cout << " ]";
 
 		//!test
 		/*
@@ -5501,6 +5509,7 @@ int main()
 														r = NULL;
 													}
 												}
+												//printf("\n(0)=====> main context ...");
 												if( r != NULL &&
 												newTargetObj->isBiomeLimited &&
 												! canBuildInBiome(
@@ -6178,7 +6187,7 @@ int main()
 													ObjectRecord *newTargetObj =
 															getObject( r->newTarget );
 
-
+													//printf("\n(0)=====> main2 context ...");
 													if( newTargetObj->blocksWalking &&
 													! isMapSpotEmpty( m.x, m.y ) ) {
 

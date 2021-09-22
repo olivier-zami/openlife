@@ -32,7 +32,7 @@ openLife::system::type::record::Biome openLife::server::process::newBiome_v0(
 				if(pixel.r==0&&pixel.g==255&&pixel.b==0)groundType = 1;//grassland
 				if(pixel.r==255&&pixel.g==127&&pixel.b==0)groundType = 2;//polar
 				if(pixel.r==127&&pixel.g==127&&pixel.b==127)groundType = 3;//moutain
-				if(pixel.r==255&&pixel.g==255&&pixel.b==0)groundType = 5;//desert
+				if(pixel.r==255&&pixel.g==255&&pixel.b==0)groundType = 4;//desert
 				if(pixel.r==0&&pixel.g==127&&pixel.b==0)groundType = 5;//jungle
 				if(pixel.r==255&&pixel.g==255&&pixel.b==255)groundType = 6;//polar
 				dbBiomeCache->set({x, y}, {(int)(localMapPosition.x+x), (int)(localMapPosition.y+y), groundType, 0, 0});

@@ -33,6 +33,7 @@ namespace openLife::server::settings
 		struct{
 			std::vector<int> order;
 		}biome;
+		std::vector<unsigned int>relief;
 		std::vector<openLife::server::type::entity::Climate> climate;
 	}WorldMap;
 }

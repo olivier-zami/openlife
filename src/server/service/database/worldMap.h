@@ -5,6 +5,8 @@
 #ifndef OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H
 #define OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H
 
+#include "src/system/_base/object/abstract/service.h"
+
 #include <string>
 #include <vector>
 #include <array>
@@ -31,7 +33,7 @@ namespace openLife::server::service::database::worldMap
 
 namespace openLife::server::service::database
 {
-	class WorldMap
+class WorldMap
 	{
 		public:
 			WorldMap(openLife::server::settings::WorldMap settings);
@@ -40,10 +42,12 @@ namespace openLife::server::service::database
 			//!temporary methods
 			void legacy(LINEARDB3* biomeDB, char* notEmptyDB, openLife::system::object::store::memory::random::Biome* dbCacheBiome);
 			char* notEmptyDB;
-
+			void updateSecondPlaceIndex(int *outSecondPlaceIndex);
+			void updateSecondPlaceGap(double *outSecondPlaceGap);
 			int init();
 			void setMapSeed(unsigned int x, unsigned int y);
 
+			//!data management methods
 			WorldMap* select(int posX, int posY);
 			WorldMap* create();
 			void insert(openLife::system::type::record::Biome biome);
@@ -52,8 +56,8 @@ namespace openLife::server::service::database
 			int getBiome();
 			openLife::system::type::record::Biome getBiomeRecord(char forceValue = true);
 
-			void updateSecondPlaceIndex(int *outSecondPlaceIndex);
-			void updateSecondPlaceGap(double *outSecondPlaceGap);
+			//!data information methods
+			std::vector<int> getBiomes();
 
 		private:
 			unsigned int width;
@@ -76,6 +80,8 @@ namespace openLife::server::service::database
 				openLife::system::type::Value2D_U32 seed;
 				char allowSecondPlaceBiomes;
 				int specialBiomeBandThickness;
+				std::vector<int> biome;
+				std::vector<unsigned int> relief;
 				std::vector<int> specialBiomeBandYCenter;
 				std::vector<int> specialBiomeBandOrder;
 				std::vector<int> specialBiomes;

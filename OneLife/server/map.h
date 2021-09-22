@@ -88,14 +88,7 @@ void mapEveDeath( const char *inEmail, double inAge, GridPos inDeathMapPos );
 
 
 
-// returns properly formatted chunk message for chunk in rectangle shape
-// with bottom-left corner at x,y
-// coordinates in message will be relative to inRelativeToPos
-// note that inStartX,Y are absolute world coordinates
-unsigned char *getChunkMessage( int inStartX, int inStartY, 
-                                int inWidth, int inHeight,
-                                GridPos inRelativeToPos,
-                                int *outMessageLength );
+
 
 
 // sets the player responsible for subsequent map changes

@@ -11,6 +11,8 @@
 openLife::server::component::channel::SpeechService* speechService;
 openLife::server::component::database::GameFeatures* gameFeatures;
 
+const unsigned int openLife::Server::WORLD_MAP = 0;
+
 openLife::Server::Server(
 		openLife::server::Settings serverSettings,
 		openLife::server::settings::WorldMap worldMapSettings,
@@ -20,6 +22,7 @@ openLife::Server::Server(
 {
 	worldMapSettings.mapGenerator.type = serverSettings.mapGenerator.type;
 	worldMapSettings.mapGenerator.sketch.filename = serverSettings.mapGenerator.sketch.filename;
+	worldMapSettings.relief = serverSettings.map.relief;
 	this->worldMap = new openLife::server::service::database::WorldMap(worldMapSettings);
 	this->worldMap->legacy(biomeDB, anyBiomesInDB, cachedBiome);
 }
@@ -30,13 +33,6 @@ void openLife::Server::init()
 {
 	//speechService = new openLife::server::component::channel::SpeechService();
 	//gameFeatures = new openLife::server::component::database::GameFeatures();
-}
-
-void openLife::Server::useService(openLife::system::object::process::Service* service)
-{
-	std::cout << "\nSet Service  id : " << service->getId();
-	std::cout << "\nInsertion of service type : " << service->getTypeId();
-	this->service[service->getId()] = service;
 }
 
 void openLife::Server::start()

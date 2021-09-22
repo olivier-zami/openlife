@@ -5,10 +5,9 @@
 #ifndef OPENLIFE_SERVER_H
 #define OPENLIFE_SERVER_H
 
-
 #include <string>
 #include <array>
-#include "src/system/_base/object/process/service.h"
+#include "src/system/_base/object/abstract/service.h"
 #include "src/server/settings.h"
 #include "src/server/service/database/worldMap.h"
 
@@ -26,7 +25,6 @@ namespace openLife
 			~Server();
 
 			void init();
-			void useService(openLife::system::object::process::Service* service = nullptr);
 			void start();
 			openLife::server::service::database::WorldMap* getWorldMap();
 
@@ -35,7 +33,8 @@ namespace openLife
 			void initSpeechService();
 
 			openLife::server::service::database::WorldMap* worldMap;
-			std::array<openLife::system::object::process::Service*, 5> service;
+
+			static const unsigned int WORLD_MAP;
 	};
 }
 

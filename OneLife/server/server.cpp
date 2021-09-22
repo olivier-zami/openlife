@@ -7,6 +7,7 @@
 #include <float.h>
 
 #include "src/server/main.h"
+#include "src/server/process/message/getMapChunk.h"
 
 #include "minorGems/io/file/Directory.h"
 #include "minorGems/util/stringUtils.h"
@@ -4449,6 +4450,7 @@ static void recomputeHeatMap( LiveObject *inPlayer ) {
     // (hot biome leaking into a building can never make the building
     //  just right).
     // Enclosed walls can make a hot biome not as hot, but never cool
+	//printf("\n(0)=====> biomeHeat context ... returned value : %i", getMapBiome( pos.x, pos.y ));
     float biomeHeat = getBiomeHeatValue( getMapBiome( pos.x, pos.y ) );
     
     if( biomeHeat > targetHeat ) {
@@ -5507,6 +5509,7 @@ char findDropSpot( LiveObject *inDroppingPlayer,
     int barrierRadius = SettingsManager::getIntSetting( "barrierRadius", 250 );
     int barrierOn = SettingsManager::getIntSetting( "barrierOn", 1 );
 
+	//printf("\n(0)=====> targetBiome context ...");
     int targetBiome = getMapBiome( inX, inY );
     int targetFloor = getMapFloor( inX, inY );
     
@@ -5524,6 +5527,7 @@ char findDropSpot( LiveObject *inDroppingPlayer,
             
             if( isBiomeAllowedForPlayer( inDroppingPlayer, testX, testY, 
                                          true ) ) {
+				//printf("\n(0)=====> targetBiome2 context ...");
                 targetBiome = getMapBiome( testX, testY );
                 break;
                 }
@@ -5651,9 +5655,9 @@ char findDropSpot( LiveObject *inDroppingPlayer,
                     y =
                         inSourceY + xD;
                     }
-                                                
 
 
+				//printf("\n(0)=====> targetBiome3 context ...");
                 if( isMapSpotEmpty( x, y ) 
                     && 
                     ( pass > 1 || 
@@ -11899,18 +11903,13 @@ static void handleHoldingChange( LiveObject *inPlayer, int inNewHeldID ) {
 
 
 
-static unsigned char *makeCompressedMessage( char *inMessage, int inLength,
-                                             int *outLength ) {
+static unsigned char *makeCompressedMessage( char *inMessage, int inLength, int *outLength )
+{
     
     int compressedSize;
-    unsigned char *compressedData =
-        zipCompress( (unsigned char*)inMessage, inLength, &compressedSize );
+    unsigned char *compressedData = zipCompress( (unsigned char*)inMessage, inLength, &compressedSize );
 
-
-
-    char *header = autoSprintf( "CM\n%d %d\n#", 
-                                inLength,
-                                compressedSize );
+    char *header = autoSprintf( "CM\n%d %d\n#", inLength, compressedSize );
     int headerLength = strlen( header );
     int fullLength = headerLength + compressedSize;
     
@@ -11927,7 +11926,7 @@ static unsigned char *makeCompressedMessage( char *inMessage, int inLength,
     delete [] header;
     
     return fullMessage;
-    }
+}
 
 
 

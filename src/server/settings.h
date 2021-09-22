@@ -6,10 +6,14 @@
 #define OPENLIFE_SERVER_SETTINGS_H
 
 #include <string>
+#include <vector>
 
 namespace openLife::server
 {
 	typedef struct{
+		struct{
+			std::vector<unsigned int> relief;
+		}map;
 		struct{
 			int type;
 			struct{
