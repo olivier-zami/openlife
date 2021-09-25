@@ -32,11 +32,7 @@ namespace client::component::bank::sprite
 	class Ground
 	{
 		public:
-			Ground(
-					int blurRadius,
-					GroundSpriteSet **groundSprites,
-					int* groundSpritesArraySize,
-					openLife::system::type::Value2D_U32 mapGenSeed);
+			Ground();
 			~Ground();
 
 			int reset(char inPrintSteps);

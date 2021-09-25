@@ -17,6 +17,8 @@
 
 #define CELL_D 128
 
+// array sized for largest biome ID for direct indexing
+// sparse, with NULL entries
 int groundSpritesArraySize;
 GroundSpriteSet **groundSprites;
 
@@ -29,20 +31,7 @@ static char printSteps = false;
 extern openLife::system::type::Value2D_U32 mapGenSeed;
 extern client::Game* game;
 
-client::component::bank::sprite::Ground::Ground(
-		int blurRadius,
-		GroundSpriteSet **groundSprites,
-		int* groundSpritesArraySize,
-		openLife::system::type::Value2D_U32 mapGenSeed)
-{
-	this->groundDir = new File( NULL, "ground" );
-	this->blurRadius  = blurRadius;
-	this->groundTileCacheDir = new File( NULL, "groundTileCache" );
-	this->mapGenSeed = mapGenSeed;
-	this->printSteps  = false;
-	this->groundSpritesArraySize = groundSpritesArraySize;
-	this->groundSprites = groundSprites;
-}
+client::component::bank::sprite::Ground::Ground(){}
 
 client::component::bank::sprite::Ground::~Ground(){}
 

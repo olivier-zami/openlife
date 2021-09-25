@@ -6134,9 +6134,10 @@ static SimpleVector<int> biomeCache;
 
 
 void getAllBiomes( SimpleVector<int> *inVectorToFill ) {
-    if( biomeCache.size() == 0 ) {
-        
-        for( int i=0; i<mapSize; i++ ) {
+    if( biomeCache.size() == 0 )
+	{
+        for( int i=0; i<mapSize; i++ )
+		{
             if( idMap[i] != NULL ) {
             
                 for( int j=0; j< idMap[i]->numBiomes; j++ ) {
@@ -6147,7 +6148,9 @@ void getAllBiomes( SimpleVector<int> *inVectorToFill ) {
                         }
                     }
                 }
-            }
+		}
+
+		//printf("\n==========> biomeCache[ ");for(int i=0; i<biomeCache.size(); i++)printf(" %i", biomeCache.getElementIndex(i));printf(" ]");
 
         // now sort it
 
@@ -6160,12 +6163,14 @@ void getAllBiomes( SimpleVector<int> *inVectorToFill ) {
         biomeCache.appendArray( a, num );
         
         delete [] a;
-        }
+		//printf("\n==========> biomeCache[ ");for(int i=0; i<biomeCache.size(); i++)printf(" %i", biomeCache.getElementIndex(i));printf(" ]\n");
+	}
     
-    for( int i=0; i<biomeCache.size(); i++ ) {
+    for( int i=0; i<biomeCache.size(); i++ )
+	{
         inVectorToFill->push_back( biomeCache.getElementDirect( i ) );
-        }
-    }
+	}
+}
 
 
 
