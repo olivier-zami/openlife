@@ -268,7 +268,11 @@ typedef struct Homeland {
 
 static SimpleVector<Homeland> homelands;
 
+/**********************************************************************************************************************/
 
+extern client::Game* game;
+
+/**********************************************************************************************************************/
 static Homeland *getHomeland( int inCenterX, int inCenterY ) {
     for( int i=0; i<homelands.size(); i++ ) {
         Homeland *h = homelands.getElement( i );
@@ -6596,19 +6600,22 @@ void LivingLifePage::draw( doublePair inViewCenter,
             
             setDrawColor( 1, 1, 1, 1 );
 
-            if( b >= 0 && b < groundSpritesArraySize ) {
-                s = groundSprites[ b ];
+            if( b >= 0 && b < game->getSprites()->getGrounds()->getTileSetNumber() ) {
+                //s = groundSprites[ b ];
+                s = game->getSprites()->getGrounds()->getTileSet()[ b ];
                 }
             else if( b == -1 ) {
                 // unknown biome image at end
-                s = groundSprites[ groundSpritesArraySize - 1 ];
+                //s = groundSprites[ groundSpritesArraySize - 1 ];
+                s = game->getSprites()->getGrounds()->getTileSet()[ game->getSprites()->getGrounds()->getTileSetNumber() - 1 ];
                 }
             
             if( s == NULL ) {
                 
                 // use end image with random color
-                s = groundSprites[ groundSpritesArraySize - 1 ];
-                
+                //s = groundSprites[ groundSpritesArraySize - 1 ];
+                s = game->getSprites()->getGrounds()->getTileSet()[ game->getSprites()->getGrounds()->getTileSetNumber() - 1 ];
+
                 // random draw color
                 setDrawColor( getXYRandom( b, b ),
                               getXYRandom( b, b + 100 ),
@@ -6616,7 +6623,8 @@ void LivingLifePage::draw( doublePair inViewCenter,
                 /*
                 // find another
                 for( int i=0; i<groundSpritesArraySize && s == NULL; i++ ) {
-                    s = groundSprites[ i ];
+                    //s = groundSprites[ i ];
+                    s = game->getSprites()->getGrounds()->getTileSet()[ i ];
                     }
                 */
                 }

@@ -39,12 +39,15 @@ namespace client::component::bank::sprite
 			float create();
 			void close();//TODO: put this in destroy method
 
+			GroundSpriteSet** getTileSet();
+			int getTileSetNumber();
+
 		private:
-			SimpleVector<int>* allBiomes;
+			SimpleVector<int> allBiomes;
 
 			// array sized for largest biome ID for direct indexing
 			// sparse, with NULL entries
-			int* groundSpritesArraySize;
+			int groundSpritesArraySize;
 			GroundSpriteSet **groundSprites;
 			int nextStep;
 			int blurRadius;

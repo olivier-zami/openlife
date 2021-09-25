@@ -204,8 +204,9 @@ int main() {
     printf( "\n" );
 
 
+	/******************************************/
+	//!all this sequence is about to count biome type number en prepare them if any ...
     num = initGroundSpritesStart( false );
-
     if( num > 0 ) {
         runRebuild( "groundTiles", num, &initGroundSpritesStep );
         }
@@ -213,8 +214,10 @@ int main() {
         printf( "No ground tiles need to be generated\n" );
         }
     initGroundSpritesFinish();
-
     freeGroundSprites();
+	/******************************************/
+
+
     printf( "\n" );
 
 

@@ -31,153 +31,171 @@ static char printSteps = false;
 extern openLife::system::type::Value2D_U32 mapGenSeed;
 extern client::Game* game;
 
-client::component::bank::sprite::Ground::Ground(){}
+client::component::bank::sprite::Ground::Ground()
+{
+	this->groundTileCacheDir = new File(NULL, "groundTileCache");
+	this->groundDir = new File(NULL, "ground");
+}
 
-client::component::bank::sprite::Ground::~Ground(){}
+client::component::bank::sprite::Ground::~Ground()
+{
+	printf("\n=====> Cleaning ground sprite ...");
+	for( int i=0; i<this->groundSpritesArraySize; i++ ) 
+	{
+		if( this->groundSprites[i] != NULL ) {
 
-int client::component::bank::sprite::Ground::reset(char inPrintSteps){return 0;}
+			for( int y=0; y<this->groundSprites[i]->numTilesHigh; y++ ) {
+				for( int x=0; x<this->groundSprites[i]->numTilesWide; x++ ) {
+					freeSprite( this->groundSprites[i]->tiles[y][x] );
+					freeSprite( this->groundSprites[i]->squareTiles[y][x] );
+				}
+				delete [] this->groundSprites[i]->tiles[y];
+				delete [] this->groundSprites[i]->squareTiles[y];
+			}
+			delete [] this->groundSprites[i]->tiles;
+			delete [] this->groundSprites[i]->squareTiles;
 
-float client::component::bank::sprite::Ground::create(){return 0.0;}
 
-/**********************************************************************************************************************/
+			freeSprite( this->groundSprites[i]->wholeSheet );
 
-int initGroundSpritesStart( char inPrintSteps ) {
-	blurRadius = SettingsManager::getIntSetting( "groundTileEdgeBlurRadius",
-												 12 );
+			delete this->groundSprites[i];
+		}
+	}
+	delete [] this->groundSprites;
 
-	nextStep = 0;
+	this->groundSprites = NULL;
+}
 
-	printSteps = inPrintSteps;
+int client::component::bank::sprite::Ground::reset(char inPrintSteps=true)
+{
+	printf("\n=====> Reseting ground sprite bank ...");
 
-	getAllBiomes( &allBiomes );
+	this->blurRadius = SettingsManager::getIntSetting( "groundTileEdgeBlurRadius", 12 );
+	this->nextStep = 0;
+	this->printSteps = inPrintSteps;
+	getAllBiomes( &(this->allBiomes) );
 
 	int maxBiome = -1;
-	for( int i=0; i<allBiomes.size(); i++ ) {
-		int b = allBiomes.getElementDirect( i );
-		if( b > maxBiome ) {
+	for( int i=0; i<this->allBiomes.size(); i++ )
+	{
+		int b = this->allBiomes.getElementDirect( i );
+		if( b > maxBiome )
+		{
 			maxBiome = b;
 		}
 	}
 
 	// extra space for unknown biome sprite
-	groundSpritesArraySize = maxBiome + 2;
-	groundSprites = new GroundSpriteSet*[ groundSpritesArraySize ];
+	this->groundSpritesArraySize = maxBiome + 2;
+	this->groundSprites = new GroundSpriteSet*[ this->groundSpritesArraySize ];
 
-
-	for( int i=0; i<groundSpritesArraySize; i++ ) {
-		groundSprites[i] = NULL;
+	for( int i=0; i<this->groundSpritesArraySize; i++ ) {
+		this->groundSprites[i] = NULL;
 	}
 
-
-	if( !groundTileCacheDir.exists() ) {
-		groundTileCacheDir.makeDirectory();
+	if( !this->groundTileCacheDir->exists() )
+	{
+		this->groundTileCacheDir->makeDirectory();
 	}
 
 	// -1 to trigger loading of unknown biome image
-	allBiomes.push_back( -1 );
+	this->allBiomes.push_back( -1 );
 
-	return allBiomes.size();
+	return this->allBiomes.size();
 }
 
+float client::component::bank::sprite::Ground::create()
+{
+	printf("\n=====> Create ground sprite ...");
 
-// returns progress... ready for Finish when progress == 1.0
-float initGroundSpritesStep() {
-
-	if( nextStep < allBiomes.size() ) {
-		int i = nextStep;
-
+	if( this->nextStep < allBiomes.size() )
+	{
+		int i = this->nextStep;
 		int b = allBiomes.getElementDirect( i );
-
 		int cacheFileNumber = b;
-
 		char *fileName;
-
 		char isUnknownBiome = false;
 
-		if( b == -1 ) {
+		if( b == -1 )
+		{
 			// special case
 			fileName = stringDuplicate( "ground_U.tga" );
-
 			// stick it at end
-			b = groundSpritesArraySize - 1;
-
+			b = this->groundSpritesArraySize - 1;
 			cacheFileNumber = 99999;
-
-
 			isUnknownBiome = true;
 		}
-		else {
+		else
+		{
 			fileName = autoSprintf( "ground_%d.tga", b );
 		}
 
-
-		File *groundFile = groundDir.getChildFile( fileName );
-
-
+		File *groundFile = this->groundDir->getChildFile( fileName );
 		char *fullFileName = groundFile->getFullFileName();
-
 		RawRGBAImage *rawImage = NULL;
 
-		if( groundFile->exists() ) {
-
+		if( groundFile->exists() )
+		{
 			rawImage = readTGAFileRawBase( fullFileName );
-
 		}
-
 		delete groundFile;
 
-		if( rawImage != NULL ) {
-
+		if( rawImage != NULL )
+		{
 			int w = rawImage->mWidth;
 			int h = rawImage->mHeight;
 
-			if( w % CELL_D != 0 || h % CELL_D != 0 ) {
+			if( w % CELL_D != 0 || h % CELL_D != 0 )
+			{
 				printf(
 						"Ground texture %s with w=%d and h=%d does not "
 						"have dimensions that are even multiples of the cell "
 						"width %d",
 						fileName, w, h, CELL_D );
 			}
-			else if( rawImage->mNumChannels != 4 ) {
+			else if( rawImage->mNumChannels != 4 )
+			{
 				printf(
 						"Ground texture %s has %d channels instead of 4",
 						fileName, rawImage->mNumChannels );
 			}
-			else {
-				groundSprites[b] = new GroundSpriteSet;
-				groundSprites[b]->biome = b;
+			else
+			{
+				this->groundSprites[b] = new GroundSpriteSet;
+				this->groundSprites[b]->biome = b;
 
-				if( isUnknownBiome ) {
-					groundSprites[b]->biome = -1;
+				if( isUnknownBiome )
+				{
+					this->groundSprites[b]->biome = -1;
 				}
 
-				groundSprites[b]->numTilesWide = w / CELL_D;
-				groundSprites[b]->numTilesHigh = h / CELL_D;
+				this->groundSprites[b]->numTilesWide = w / CELL_D;
+				this->groundSprites[b]->numTilesHigh = h / CELL_D;
 
-				int tW = groundSprites[b]->numTilesWide;
-				int tH = groundSprites[b]->numTilesHigh;
+				int tW = this->groundSprites[b]->numTilesWide;
+				int tH = this->groundSprites[b]->numTilesHigh;
 
-				groundSprites[b]->tiles = new SpriteHandle*[tH];
-				groundSprites[b]->squareTiles = new SpriteHandle*[tH];
+				this->groundSprites[b]->tiles = new SpriteHandle*[tH];
+				this->groundSprites[b]->squareTiles = new SpriteHandle*[tH];
 
-				groundSprites[b]->wholeSheet = fillSprite( rawImage );
+				this->groundSprites[b]->wholeSheet = fillSprite( rawImage );
 
 				// check if all cache files exist
 				// if so, don't need to load double version of whole image
 				char allCacheFilesExist = true;
 
-				for( int ty=0; ty<tH; ty++ ) {
-					groundSprites[b]->tiles[ty] = new SpriteHandle[tW];
-					groundSprites[b]->squareTiles[ty] = new SpriteHandle[tW];
-
-					for( int tx=0; tx<tW; tx++ ) {
-
+				for( int ty=0; ty<tH; ty++ )
+				{
+					this->groundSprites[b]->tiles[ty] = new SpriteHandle[tW];
+					this->groundSprites[b]->squareTiles[ty] = new SpriteHandle[tW];
+					for( int tx=0; tx<tW; tx++ )
+					{
 						char *cacheFileName =
 								autoSprintf(
 										"groundTileCache/biome_%d_x%d_y%d.tga",
 										cacheFileNumber, tx, ty );
 
-						groundSprites[b]->tiles[ty][tx] =
+						this->groundSprites[b]->tiles[ty][tx] =
 								loadSpriteBase( cacheFileName, false );
 
 						char *squareCacheFileName =
@@ -185,18 +203,19 @@ float initGroundSpritesStep() {
 										"groundTileCache/biome_%d_x%d_y%d_square.tga",
 										cacheFileNumber, tx, ty );
 
-						groundSprites[b]->squareTiles[ty][tx] =
+						this->groundSprites[b]->squareTiles[ty][tx] =
 								loadSpriteBase( squareCacheFileName, false );
 
 
-						if( groundSprites[b]->tiles[ty][tx] == NULL ) {
+						if( this->groundSprites[b]->tiles[ty][tx] == NULL )
+						{
 							// cache miss
-
 							allCacheFilesExist = false;
 						}
-						if( groundSprites[b]->squareTiles[ty][tx] == NULL ) {
-							// cache miss
 
+						if( this->groundSprites[b]->squareTiles[ty][tx] == NULL )
+						{
+							// cache miss
 							allCacheFilesExist = false;
 						}
 						delete [] cacheFileName;
@@ -204,21 +223,20 @@ float initGroundSpritesStep() {
 					}
 				}
 
-
-				if( !allCacheFilesExist ) {
+				if( !allCacheFilesExist )
+				{
 					// need to regenerate some
-
 					// spend time to load the double-converted image
 					Image *image = readTGAFileBase( fullFileName );
 
 					int tileD = CELL_D * 2;
-
-					for( int ty=0; ty<tH; ty++ ) {
-
-						for( int tx=0; tx<tW; tx++ ) {
-
-							if( groundSprites[b]->squareTiles[ty][tx] ==
-								NULL ) {
+					for( int ty=0; ty<tH; ty++ )
+					{
+						for( int tx=0; tx<tW; tx++ )
+						{
+							if( this->groundSprites[b]->squareTiles[ty][tx] ==
+								NULL )
+							{
 
 								// cache miss
 
@@ -226,7 +244,8 @@ float initGroundSpritesStep() {
 										"groundTileCache/biome_%d_x%d_y%d_square.tga",
 										cacheFileNumber, tx, ty );
 
-								if( printSteps ) {
+								if( printSteps )
+								{
 									printf( "Cache file %s does not exist, "
 											"rebuilding.\n", cacheFileName );
 								}
@@ -239,12 +258,13 @@ float initGroundSpritesStep() {
 
 								delete [] cacheFileName;
 
-								groundSprites[b]->squareTiles[ty][tx] =
+								this->groundSprites[b]->squareTiles[ty][tx] =
 										fillSprite( tileImage, false );
 
 								delete tileImage;
 							}
-							if( groundSprites[b]->tiles[ty][tx] == NULL ) {
+							if( this->groundSprites[b]->tiles[ty][tx] == NULL )
+							{
 								// cache miss
 
 								char *cacheFileName =
@@ -417,7 +437,7 @@ float initGroundSpritesStep() {
 								// to test a single tile
 								//exit(0);
 
-								groundSprites[b]->tiles[ty][tx] =
+								this->groundSprites[b]->tiles[ty][tx] =
 										fillSprite( &tileImage, false );
 							}
 						}
@@ -433,10 +453,34 @@ float initGroundSpritesStep() {
 
 		delete [] fileName;
 
-		nextStep++;
+		this->nextStep++;
 	}
 
-	return nextStep / (float)( allBiomes.size() );
+	return this->nextStep / (float)( allBiomes.size() );
+}
+
+GroundSpriteSet **client::component::bank::sprite::Ground::getTileSet()
+{
+	return this->groundSprites;
+}
+
+int client::component::bank::sprite::Ground::getTileSetNumber()
+{
+	return this->groundSpritesArraySize;
+}
+
+/**********************************************************************************************************************/
+
+int initGroundSpritesStart( char inPrintSteps )
+{
+	return game->getSprites()->getGrounds()->reset();
+}
+
+
+// returns progress... ready for Finish when progress == 1.0
+float initGroundSpritesStep()
+{
+	return game->getSprites()->getGrounds()->create();
 }
 
 
@@ -446,28 +490,7 @@ void initGroundSpritesFinish() {
 
 
 
-void freeGroundSprites() {
-	for( int i=0; i<groundSpritesArraySize; i++ ) {
-		if( groundSprites[i] != NULL ) {
-
-			for( int y=0; y<groundSprites[i]->numTilesHigh; y++ ) {
-				for( int x=0; x<groundSprites[i]->numTilesWide; x++ ) {
-					freeSprite( groundSprites[i]->tiles[y][x] );
-					freeSprite( groundSprites[i]->squareTiles[y][x] );
-				}
-				delete [] groundSprites[i]->tiles[y];
-				delete [] groundSprites[i]->squareTiles[y];
-			}
-			delete [] groundSprites[i]->tiles;
-			delete [] groundSprites[i]->squareTiles;
-
-
-			freeSprite( groundSprites[i]->wholeSheet );
-
-			delete groundSprites[i];
-		}
-	}
-	delete [] groundSprites;
-
-	groundSprites = NULL;
+void freeGroundSprites()
+{
+	game->getSprites()->getGrounds()->~Ground();
 }
