@@ -72,7 +72,6 @@ int accountHmacVersionNumber = 0;
 
 #include "SoundWidget.h"
 
-#include "groundSprites.h"
 
 
 #include "ageControl.h"

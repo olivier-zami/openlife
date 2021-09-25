@@ -54,7 +54,6 @@ ${DIR_SRC_CLIENT}/convolution.cpp \
 ${DIR_SRC_CLIENT}/fft.cpp \
 ${DIR_SRC_CLIENT}/ogg.cpp \
 ${DIR_SRC_CLIENT}/musicPlayer2.cpp \
-${DIR_SRC_CLIENT}/groundSprites.cpp \
 ${DIR_SRC_CLIENT}/SettingsPage.cpp \
 ${DIR_SRC_CLIENT}/CheckboxButton.cpp \
 ${DIR_SRC_CLIENT}/ValueSlider.cpp \

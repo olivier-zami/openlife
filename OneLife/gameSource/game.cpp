@@ -78,8 +78,6 @@ CustomRandomSource randSource( 34957197 );
 
 #include "liveObjectSet.h"
 
-#include "groundSprites.h"
-
 #include "emotion.h"
 #include "photos.h"
 #include "lifeTokens.h"
@@ -299,7 +297,8 @@ const char *getDemoCodeServerURL() {
     return "http://FIXME/demoServer/server.php";
     }
 
-
+#include "src/client/game.h"
+/**********************************************************************************************************************/
 
 char gamePlayingBack = false;
 

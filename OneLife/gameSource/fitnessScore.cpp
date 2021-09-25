@@ -4,7 +4,6 @@
 
 #include "objectBank.h"
 #include "ageControl.h"
-#include "groundSprites.h"
 
 
 #include "minorGems/game/game.h"
@@ -15,6 +14,8 @@
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/crypto/hashes/sha1.h"
 #include "minorGems/network/web/URLUtils.h"
+
+#include "src/client/game.h"
 
 
 static int webRequest = -1;
@@ -62,6 +63,9 @@ typedef struct OffspringRecord {
 
 
 static SimpleVector<OffspringRecord> recentOffspring;
+
+extern GroundSpriteSet **groundSprites;
+extern int groundSpritesArraySize;
 
 
 static void freeOffspringRecord( OffspringRecord inR ) {

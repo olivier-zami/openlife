@@ -1,4 +1,3 @@
-#include "groundSprites.h"
 #include "accountHmac.h"
 
 #include "minorGems/util/SimpleVector.h"
@@ -18,7 +17,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
 #include "stb_image_write.h"
+#include "src/client/game.h"
 
+extern GroundSpriteSet **groundSprites;
 
 extern char *userEmail;
 extern char *serverIP;

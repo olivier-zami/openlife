@@ -5,13 +5,16 @@
 #include "Pickable.h"
 
 
-#include "groundSprites.h"
 #include "objectBank.h"
 
 
 #define QUOTE( arg )  #arg
 #define STRING_VAL( arg )  QUOTE( arg )
 #define NUM_GROUND_STRING_NAMES 30
+
+#include "src/client/game.h"
+
+extern GroundSpriteSet **groundSprites;
 
 
 class GroundPickable : public Pickable {

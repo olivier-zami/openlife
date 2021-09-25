@@ -15,7 +15,7 @@ namespace client::component::bank
 			Sprite();
 			~Sprite();
 
-			client::component::bank::sprite::Ground* getGround();
+			client::component::bank::sprite::Ground* getGrounds();
 
 		private:
 			client::component::bank::sprite::Ground* groundBank;

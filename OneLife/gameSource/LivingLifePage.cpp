@@ -7,8 +7,6 @@
 #include "soundBank.h"
 #include "whiteSprites.h"
 #include "message.h"
-#include "groundSprites.h"
-
 #include "accountHmac.h"
 
 #include "liveObjectSet.h"
@@ -54,6 +52,9 @@
 
 #define OHOL_NON_EDITOR 1
 #include "ObjectPickable.h"
+#include "src/client/game.h"
+
+/**********************************************************************************************************************/
 
 static ObjectPickable objectPickable;
 
@@ -328,6 +329,9 @@ static SimpleVector<HomePos> oldHomePosStack;
 static int lastPlayerID = -1;
 
 extern openLife::system::type::Value2D_U32 mapGenSeed;
+extern int groundSpritesArraySize;
+extern GroundSpriteSet **groundSprites;
+
 /**********************************************************************************************************************/
 
 static void processHomePosStack() {
