@@ -27,14 +27,14 @@ openLife::system::type::record::Biome openLife::server::process::newBiome_v0(
 			{
 				int groundType = -1;
 				ColorRGB pixel = imageHandler->select((openLife::system::type::geometric::Point2D_32){(int)x, (int)(image.width-(y+1))})->getPixel();
-				if(pixel.r==0&&pixel.g==0&&pixel.b==255)groundType = 0;//water
-				if(pixel.r==0&&pixel.g==127&&pixel.b==127)groundType = 0;//swamp
-				if(pixel.r==0&&pixel.g==255&&pixel.b==0)groundType = 1;//grassland
-				if(pixel.r==255&&pixel.g==127&&pixel.b==0)groundType = 2;//polar
-				if(pixel.r==127&&pixel.g==127&&pixel.b==127)groundType = 3;//moutain
-				if(pixel.r==255&&pixel.g==255&&pixel.b==0)groundType = 4;//desert
-				if(pixel.r==0&&pixel.g==127&&pixel.b==0)groundType = 5;//jungle
-				if(pixel.r==255&&pixel.g==255&&pixel.b==255)groundType = 6;//polar
+				if(pixel.r==0&&pixel.g==127&&pixel.b==127)groundType = 0;//swamp 0
+				if(pixel.r==0&&pixel.g==255&&pixel.b==0)groundType = 1;//grassland 1
+				if(pixel.r==255&&pixel.g==127&&pixel.b==0)groundType = 2;//savanah 2
+				if(pixel.r==127&&pixel.g==127&&pixel.b==127)groundType = 3;//moutain 3
+				if(pixel.r==255&&pixel.g==255&&pixel.b==0)groundType = 4;//desert 4
+				if(pixel.r==0&&pixel.g==127&&pixel.b==0)groundType = 5;//jungle 5
+				if(pixel.r==255&&pixel.g==255&&pixel.b==255)groundType = 6;//polar 6
+				if(pixel.r==0&&pixel.g==0&&pixel.b==255)groundType = 7;//water 7
 				dbBiomeCache->set({x, y}, {(int)(localMapPosition.x+x), (int)(localMapPosition.y+y), groundType, 0, 0});
 			}
 		}

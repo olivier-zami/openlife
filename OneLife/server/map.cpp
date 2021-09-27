@@ -188,7 +188,7 @@ extern openLife::Server* server;
 extern openLife::server::service::database::WorldMap* worldMap;
 // object ids that occur naturally on map at random, per biome
 extern int numBiomes;
-int *biomes;//legacy: static int *biomes;
+//int *biomes;//legacy: static int *biomes;/***************************************************************************/
 static float *biomeWeights;
 extern float *biomeCumuWeights;
 extern float biomeTotalWeight;
@@ -1060,7 +1060,8 @@ char initMap()
 	}
 
 
-
+/**********************************************************************************************************************/
+//! set biome list
 	int numObjects;
 	ObjectRecord **allObjects = getAllObjects( &numObjects );
 
@@ -1069,7 +1070,8 @@ char initMap()
 	SimpleVector<int> biomeList;
 
 
-	//printf("\n=====>Generate biomeList (nbrObjectChecked: %i) (biomeList size : %i)\n\n", numObjects, biomeList.size());
+	printf("\n=====>Generate biomeList (nbrObjectChecked: %i) (biomeList size : %i)\n\n", numObjects, biomeList.size());
+	/*
 	for( int i=0; i<numObjects; i++ )
 	{
 		ObjectRecord *o = allObjects[i];
@@ -1085,12 +1087,18 @@ char initMap()
 			}
 		}
 	}
+	*/
+	for(int i=0; i<8; i++)
+	{
+		biomeList.push_back(i);
+	}
 
 
 	// manually controll order
 	SimpleVector<int> *biomeOrderList = SettingsManager::getIntSettingMulti( "biomeOrder" );
-	//printf("\n=====>Setting Biomes from file(biomeOrder.txt) : [");for(int i=0; i<biomeOrderList->size(); i++){printf(" %i", biomeOrderList->getElementDirect(i));}printf(" ]\n\n");
+	printf("\n=====>Setting Biomes from file(biomeOrder.txt) : [");for(int i=0; i<biomeOrderList->size(); i++){printf(" %i", biomeOrderList->getElementDirect(i));}printf(" ]\n\n");
 
+	printf("\n=====>Setting Biomes from file(object data generation.txt) : [");for(int i=0; i<biomeList.size(); i++){printf(" %i", biomeList.getElementDirect(i));}printf(" ]\n\n");
 
 	SimpleVector<float> *biomeWeightList = SettingsManager::getFloatSettingMulti( "biomeWeights" );
 
@@ -1117,12 +1125,13 @@ char initMap()
 
 	numBiomes = biomeOrderList->size();
 
-	/*******************/
-	//printf("\n=====>Setting Biomes :");
+	/*
+	//TODO: put in log function
+	printf("\n=====>Setting Biomes :");
 	biomes = biomeOrderList->getElementArray();
-	//printf("\n==========>biome size : %i\n", biomeOrderList->size());
-	//printf("\n[");
+	printf("\n==========>biome size : %i [ ", biomeOrderList->size());
 	for(int i=0; i<biomeOrderList->size(); i++){ printf(" %i", biomes[i]);}printf(" ]\n\n");
+	*/
 
 
 
@@ -1176,8 +1185,11 @@ char initMap()
 
 		int biomeIndex = 0;
 
-		for( int j=0; j<numBiomes; j++ ) {
-			if( biomes[j] == biomeNumber ) {
+		for( int j=0; j<numBiomes; j++ )
+		{
+			//if( biomes[j] == biomeNumber )
+			if( server->getWorldMap()->getInfoBiome(j) == biomeNumber )
+			{
 				biomeIndex = j;
 				break;
 			}
@@ -1194,8 +1206,11 @@ char initMap()
 
 	// look up biome index
 	specialBiomeBandDefaultIndex = 0;
-	for( int j=0; j<numBiomes; j++ ) {
-		if( biomes[j] == specialBiomeBandDefault ) {
+	for( int j=0; j<numBiomes; j++ )
+	{
+		//if( biomes[j] == specialBiomeBandDefault )
+		if( server->getWorldMap()->getBiomes()[j] == specialBiomeBandDefault )
+		{
 			specialBiomeBandDefaultIndex = j;
 			break;
 		}
@@ -1333,10 +1348,15 @@ char initMap()
 	}
 
 
-	for( int j=0; j<numBiomes; j++ ) {
+	for( int j=0; j<numBiomes; j++ )
+	{
+		/*//TODO: uncomment in map constructor
 		AppLog::infoF(
 				"Biome %d:  Found %d natural objects with total weight %f",
-				biomes[j], naturalMapIDs[j].size(), totalChanceWeight[j] );
+				biomes[j],
+				naturalMapIDs[j].size(),
+				totalChanceWeight[j] );
+				*/
 	}
 
 	delete [] allObjects;
@@ -1568,14 +1588,18 @@ void setResponsiblePlayer( int inPlayerID ) {
     currentResponsiblePlayer = inPlayerID;
     }
 
-int getBiomeIndex( int inBiome ) {
-    for( int i=0; i<numBiomes; i++ ) {
-        if( biomes[i] == inBiome ) {
+
+int getBiomeIndex( int inBiome )
+{
+    for( int i=0; i<numBiomes; i++ )
+	{
+        if( server->getWorldMap()->getBiomes()[i]/*biomes[i]*/ == inBiome )
+		{
             return i;
-            }
-        }
+		}
+	}
     return -1;
-    }
+}
 
 static void expireHomeland( Homeland *inH ) {
     inH->expired = true;
@@ -1936,7 +1960,7 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
         // getBaseMap is always called for our cell in question first
         // before examining neighboring cells if needed
         if( lastCheckedBiome == -1 ) {    
-            lastCheckedBiome = biomes[pickedBiome];
+            lastCheckedBiome = server->getWorldMap()->getBiomes()[pickedBiome]/*biomes[pickedBiome]*/;
             lastCheckedBiomeX = inX;
             lastCheckedBiomeY = inY;
             }
@@ -2111,7 +2135,7 @@ void outputMapImage() {
         
         Color *c;
         
-        int biomeNumber = biomes[j];
+        int biomeNumber = server->getWorldMap()->getBiomes()[j]/*biomes[j]*/;
 
         switch( biomeNumber ) {
             case 0:
@@ -2229,13 +2253,13 @@ void outputMapImage() {
     for( int j=0; j<numBiomes; j++ ) {
         const char *name = "unknwn";
         
-        if( biomes[j] < 7 ) {
-            name = biomeNames[ biomes[j] ];
+        if( server->getWorldMap()->getBiomes()[j]/*biomes[j]*/ < 7 ) {
+            name = biomeNames[ server->getWorldMap()->getBiomes()[j]/*biomes[j]*/ ];
             }
         int c = biomeCounts.getElementDirect( j );
 
         printf( "Biome %d (%s) \tcount = %d\t%.1f%%\n",
-                biomes[j], name, c, 100 * (float)c / totalBiomeCount );
+				server->getWorldMap()->getBiomes()[j]/*biomes[j]*/, name, c, 100 * (float)c / totalBiomeCount );
         }
 
 
@@ -2281,7 +2305,7 @@ void outputBiomeFractals() {
     for( int scale = 1; scale <=4; scale *= 2 ) {
         
         for( int b=0; b<numBiomes; b++ ) {
-            int biome = biomes[ b ];
+            int biome = server->getWorldMap()->getBiomes()[b]/*biomes[b]*/;
             
             setXYRandomSeed( biome * 263 + 723 );
 
@@ -2391,7 +2415,7 @@ void printBiomeSamples() {
     
     for( int i=0; i<numBiomes; i++ ) {
         printf( "Biome %d:  %d (%.2f)\n",
-                biomes[ i ], biomeSamples[i], 
+				server->getWorldMap()->getBiomes()[i]/*biomes[i]*/, biomeSamples[i],
                 biomeSamples[i] / (double)numSamples );
         }
     }
@@ -3598,7 +3622,7 @@ void freeMap( char inSkipCleanup ) {
     writeEveRadius();
     writeRecentPlacements();
 
-    delete [] biomes;
+    //delete [] biomes;//TODO delete if unneeded
     delete [] biomeWeights;
     delete [] biomeCumuWeights;
     delete [] specialBiomes;
@@ -5463,14 +5487,12 @@ char isMapObjectInTransit( int inX, int inY ) {
  */
 int getMapBiome( int inX, int inY )
 {
-	int biomeRelief = server->getWorldMap()->select( inX, inY )->getBiomeRecord().value;
-	//printf("\n======>Biome relief=%i value=%i biomes=[", biomeRelief, biomes[biomeRelief]);
-	return biomes[biomeRelief];
+	//int biomeRelief = server->getWorldMap()->select( inX, inY )->getBiomeRecord().value;
+	//printf("\n======>Seek biome relief=%i value=%i in biomes = [", biomeRelief, biomes[biomeRelief]);
+	//printf(" ]\n\n");
+	//return biomes[biomeRelief];
 
-	//int test[7] = {1, 0, 2, 3, 6, 5, 4};
-	//int test[7] = {2, 2, 2, 2, 6, 5, 4};
-	//for(unsigned int i=0; i<7; i++){printf(" %i", test[i]);}printf(" ]\n\n");
-	//return test[biomeRelief];
+	return server->getWorldMap()->select(inX, inY)->getBiome();
 }
 
 
@@ -8649,7 +8671,7 @@ int isBirthland( int inX, int inY, int inLineageEveID, int inDisplayID ) {
             return -1;
             }
         
-        int biomeNumber = biomes[ pickedBiome ];
+        int biomeNumber = server->getWorldMap()->getBiomes()[pickedBiome]/*biomes[pickedBiome]*/;
         
         int personRace = getObject( inDisplayID )->race;
 

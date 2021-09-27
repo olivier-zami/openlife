@@ -57,7 +57,8 @@ class WorldMap
 			openLife::system::type::record::Biome getBiomeRecord(char forceValue = true);
 
 			//!data information methods
-			std::vector<int> getBiomes();
+			std::vector<int> getBiomes();//TODO should return array of biome struct
+			int getInfoBiome(int biome);//TODO should return biome struct
 
 		private:
 			unsigned int width;
@@ -80,13 +81,15 @@ class WorldMap
 				openLife::system::type::Value2D_U32 seed;
 				char allowSecondPlaceBiomes;
 				int specialBiomeBandThickness;
-				std::vector<int> biome;
 				std::vector<unsigned int> relief;
 				std::vector<int> specialBiomeBandYCenter;
 				std::vector<int> specialBiomeBandOrder;
 				std::vector<int> specialBiomes;
 				std::vector<float> biomeWeight;
 			}map;
+
+			std::vector<int> biome;
+			std::vector<int> mappedBiomeValue;
 
 			openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::record::Biome>* dbBiomeCache;
 			openLife::system::object::store::memory::random::Biome* dbCacheBiome;
@@ -96,7 +99,6 @@ class WorldMap
 			{
 				std::vector<int> order;
 			}dataBiome;
-			std::vector<openLife::server::service::database::worldMap::Biome> biome;
 
 			struct mapSettings{
 				float *biomeCumuWeights;

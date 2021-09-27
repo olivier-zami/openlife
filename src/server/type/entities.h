@@ -11,6 +11,12 @@ namespace openLife::server::type::entity
 {
 	typedef struct{
 		std::string label;
+		int code;
+		int value;
+	}Biome;
+
+	typedef struct{
+		std::string label;
 	}Climate;
 }
 

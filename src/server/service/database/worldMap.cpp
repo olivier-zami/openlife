@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <cstdio>
 
 #include "src/server/main.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
@@ -68,6 +69,14 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 	this->map.seed.y = settings.map.seed.y;
 	this->map.allowSecondPlaceBiomes = allowSecondPlaceBiomes;
 	this->map.specialBiomeBandThickness = settings.map.specialBiomeBandThickness;
+
+	this->mappedBiomeValue.reserve(settings.biome1.size() + 1);
+	for(unsigned int i=0; i<settings.biome1.size(); i++)//TODO: rename biome1 to biome after settings struct modification
+	{
+		this->mappedBiomeValue[settings.biome1[i].value] = settings.biome1[i].code;
+		this->biome.push_back(settings.biome1[i].value);
+	}
+
 	for(unsigned int i=0; i<settings.map.specialBiomeBandYCenter.size(); i++)
 	{
 		this->map.specialBiomeBandYCenter.push_back(settings.map.specialBiomeBandYCenter[i]);
@@ -85,6 +94,7 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 		this->map.specialBiomeBandOrder.push_back(settings.map.specialBiomeBandOrder[i]);
 	}
 
+	/*
 	this->biome.reserve(settings.climate.size());//TODO: climate.size() must be the same size of biomeOrder
 	std::cout << "\nregister " << settings.climate.size() << " biomes in size " << this->biome.capacity();
 	for(unsigned int i=0; i<settings.climate.size(); i++)
@@ -93,6 +103,7 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 		dataBiome.label = settings.climate[i].label;
 		this->biome.push_back(dataBiome);
 	}
+ 	*/
 
 	for(unsigned int i=0; i<settings.biome.order.size(); i++) this->dataBiome.order.push_back(settings.biome.order[i]);
 
@@ -105,16 +116,6 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 
 	//!
 	this->map.relief = settings.relief;
-
-	//!
-	this->map.biome.push_back(7);
-	this->map.biome.push_back(1);
-	this->map.biome.push_back(0);
-	this->map.biome.push_back(2);
-	this->map.biome.push_back(3);
-	this->map.biome.push_back(6);
-	this->map.biome.push_back(5);
-	this->map.biome.push_back(4);
 }
 
 /**
@@ -402,7 +403,13 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 
 std::vector<int> openLife::server::service::database::WorldMap::getBiomes()
 {
-	return this->map.biome;
+	return this->biome;
+}
+
+int openLife::server::service::database::WorldMap::getInfoBiome(int biome)
+{
+	printf("\n==========>getInfoBiome(%i)", biome);
+	return this->biome[biome];
 }
 
 
@@ -535,7 +542,7 @@ openLife::system::type::record::Biome openLife::server::service::database::World
 	{
 		// not stored, OR some part of stored stale, re-store it
 		biomeRecord.secondPlace = 0;
-		if( biomeRecord.secondPlace != -1 ) biomeRecord.secondPlace = biomes[ biomeRecord.secondPlace ];
+		if( biomeRecord.secondPlace != -1 ) biomeRecord.secondPlace = this->getBiomes()[biomeRecord.secondPlace]/*biomes[biomeRecord.secondPlace]*/;
 		// skip saving proc-genned biomes for now
 		// huge RAM impact as players explore distant areas of map
 
@@ -551,9 +558,12 @@ openLife::system::type::record::Biome openLife::server::service::database::World
  */
 int openLife::server::service::database::WorldMap::getBiome()
 {
-	unsigned int idx;
-	idx = this->query.x+(this->query.y*this->width);
-	return this->mapTile[idx];
+	//unsigned int idx;
+	//idx = this->query.x+(this->query.y*this->width);
+	//int relief = this->mapTile[idx];
+	int relief = this->select(this->query.x, this->query.y)->getBiomeRecord().value;
+	printf("\n=====>Retrieve biome value from worldMap(%i, %i) : nbrBiome=%lu (rawValue=%i, mappedValue=%i)\n", this->query.x, this->query.y, this->mappedBiomeValue.size(), relief, this->mappedBiomeValue[relief]);
+	return this->mappedBiomeValue[relief];
 }
 
 //!

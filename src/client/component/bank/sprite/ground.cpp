@@ -73,6 +73,7 @@ int client::component::bank::sprite::Ground::reset(char inPrintSteps=true)
 	this->blurRadius = SettingsManager::getIntSetting( "groundTileEdgeBlurRadius", 12 );
 	this->nextStep = 0;
 	this->printSteps = inPrintSteps;
+	/*
 	getAllBiomes( &(this->allBiomes) );
 
 	int maxBiome = -1;
@@ -83,6 +84,12 @@ int client::component::bank::sprite::Ground::reset(char inPrintSteps=true)
 		{
 			maxBiome = b;
 		}
+	}
+	 */
+	int maxBiome = 8;
+	for(int i = 0; i<9; i++)
+	{
+		this->allBiomes.push_back(i);
 	}
 
 	// extra space for unknown biome sprite

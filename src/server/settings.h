@@ -8,9 +8,12 @@
 #include <string>
 #include <vector>
 
+#include "src/server/type/entities.h"
+
 namespace openLife::server
 {
 	typedef struct{
+		std::vector<openLife::server::type::entity::Biome> biome;
 		struct{
 			std::vector<unsigned int> relief;
 		}map;

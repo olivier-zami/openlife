@@ -1,10 +1,10 @@
 {
   "mapGenerator": {
-    "type" : 1,
+    "type" : 2,
     "seed": {"x": 2656821518, "y": 1152282492}
   },
-  "biomeOrder": [1, 0, 2, 3, 6, 5, 4],
-  "biomeWeight": [0.32, 0.12, 0.09, 0.11, 0.11, 0.11, 0.13],
+  "biomeOrder": [7, 1, 0, 2, 3, 6, 5, 4],
+  "biomeWeight": [0.2, 0.12, 0.12, 0.09, 0.11, 0.11, 0.11, 0.13],
   "specialBiomes": [6, 5, 4],
   "specialBiomeBandOrder" : [4, 3, 6, 5],
   "specialBiomeBandYCenter": [320, 120, -80, -282],

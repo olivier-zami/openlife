@@ -138,16 +138,24 @@ int main()
 		{
 			worldMapSettings.map.biomeWeight.push_back(dataWorldMap["biomeWeight"][i].get<float>());
 		}
+
 		std::cout << "\nSetting biomeWeight size("<<worldMapSettings.map.biomeWeight.size()<<") [";
 		for(unsigned int i=0; i<worldMapSettings.map.biomeWeight.size(); i++) std::cout << "  " <<worldMapSettings.map.biomeWeight[i];
 		std::cout << "]";
 
 		std::cout << "\nall biome should be set ...";
-
-
+		for(unsigned int i=0; i<dataSettingsServer["mapping"]["biome"].size(); i++)
+		{
+			openLife::server::type::entity::Biome biome;
+			biome.label = dataSettingsServer["mapping"]["biome"][i]["label"];
+			biome.code = dataSettingsServer["mapping"]["biome"][i]["code"];
+			biome.value = dataSettingsServer["mapping"]["biome"][i]["value"];
+			worldMapSettings.biome1.push_back(biome);//TODO: rename biome1 to biome after worldMapSetting modification
+		}
 
 		//!new
 		openLife::server::Settings serverSettings;
+
 		for(unsigned int i=0; i<dataSettingsServer["map"]["relief"].size();i++)
 		{
 			serverSettings.map.relief.push_back(dataSettingsServer["map"]["relief"][i].get<unsigned int>());

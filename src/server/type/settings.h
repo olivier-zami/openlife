@@ -13,6 +13,7 @@
 namespace openLife::server::settings
 {
 	typedef struct{
+		std::vector<openLife::server::type::entity::Biome> biome1;//TODO rename to biome after old version delete
 		struct{
 			int type;
 			struct{
@@ -33,6 +34,7 @@ namespace openLife::server::settings
 		struct{
 			std::vector<int> order;
 		}biome;
+
 		std::vector<unsigned int>relief;
 		std::vector<openLife::server::type::entity::Climate> climate;
 	}WorldMap;

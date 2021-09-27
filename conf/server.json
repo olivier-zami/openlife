@@ -8,5 +8,49 @@
       "filename": "../../data/images/maps/mini_map.bmp",
       "center": {"x":  0, "y": 0}
     }
+  },
+  "mapping": {
+    "biome" : [
+      {
+        "label": "grassland",
+        "code": 0,
+        "value": 1
+      },
+      {
+        "label": "swamp",
+        "code": 1,
+        "value": 0
+      },
+      {
+        "label": "dry grass",
+        "code": 2,
+        "value": 2
+      },
+      {
+        "label": "mountain",
+        "code": 3,
+        "value": 3
+      },
+      {
+        "label": "snow",
+        "code": 4,
+        "value": 6
+      },
+      {
+        "label": "desert",
+        "code": 5,
+        "value": 4
+      },
+      {
+        "label": "jungle",
+        "code": 6,
+        "value": 5
+      },
+      {
+        "code": 7,
+        "label": "water",
+        "value": 7
+      }
+    ]
   }
 }
