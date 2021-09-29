@@ -2,13 +2,11 @@
 #include "overlayBank.h"
 
 #include "minorGems/util/StringTree.h"
-
 #include "minorGems/util/SimpleVector.h"
 #include "minorGems/util/stringUtils.h"
-
 #include "minorGems/io/file/File.h"
-
 #include "minorGems/graphics/converters/TGAImageConverter.h"
+#include "minorGems/io/file/FileOutputStream.h"
 
 
 

@@ -10,6 +10,7 @@
 #include "minorGems/graphics/converters/PNGImageConverter.h"
 
 #include "minorGems/io/file/FileInputStream.h"
+#include "minorGems/io/file/File.h"
 
 
 #include "soundBank.h"

@@ -26,6 +26,7 @@
 
 #include "spriteDrawColorOverride.h"
 
+extern int maxSpeechPipeIndex;
 
 // supplied by animation bank
 extern void checkDrawPos( int inObjectID, doublePair inPos );

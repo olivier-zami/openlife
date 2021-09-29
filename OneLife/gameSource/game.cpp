@@ -334,8 +334,8 @@ static char *currentUserTypedMessage = NULL;
 static int holdDeleteKeySteps = -1;
 static int stepsBetweenDeleteRepeat;
 
-openLife::system::type::Value2D_U32 mapGenSeed;
-int maxSpeechPipeIndex = 0;
+extern openLife::system::type::Value2D_U32 mapGenSeed;
+extern int maxSpeechPipeIndex;
 
 /**********************************************************************************************************************/
 

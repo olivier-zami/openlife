@@ -16,10 +16,11 @@
 #include "minorGems/graphics/converters/PNGImageConverter.h"
 
 #include "minorGems/io/file/FileInputStream.h"
+#include "minorGems/io/file/FileOutputStream.h"
 
 #include "minorGems/graphics/converters/PNGImageConverter.h"
 
-
+#include "minorGems/io/file/File.h"
 
 static double faceStepAges[NUM_FACES_STEPS] = { 0.4, 4, 14, 30, 40, 55 };
 

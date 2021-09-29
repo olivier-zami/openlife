@@ -84,6 +84,10 @@ int accountHmacVersionNumber = 0;
 #include "minorGems/io/file/File.h"
 #include "minorGems/system/Time.h"
 
+#include "src/client/game.h"
+
+/**********************************************************************************************************************/
+
 int loadingFileHandle = -1;
 int loadingFileStepCount = 0;
 double loadingStartTime;
@@ -160,7 +164,7 @@ int serverPort;
 
 int serverSocket = -1;
 
-
+/**********************************************************************************************************************/
 
 char doesOverrideGameImageSize() {
     return true;

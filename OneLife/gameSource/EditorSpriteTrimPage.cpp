@@ -20,6 +20,7 @@ extern Font *smallFont;
 
 
 #include "SpritePickable.h"
+#include "minorGems/io/file/File.h"
 
 static SpritePickable spritePickable;
 

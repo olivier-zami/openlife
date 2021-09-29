@@ -14,6 +14,7 @@
 
 
 #include "message.h"
+#include "minorGems/io/file/File.h"
 
 
 // label distance from checkboxes

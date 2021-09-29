@@ -3,6 +3,8 @@
 //
 
 #include "src/client/game.h"
+openLife::system::type::Value2D_U32 mapGenSeed;
+int maxSpeechPipeIndex = 0;
 
 client::Game* game;
 

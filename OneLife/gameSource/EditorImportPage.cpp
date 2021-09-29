@@ -3,6 +3,7 @@
 #include "minorGems/game/game.h"
 #include "minorGems/game/Font.h"
 #include "minorGems/game/drawUtils.h"
+#include "minorGems/io/file/File.h"
 
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/util/SettingsManager.h"

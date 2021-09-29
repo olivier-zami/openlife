@@ -15,6 +15,7 @@
 // let SDL override our main function with SDLMain
 #include <SDL/SDL_main.h>
 
+#include "minorGems/graphics/converters/PNGImageConverter.h"
 
 // must do this before SDL include to prevent WinMain linker errors on win32
 int mainFunction( int inArgCount, char **inArgs );

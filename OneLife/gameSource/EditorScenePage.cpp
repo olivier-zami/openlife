@@ -22,6 +22,7 @@ static GroundPickable groundPickable;
 
 
 #include "ObjectPickable.h"
+#include "minorGems/io/file/File.h"
 
 static ObjectPickable objectPickable;
 
