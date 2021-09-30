@@ -45,6 +45,7 @@ int DB_open_timeShrunk(
 {
 	File dbFile( NULL, path );
 
+	//!create file.db if not exists
 	if( ! dbFile.exists() || lookTimeDBEmpty || skipLookTimeCleanup )
 	{
 
@@ -70,7 +71,6 @@ int DB_open_timeShrunk(
 
 			// key and value size that are big enough to handle all of our DB
 			unsigned char key[16];
-
 			unsigned char value[12];
 
 			while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 ) {
@@ -85,19 +85,19 @@ int DB_open_timeShrunk(
 		return error;
 	}
 
+	//!check if file.db.temp exists and delete if any
 	char *dbTempName = autoSprintf( "%s.temp", path );
 	File dbTempFile( NULL, dbTempName );
+	if( dbTempFile.exists() )dbTempFile.remove();
 
-	if( dbTempFile.exists() ) {
-		dbTempFile.remove();
-	}
-
-	if( dbTempFile.exists() ) {
+	//!fail to delete return db
+	if( dbTempFile.exists() )
+	{
 		AppLog::errorF( "Failed to remove temp DB file %s", dbTempName );
 
 		delete [] dbTempName;
 
-		return LINEARDB3_open( db,
+		return LINEARDB3_open( db,//!return !
 							   path,
 							   mode,
 							   hash_table_size,
@@ -105,40 +105,36 @@ int DB_open_timeShrunk(
 							   value_size );
 	}
 
+	//!open ancient db
+	printf("\n=====>Try to open %s", path);
 	LINEARDB3 oldDB;
-
 	int error = LINEARDB3_open( &oldDB,
 								path,
 								mode,
 								hash_table_size,
 								key_size,
 								value_size );
-	if( error ) {
-		AppLog::errorF( "Failed to open DB file %s in DB_open_timeShrunk",
-						path );
+	if(error)
+	{
+		AppLog::errorF( "Failed to open DB file %s in DB_open_timeShrunk", path );
 		delete [] dbTempName;
-
 		return error;
 	}
 
-
-
-
-
-
 	LINEARDB3_Iterator dbi;
-
-
 	LINEARDB3_Iterator_init( &oldDB, &dbi );
+
+	printf("\n=====>old db %s opened ... oldDb->fingerprint = %i", path, db->fingerprintMod);
 
 	// key and value size that are big enough to handle all of our DB
 	unsigned char key[16];
-
 	unsigned char value[12];
 
 	int total = 0;
 	int stale = 0;
 	int nonStale = 0;
+
+
 
 	// first, just count
 	while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 ) {
@@ -147,7 +143,8 @@ int DB_open_timeShrunk(
 		int x = valueToInt( key );
 		int y = valueToInt( &( key[4] ) );
 
-		if( dbLookTimeGet( x, y ) > 0 ) {
+		if( dbLookTimeGet( x, y ) > 0 )
+		{
 			// keep
 			nonStale++;
 		}
@@ -237,7 +234,7 @@ int LINEARDB3_open(
 		unsigned int inHashTableStartSize,
 		unsigned int inKeySize,
 		unsigned int inValueSize )
-		{
+{
 	inDB->recordBuffer = NULL;
 	inDB->maxOverflowDepth = 0;
 	inDB->numRecords = 0;
@@ -252,9 +249,9 @@ int LINEARDB3_open(
 		return 1;
 	}
 
-	if( inHashTableStartSize < 2 ) {
-		inHashTableStartSize = 2;
-	}
+	//!
+	printf("\ninHashTableStartSize : %i", inHashTableStartSize);
+	if( inHashTableStartSize < 2 ) inHashTableStartSize = 2;
 
 	inDB->hashTableSizeA = inHashTableStartSize;
 	inDB->hashTableSizeB = inHashTableStartSize;
@@ -264,9 +261,8 @@ int LINEARDB3_open(
 
 	// first byte in record is present flag
 	inDB->recordSizeBytes = getRecordSizeBytes( inKeySize, inValueSize );
-
 	inDB->recordBuffer = new uint8_t[ inDB->recordSizeBytes ];
-
+	printf("\nrecordSizeBytes : %i", inDB->recordSizeBytes);
 
 	recomputeFingerprintMod( inDB );
 
@@ -277,65 +273,45 @@ int LINEARDB3_open(
 	// does the file already contain a header
 
 	// seek to the end to find out file size
+	if( fseeko( inDB->file, 0, SEEK_END ) ) return 1;//file empty
 
-	if( fseeko( inDB->file, 0, SEEK_END ) ) {
-		return 1;
-	}
-
-
-
-	if( ftello( inDB->file ) < LINEARDB3_HEADER_SIZE ) {
+	//!check file header
+	printf("\n(header)%i/(file)%li", LINEARDB3_HEADER_SIZE, ftello(inDB->file));
+	if( ftello( inDB->file ) < LINEARDB3_HEADER_SIZE )
+	{
 		// file that doesn't even contain the header
-
-
 		// write fresh header and hash table
-
 		// rewrite header
-
-		if( writeHeader( inDB ) != 0 ) {
-			return 1;
-		}
+		if( writeHeader( inDB ) != 0 ) return 1;
 
 		inDB->lastOp = opWrite;
 
 		initPageManager( inDB->hashTable, inDB->hashTableSizeA );
 		initPageManager( inDB->overflowBuckets, 2 );
 	}
-	else {
+	else
+	{
 		// read header
-		if( fseeko( inDB->file, 0, SEEK_SET ) ) {
-			return 1;
-		}
-
+		if( fseeko( inDB->file, 0, SEEK_SET ) ) return 1;
 
 		int numRead;
-
 		char magicBuffer[ 4 ];
-
 		numRead = fread( magicBuffer, 3, 1, inDB->file );
-
-		if( numRead != 1 ) {
-			return 1;
-		}
-
+		if( numRead != 1 ) return 1;
 		magicBuffer[3] = '\0';
 
-		if( strcmp( magicBuffer, magicString ) != 0 ) {
-			printf( "lineardb3 magic string '%s' not found at start of  "
-					"file header in %s\n", magicString, inPath );
+		printf("\nCompare magicString(%s) and magicBuffer(%s)", magicString, magicBuffer);
+		if( strcmp( magicBuffer, magicString ) != 0 )
+		{
+			printf( "lineardb3 magic string '%s' not found at start of ""file header in %s\n", magicString, inPath );
 			return 1;
 		}
-
 
 		uint32_t val32;
-
-		numRead = fread( &val32, sizeof(uint32_t), 1, inDB->file );
-
-		if( numRead != 1 ) {
-			return 1;
-		}
-
-		if( val32 != inKeySize ) {
+		numRead = fread( &val32, sizeof(uint32_t), 1, inDB->file );//read a a uint32_t
+		if( numRead != 1 ) return 1;
+		if( val32 != inKeySize )
+		{
 			printf( "Requested lineardb3 key size of %u does not match "
 					"size of %u in file header in %s\n", inKeySize, val32,
 					inPath );
@@ -343,12 +319,11 @@ int LINEARDB3_open(
 		}
 
 
-
-		numRead = fread( &val32, sizeof(uint32_t), 1, inDB->file );
-
+		numRead = fread( &val32, sizeof(uint32_t), 1, inDB->file );//read next uint_32
 		if( numRead != 1 ) {
 			return 1;
 		}
+
 
 		if( val32 != inValueSize ) {
 			printf( "Requested lineardb3 value size of %u does not match "
@@ -356,7 +331,6 @@ int LINEARDB3_open(
 					inPath );
 			return 1;
 		}
-
 
 		// got here, header matches
 
@@ -367,16 +341,13 @@ int LINEARDB3_open(
 		}
 
 		uint64_t fileSize = ftello( inDB->file );
+		uint64_t numRecordsInFile = ( fileSize - LINEARDB3_HEADER_SIZE ) / inDB->recordSizeBytes;
+		uint64_t expectedSize = inDB->recordSizeBytes * numRecordsInFile + LINEARDB3_HEADER_SIZE;
+		printf("\n=====> numRecords(%li) size(%li)/expectedSize(%li)", numRecordsInFile, fileSize, expectedSize);
 
 
-		uint64_t numRecordsInFile =
-				( fileSize - LINEARDB3_HEADER_SIZE ) / inDB->recordSizeBytes;
-
-		uint64_t expectedSize =
-				inDB->recordSizeBytes * numRecordsInFile + LINEARDB3_HEADER_SIZE;
-
-
-		if( expectedSize != fileSize ) {
+		if( expectedSize != fileSize )
+		{
 
 			printf( "Requested lineardb3 file %s does not contain a "
 					"whole number of %d-byte records.  "
@@ -456,31 +427,20 @@ int LINEARDB3_open(
 			}
 		}
 
-
 		// now populate hash table
-
-		uint32_t minTableBuckets =
-				LINEARDB3_getPerfectTableSize( inDB->maxLoad,
-											   numRecordsInFile );
-
-
+		uint32_t minTableBuckets = LINEARDB3_getPerfectTableSize( inDB->maxLoad, numRecordsInFile );
 		inDB->hashTableSizeA = minTableBuckets;
 		inDB->hashTableSizeB = minTableBuckets;
-
-
 		recomputeFingerprintMod( inDB );
-
 		initPageManager( inDB->hashTable, inDB->hashTableSizeA );
 		initPageManager( inDB->overflowBuckets, 2 );
 
+		if( fseeko( inDB->file, LINEARDB3_HEADER_SIZE, SEEK_SET ) ) return 1;
 
-		if( fseeko( inDB->file, LINEARDB3_HEADER_SIZE, SEEK_SET ) ) {
-			return 1;
-		}
-
-		for( uint64_t i=0; i<numRecordsInFile; i++ ) {
-			int numRead = fread( inDB->recordBuffer,
-								 inDB->recordSizeBytes, 1, inDB->file );
+		printf("\n=====>Starting read file content ...");
+		for( uint64_t i=0; i<numRecordsInFile; i++ )
+		{
+			int numRead = fread( inDB->recordBuffer, inDB->recordSizeBytes, 1, inDB->file );
 
 			if( numRead != 1 ) {
 				printf( "Failed to read record from lineardb3 file\n" );
@@ -490,58 +450,77 @@ int LINEARDB3_open(
 			// put only in RAM part of table
 			// note that this assumes that each key in the file is unique
 			// (it should be, because we generated the file on a previous run)
-			int result =
-					LINEARDB3_getOrPut( inDB,
-										&( inDB->recordBuffer[0] ),
-										&( inDB->recordBuffer[inDB->keySize] ),
-										true,
+			int result = LINEARDB3_getOrPut( inDB,
+										&( inDB->recordBuffer[0] ),//key
+										&( inDB->recordBuffer[inDB->keySize] ),//value
+										true,//input?
 										// ignore data file
 										// update ram only
 										// don't even verify keys in data file
 										// this preserves our fread position
-										true );
-			if( result != 0 ) {
+										true );//ignore?
+
+			if(!valueToInt(inDB->recordBuffer) && !valueToInt(&(inDB->recordBuffer[sizeof(int)])))
+			{
+				printf("\n===>Record(%li) : (%i, %i) = %i",
+					   i,
+					   valueToInt(inDB->recordBuffer),
+					   valueToInt(&(inDB->recordBuffer[sizeof(int)])),
+					   valueToInt(&(inDB->recordBuffer[inDB->keySize])));
+			}
+
+			if( result != 0 )
+			{
 				printf( "Putting lineardb3 record in RAM hash table failed\n" );
 				return 1;
 			}
 		}
-
 		inDB->lastOp = opRead;
 	}
 
 	return 0;
-		}
+}
 
-
-
-
-
-
-		int LINEARDB3_get( LINEARDB3 *inDB, const void *inKey, void *outValue ) {
+/**
+ *
+ * @param inDB
+ * @param inKey
+ * @param outValue
+ * @return
+ */
+int LINEARDB3_get( LINEARDB3 *inDB, const void *inKey, void *outValue )
+{
 	return LINEARDB3_getOrPut( inDB, inKey, outValue, false, false );
 }
 
-int LINEARDB3_getOrPut( LINEARDB3 *inDB, const void *inKey, void *inOutValue,
-						char inPut, char inIgnoreDataFile ) {
-
+/**
+ *
+ * @param inDB
+ * @param inKey
+ * @param inOutValue
+ * @param inPut
+ * @param inIgnoreDataFile
+ * @return
+ */
+int LINEARDB3_getOrPut(
+		LINEARDB3 *inDB,
+		const void *inKey,
+		void *inOutValue,
+		char inPut,
+		char inIgnoreDataFile)
+{
 	uint32_t fingerprint;
-
 	uint64_t binNumber = getBinNumber( inDB, inKey, &fingerprint );
-
-
 	unsigned int overflowDepth = 0;
-
 	LINEARDB3_FingerprintBucket *thisBucket = getBucket( inDB->hashTable, binNumber );
-
-
 	char skipToOverflow = false;
 
-	if( inPut && inIgnoreDataFile ) {
-		skipToOverflow = true;
-	}
+	if( inPut && inIgnoreDataFile ) skipToOverflow = true;
 
 	if( !skipToOverflow || thisBucket->overflowIndex == 0 )
-		for( int i=0; i<RECORDS_PER_BUCKET; i++ ) {
+	{
+		for( int i=0; i<RECORDS_PER_BUCKET; i++ )
+		{
 
 			int result = LINEARDB3_considerFingerprintBucket(
 					inDB, inKey, inOutValue,
@@ -555,7 +534,7 @@ int LINEARDB3_getOrPut( LINEARDB3 *inDB, const void *inKey, void *inOutValue,
 			}
 			// 2 means record didn't match, keep going
 		}
-
+	}
 
 	uint32_t thisBucketIndex = 0;
 
@@ -726,6 +705,7 @@ uint64_t getBinNumber( LINEARDB3 *inDB, const void *inKey,
 
 	uint64_t hashVal = LINEARDB3_hash( inKey, inDB->keySize );
 
+	printf("\n==============> %li%%%i\n", hashVal, inDB->fingerprintMod);
 	*outFingerprint = hashVal % inDB->fingerprintMod;
 
 
@@ -1399,6 +1379,7 @@ int getRecordSizeBytes( int inKeySize, int inValueSize ) {
 
 
 void recomputeFingerprintMod( LINEARDB3 *inDB ) {
+	printf("\n====> recomputeFingerprintMod : %i => %i", inDB->fingerprintMod, inDB->hashTableSizeA);
 	inDB->fingerprintMod = inDB->hashTableSizeA;
 
 	while( true ) {
@@ -1411,6 +1392,7 @@ void recomputeFingerprintMod( LINEARDB3 *inDB ) {
 		}
 		else {
 			inDB->fingerprintMod = newMod;
+			printf("\n====> recomputeFingerprintMod : %i => %i", inDB->fingerprintMod, newMod);
 		}
 	}
 }

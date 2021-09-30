@@ -26,6 +26,8 @@ extern char skipLookTimeCleanup;
 // if lookTimeDBEmpty, then we init all map cell look times to NOW
 extern int cellsLookedAtToInit ;
 
+LINEARDB3 lookTimeDB;
+char lookTimeDBOpen  = false;
 const double openLife::system::object::store::device::random::LinearDB::MAX_LOAD_FOR_OPEN_CALLS = 0.5;
 
 /**
@@ -354,17 +356,57 @@ DB_open_timeShrunk( &biomeDB,
  */
 void openLife::system::object::store::device::random::LinearDB::recomputeFingerprintMod()
 {
+	printf("\n====> recomputeFingerprintMod : %i => %i", this->fingerprintMod, this->hashTableSizeA);
 	this->fingerprintMod = this->hashTableSizeA;
 
 	while( true )
 	{
 		uint32_t newMod = this->fingerprintMod * 2;
-		if( newMod <= this->fingerprintMod ) {
+		if( newMod <= this->fingerprintMod )
+		{
 			// reached 32-bit limit
 			return;
 		}
-		else {
+		else
+		{
+			printf("\n====> recomputeFingerprintMod : %i => %i", this->fingerprintMod, newMod);
 			this->fingerprintMod = newMod;
 		}
+	}
+}
+
+/**********************************************************************************************************************/
+
+void dbLookTimePut( int inX, int inY, timeSec_t inTime )
+{
+	if( !lookTimeDBOpen ) return;
+
+	unsigned char key[8];
+	unsigned char value[8];
+
+
+	intPairToKey( inX/100, inY/100, key );
+	timeToValue( inTime, value );
+
+
+	LINEARDB3_put( &lookTimeDB, key, value );
+}
+
+// returns 0 if not found
+timeSec_t dbLookTimeGet( int inX, int inY )
+{
+	unsigned char key[8];
+	unsigned char value[8];
+
+	intPairToKey( inX/100, inY/100, key );
+
+	int result = LINEARDB3_get( &lookTimeDB, key, value );//DB_get
+
+	if( result == 0 ) {
+		// found
+		return valueToTime( value );
+	}
+	else {
+		return 0;
 	}
 }

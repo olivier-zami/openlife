@@ -101,6 +101,11 @@ namespace openLife::system::object::store::device::random
 	};
 }
 
+/**********************************************************************************************************************/
+
+void dbLookTimePut( int inX, int inY, timeSec_t inTime );
+timeSec_t dbLookTimeGet( int inX, int inY );
+
 #if !defined(OPENLIFE_UNIT_TEST)
 	#include "draft.h"
 #endif

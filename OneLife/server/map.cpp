@@ -221,8 +221,8 @@ static SimpleVector<MapGridPlacement> gridPlacements;
 static SimpleVector<int> allNaturalMapIDs;
 static float *totalChanceWeight;
 // tracking when a given map cell was last seen
-static DB lookTimeDB;
-static char lookTimeDBOpen = false;
+extern LINEARDB3 lookTimeDB;
+extern char lookTimeDBOpen;
 static DB db;
 static char dbOpen = false;
 static DB timeDB;
@@ -3778,24 +3778,6 @@ static timeSec_t dbFloorTimeGet( int inX, int inY ) {
         }
     }
 
-// returns 0 if not found
-timeSec_t dbLookTimeGet( int inX, int inY ) {
-    unsigned char key[8];
-    unsigned char value[8];
-
-    intPairToKey( inX/100, inY/100, key );
-    
-    int result = DB_get( &lookTimeDB, key, value );
-    
-    if( result == 0 ) {
-        // found
-        return valueToTime( value );
-        }
-    else {
-        return 0;
-        }
-    }
-
 void dbPut( int inX, int inY, int inSlot, int inValue,
                    int inSubCont ) {
     
@@ -3946,19 +3928,7 @@ static void dbFloorTimePut( int inX, int inY, timeSec_t inTime ) {
     }
 
 
-void dbLookTimePut( int inX, int inY, timeSec_t inTime ) {
-    if( !lookTimeDBOpen ) return;
-    
-    unsigned char key[8];
-    unsigned char value[8];
-    
 
-    intPairToKey( inX/100, inY/100, key );
-    timeToValue( inTime, value );
-            
-    
-    DB_put( &lookTimeDB, key, value );
-    }
 
 
 // certain types of movement transitions should always be live
@@ -5443,6 +5413,7 @@ int getMapObject( int inX, int inY ) {
         }
 
     // apply any decay that should have happened by now
+	//printf("\n=====>log before move object 1");
     return checkDecayObject( inX, inY, getMapObjectRaw( inX, inY ) );
     }
 
@@ -5455,6 +5426,7 @@ int getMapObject( int inX, int inY ) {
 int getMapObjectNoLook( int inX, int inY ) {
 
     // apply any decay that should have happened by now
+	//printf("\n=====>log before move object 2");
     return checkDecayObject( inX, inY, getMapObjectRaw( inX, inY ) );
     }
 
@@ -7152,6 +7124,7 @@ void stepMap( SimpleVector<MapChangeRecord> *inMapChanges,
 
             // this call will append changes to our global lists, which
             // we process below
+			printf("\n=====>log before move object 3 idObject:%i position(%i,%i)", oldID, r.x, r.y);
             checkDecayObject( r.x, r.y, oldID );
             }
         else {

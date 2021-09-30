@@ -378,10 +378,6 @@ int getSpecialBiomeBandYCenterForRace( int inRace );
 
 int getBiomeIndex( int inBiome );
 
-void dbLookTimePut( int inX, int inY, timeSec_t inTime );
-
-timeSec_t dbLookTimeGet( int inX, int inY );
-
 void checkDecayContained( int inX, int inY, int inSubCont = 0 );
 
 void deleteFileByName( const char *inFileName );
