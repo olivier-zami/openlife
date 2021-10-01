@@ -3,7 +3,7 @@
 #include "minorGems/util/SimpleVector.h"
 #include "minorGems/util/SettingsManager.h"
 #include "minorGems/io/file/File.h"
-#include "minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
 
 #include "../gameSource/objectBank.h"
 

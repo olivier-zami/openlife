@@ -153,7 +153,7 @@
 
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/util/SettingsManager.h"
-#include "minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
 #include "minorGems/io/file/File.h"
 
 #include "minorGems/system/Time.h"

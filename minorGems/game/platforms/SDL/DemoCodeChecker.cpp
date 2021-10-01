@@ -3,7 +3,7 @@
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/util/TranslationManager.h"
 #include "minorGems/crypto/hashes/sha1.h"
-#include "minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
 
 
 

@@ -65,8 +65,8 @@ int main( int inArgCount, char **inArgs )
 #include "minorGems/util/SimpleVector.h"
 
 
-#include "minorGems/util/log/AppLog.h"
-#include "minorGems/util/log/FileLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/FileLog.h"
 
 #include "minorGems/graphics/converters/TGAImageConverter.h"
 

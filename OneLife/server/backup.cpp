@@ -7,7 +7,7 @@
 #include "minorGems/io/file/Directory.h"
 #include "minorGems/system/Time.h"
 
-#include "minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
 
 
 static timeSec_t lastBackupTime = 0;

@@ -42,7 +42,7 @@
 
 #include "minorGems/system/Thread.h"
 
-#include "minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
 
 #include "minorGems/crypto/hashes/sha1.h"
 

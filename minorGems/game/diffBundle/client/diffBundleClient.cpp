@@ -6,7 +6,7 @@
 #include "minorGems/formats/encodingUtils.h"
 #include "minorGems/crypto/hashes/sha1.h"
 
-#include "minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
 #include "minorGems/util/SimpleVector.h"
 
 

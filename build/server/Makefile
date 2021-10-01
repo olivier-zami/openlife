@@ -116,6 +116,8 @@ LINK_HEADLESS = no
 SOCKET_UDP_PLATFORM_PATH = unix
 SOCKET_UDP_PLATFORM = Unix
 
+THIRD_PARTY_SRC_PATH = src/third_party/jason_rohrer
+THIRD_PARTY_OBJ_PATH = objects/third_party/jason_rohrer
 
 
 COMPILE_FLAGS = -Wall -Wwrite-strings -Wchar-subscripts -Wparentheses ${DEBUG_FLAG} ${PLATFORM_COMPILE_FLAGS} ${PROFILE_FLAG} ${OPTIMIZE_FLAG} -I${ROOT_PATH}
@@ -321,23 +323,23 @@ BINARY_SEMAPHORE_O = ${PLATFORM_BINARY_SEMAPHORE}.o
 
 SEMAPHORE_H = ${ROOT_PATH}/minorGems/system/Semaphore.h
 
-APP_LOG_H = ${ROOT_PATH}/minorGems/util/log/AppLog.h
-APP_LOG_CPP = ${ROOT_PATH}/minorGems/util/log/AppLog.cpp
-APP_LOG_O = ${ROOT_PATH}/minorGems/util/log/AppLog.o
+APP_LOG_H = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/AppLog.h
+APP_LOG_CPP = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/AppLog.cpp
+APP_LOG_O = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/AppLog.o
 
-PRINT_LOG_H = ${ROOT_PATH}/minorGems/util/log/PrintLog.h
-PRINT_LOG_CPP = ${ROOT_PATH}/minorGems/util/log/PrintLog.cpp
-PRINT_LOG_O = ${ROOT_PATH}/minorGems/util/log/PrintLog.o
-
-
-FILE_LOG_H = ${ROOT_PATH}/minorGems/util/log/FileLog.h
-FILE_LOG_CPP = ${ROOT_PATH}/minorGems/util/log/FileLog.cpp
-FILE_LOG_O = ${ROOT_PATH}/minorGems/util/log/FileLog.o
+PRINT_LOG_H = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/PrintLog.h
+PRINT_LOG_CPP = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/PrintLog.cpp
+PRINT_LOG_O = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/PrintLog.o
 
 
-LOG_H = ${ROOT_PATH}/minorGems/util/log/Log.h
-LOG_CPP = ${ROOT_PATH}/minorGems/util/log/Log.cpp
-LOG_O = ${ROOT_PATH}/minorGems/util/log/Log.o
+FILE_LOG_H = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/FileLog.h
+FILE_LOG_CPP = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/FileLog.cpp
+FILE_LOG_O = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/FileLog.o
+
+
+LOG_H = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/Log.h
+LOG_CPP = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/Log.cpp
+LOG_O = ${THIRD_PARTY_SRC_PATH}/minorGems/util/log/Log.o
 
 
 PRINT_UTILS_H = ${ROOT_PATH}/minorGems/util/printUtils.h

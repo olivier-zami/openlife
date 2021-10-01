@@ -3,7 +3,7 @@
 #include "kissdb.h"
 #include "dbCommon.h"
 
-#include "minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
 #include "minorGems/util/SettingsManager.h"
 #include "minorGems/util/SimpleVector.h"
 

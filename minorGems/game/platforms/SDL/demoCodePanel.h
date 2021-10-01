@@ -22,7 +22,7 @@ void freeDemoCodePanel();
 #include "minorGems/graphics/openGL/gui/LabelGL.h"
 #include "minorGems/graphics/Color.h"
 #include "minorGems/util/SimpleVector.h"
-#include "minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
 
 #include "minorGems/game/game.h"
 

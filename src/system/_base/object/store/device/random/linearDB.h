@@ -24,7 +24,7 @@
 
 #include "src/common/type/database/lineardb3.h"
 #include "minorGems/io/file/File.h"
-#include "minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
 //#include "src/common/process/hash.h"
 
 uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed );

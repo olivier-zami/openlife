@@ -4,8 +4,8 @@
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/network/web/WebClient.h"
 #include "minorGems/formats/encodingUtils.h"
-#include "minorGems/util/log/AppLog.h"
-#include "minorGems/util/log/FileLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/FileLog.h"
 #include "minorGems/system/Thread.h"
 #include "minorGems/system/Time.h"
 

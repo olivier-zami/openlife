@@ -42,6 +42,10 @@ ${DIR_APP_SERVER}/../../src/system/_base/object/store/memory/random/biome.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/process/scalar.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/process/hash/murmurhash.cpp \
 ${DIR_APP_SERVER}/../../src/system/_extension/nlohmann.cpp \
+${DIR_APP_SERVER}/../../src/third_party/jason_rohrer/minorGems/util/log/AppLog.cpp \
+${DIR_APP_SERVER}/../../src/third_party/jason_rohrer/minorGems/util/log/FileLog.cpp \
+${DIR_APP_SERVER}/../../src/third_party/jason_rohrer/minorGems/util/log/Log.cpp \
+${DIR_APP_SERVER}/../../src/third_party/jason_rohrer/minorGems/util/log/PrintLog.cpp \
 ${DIR_APP_SERVER}/../../src/common/object/entity/mapZone.cpp \
 ${DIR_APP_SERVER}/../../src/common/process/hash/murmurhash2_64.cpp \
 ${DIR_APP_SERVER}/../../src/common/system.cpp \
@@ -119,10 +123,6 @@ NEEDED_MINOR_GEMS_OBJECTS = \
  ${SHA1_O} \
  ${ENCODING_UTILS_O} \
  ${DIRECTORY_O} \
- ${LOG_O} \
- ${APP_LOG_O} \
- ${FILE_LOG_O} \
- ${PRINT_LOG_O} \
  ${PRINT_UTILS_O} \
  ${DOUBLE_PAIR_O} \
  ${STRING_TREE_O} \

@@ -42,7 +42,7 @@
 
 #include "WebClient.h"
 
-#include "minorGems/util/log/AppLog.h"
+#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/util/SimpleVector.h"
 
