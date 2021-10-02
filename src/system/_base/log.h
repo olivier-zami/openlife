@@ -13,6 +13,7 @@ namespace openLife::system
 	{
 		public:
 			static void notice(const char* message, ...);
+			static void trace(const char* message, ...);
 	};
 
 }

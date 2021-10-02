@@ -33,6 +33,7 @@ ${DIR_APP_SERVER}/../../src/server/process/newBiome_v1.cpp \
 ${DIR_APP_SERVER}/../../src/server/process/message/getMapChunk.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/object/abstract/service.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/file.cpp \
+${DIR_APP_SERVER}/../../src/system/_base/log.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/object/entity/exception.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/object/process/handler/image.cpp \
 ${DIR_APP_SERVER}/../../src/system/_base/object/store/device/random/linearDB.cpp \
