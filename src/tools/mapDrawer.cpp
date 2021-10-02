@@ -68,7 +68,7 @@ int main()
 	{
 		for(int x=minMapLimit.x; x<maxMapLimit.x; x++)
 		{
-			//openLife::system::type::record::Biome pickedBiome = {x, y, 2, 0, 0};
+			//openLife::system::type::entity::Biome pickedBiome = {x, y, 2, 0, 0};
 
 			if(x>=topLeftCorner.x&&x<(topLeftCorner.x+128)&&y>=topLeftCorner.y&&y<topLeftCorner.y+128)
 			{
@@ -86,7 +86,7 @@ int main()
 			* /
 
 			/ *
-			openLife::system::type::record::Biome pickedBiome = openLife::server::process::newBiome_v1(
+			openLife::system::type::entity::Biome pickedBiome = openLife::server::process::newBiome_v1(
 				x, y,
 				randSeed,
 				allowSecondPlaceBiomes,
@@ -116,14 +116,14 @@ int main()
 	imageHandler->create(mapSize.x, mapSize.y);
 
 	//!MapGenerator Setting
-	openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::record::Biome>* cache;
-	cache = new openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::record::Biome>();
+	openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::entity::Biome>* cache;
+	cache = new openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::entity::Biome>();
 	std::string sketchFilename("/home/olivier/Projets/OpenLife/data/images/maps/mini_map.bmp");
 
 
 
 	//!Image painting
-	openLife::system::type::record::Biome pickedBiome;
+	openLife::system::type::entity::Biome pickedBiome;
 	for(unsigned int y=0; y<mapSize.y; y++)
 	{
 		for(unsigned int x=0; x<mapSize.x; x++)

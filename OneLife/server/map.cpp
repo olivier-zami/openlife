@@ -1550,7 +1550,7 @@ char initMap()
 void biomeDBPut( int inX, int inY, int inValue, int inSecondPlace,
 						double inSecondPlaceGap )
 						{
-	openLife::system::type::record::Biome biomeRecord;
+	openLife::system::type::entity::Biome biomeRecord;
 	biomeRecord.value = inValue;
 	biomeRecord.secondPlace = inSecondPlace;
 	biomeRecord.secondPlaceGap = inSecondPlaceGap;
@@ -1891,7 +1891,7 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
             int secondPlace; //TODO: uncomment if needed
             double secondPlaceGap; //TODO: uncomment if needed
 
-            openLife::system::type::record::Biome biomeRecord;
+            openLife::system::type::entity::Biome biomeRecord;
             biomeRecord = server->getWorldMap()->select(inX, inY)->getBiomeRecord();
             int pickedBiome = biomeRecord.value;
             secondPlace = biomeRecord.secondPlace;
@@ -1942,7 +1942,7 @@ static int getBaseMap( int inX, int inY, char *outGridPlacement = NULL ) {
         int secondPlace;
         double secondPlaceGap;
 
-        openLife::system::type::record::Biome biomeRecord;
+        openLife::system::type::entity::Biome biomeRecord;
         biomeRecord = server->getWorldMap()->select(inX, inY)->getBiomeRecord();
         int pickedBiome = biomeRecord.value;
         secondPlace = biomeRecord.secondPlace;
@@ -2943,7 +2943,7 @@ char loadIntoMapFromFile( FILE *inFile,
 
 
         // set all test map directly in database
-        openLife::system::type::record::Biome biomeRecord;
+        openLife::system::type::entity::Biome biomeRecord;
         biomeRecord.value = r.biome;
         biomeRecord.secondPlace = r.biome;
         biomeRecord.secondPlaceGap = 0.5;
@@ -5201,7 +5201,7 @@ int getTweakedBaseMap( int inX, int inY ) {
             
             // naturally-occurring object that forces a biome
             // stick into floorDB
-            openLife::system::type::record::Biome biomeRecord;
+            openLife::system::type::entity::Biome biomeRecord;
             biomeRecord.value = o->forceBiome;
             biomeRecord.secondPlace = o->forceBiome;
             biomeRecord.secondPlaceGap = 0.5;

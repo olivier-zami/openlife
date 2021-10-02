@@ -6,7 +6,7 @@
 #define OPENLIFE_WORLD_V1_H
 
 #include "src/system/_base/type.h"
-#include "src/system/_base/type/record.h"
+#include "src/system/_base/type/entities.h"
 
 namespace openLife::server::procedure::mapGenerator
 {
@@ -19,7 +19,7 @@ namespace openLife::server::procedure::mapGenerator
 
 			~World_v1();
 
-			openLife::system::type::record::Biome getBiome(int x, int y);
+			openLife::system::type::entity::Biome getBiome(int x, int y);
 
 			openLife::system::type::Value2D_U32 getMapCenter();
 

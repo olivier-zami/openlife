@@ -174,7 +174,7 @@ int main()
 		nlohmann::json config = nlohmann::json::parse(someJson);
 		SimpleVector<int> *testBiomeOrderList = SettingsManager::getIntSettingMulti( "biomeOrder" );
 		biomes = testBiomeOrderList->getElementArray();
-		openLife::system::type::record::Biome testedBiome;
+		openLife::system::type::entity::Biome testedBiome;
 		testedBiome = worldMap->select(0, 0)->getBiomeRecord();
 		std::cout << "\n################### Test ####### => Biome ("<<testedBiome.x<<", "<<testedBiome.y<<")" << " value = " << testedBiome.value;
 		std::cout << "\n################### Test ####### => BiomeLine [";

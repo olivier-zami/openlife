@@ -12,7 +12,7 @@
 #include <array>
 #include "src/server/type/settings.h"
 #include "src/server/type/entities.h"
-#include "src/system/_base/type/record.h"
+#include "src/system/_base/type/entities.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
 #include "src/system/_base/object/store/memory/extendedVector2D.h"
@@ -50,11 +50,11 @@ class WorldMap
 			//!data management methods
 			WorldMap* select(int posX, int posY);
 			WorldMap* create();
-			void insert(openLife::system::type::record::Biome biome);
+			void insert(openLife::system::type::entity::Biome biome);
 			void insert(common::object::entity::MapZone* mapZone);
-			openLife::system::type::record::Biome getNewBiome();
+			openLife::system::type::entity::Biome getNewBiome();
 			int getBiome();
-			openLife::system::type::record::Biome getBiomeRecord(char forceValue = true);
+			openLife::system::type::entity::Biome getBiomeRecord(char forceValue = true);
 
 			//!data information methods
 			std::vector<int> getBiomes();//TODO should return array of biome struct
@@ -91,7 +91,7 @@ class WorldMap
 			std::vector<int> biome;
 			std::vector<int> mappedBiomeValue;
 
-			openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::record::Biome>* dbBiomeCache;
+			openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::entity::Biome>* dbBiomeCache;
 			openLife::system::object::store::memory::random::Biome* dbCacheBiome;
 			openLife::system::object::store::device::random::LinearDB* dbBiome;
 

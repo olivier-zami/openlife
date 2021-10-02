@@ -8,7 +8,7 @@
 #include <iostream>
 #include "src/system/_base/process/scalar.h"
 
-openLife::system::type::record::Biome openLife::server::process::newBiome_v1(
+openLife::system::type::entity::Biome openLife::server::process::newBiome_v1(
 		int x, int y,
 		openLife::system::type::Value2D_U32 randSeed,
 		char allowSecondPlaceBiomes,
@@ -21,7 +21,7 @@ openLife::system::type::record::Biome openLife::server::process::newBiome_v1(
 		std::vector<float> biomeWeights)
 {
 	//!legacy : int computeMapBiomeIndex(x, y);
-	openLife::system::type::record::Biome newBiome = {x, y, 0, -1, 0};
+	openLife::system::type::entity::Biome newBiome = {x, y, 0, -1, 0};
 
 	int numSpecialBiomes = specialBiomes.size();
 	int numBiomes = biomes.size();

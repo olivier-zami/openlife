@@ -7,11 +7,11 @@
 
 #include <vector>
 #include "src/system/_base/type.h"
-#include "src/system/_base/type/record.h"
+#include "src/system/_base/type/entities.h"
 
 namespace openLife::server::process
 {
-	::openLife::system::type::record::Biome newBiome_v1(
+	::openLife::system::type::entity::Biome newBiome_v1(
 		int x, int y,
 		openLife::system::type::Value2D_U32 randSeed,
 		char allowSecondPlaceBiomes,

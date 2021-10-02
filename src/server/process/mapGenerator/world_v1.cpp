@@ -14,9 +14,9 @@ openLife::server::procedure::mapGenerator::World_v1::World_v1(
 
 openLife::server::procedure::mapGenerator::World_v1::~World_v1() {}
 
-openLife::system::type::record::Biome openLife::server::procedure::mapGenerator::World_v1::getBiome(int x, int y)
+openLife::system::type::entity::Biome openLife::server::procedure::mapGenerator::World_v1::getBiome(int x, int y)
 {
-	openLife::system::type::record::Biome biome = {x, y, -1, 0, 0};
+	openLife::system::type::entity::Biome biome = {x, y, -1, 0, 0};
 	return biome;
 }
 

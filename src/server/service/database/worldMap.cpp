@@ -111,7 +111,7 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 	std::fill(this->mapTile.begin(), this->mapTile.end(), -1);
 
 	openLife::system::settings::LinearDB dbBiomeSettings;
-	this->dbBiomeCache = new openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::record::Biome>();
+	this->dbBiomeCache = new openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::entity::Biome>();
 	this->dbBiome = new openLife::system::object::store::device::random::LinearDB(dbBiomeSettings);
 
 	//!
@@ -365,9 +365,9 @@ openLife::server::service::database::WorldMap* openLife::server::service::databa
  * @return
  * @note topographic rings
  */
-openLife::system::type::record::Biome openLife::server::service::database::WorldMap::getNewBiome()
+openLife::system::type::entity::Biome openLife::server::service::database::WorldMap::getNewBiome()
 {
-	openLife::system::type::record::Biome newGround;
+	openLife::system::type::entity::Biome newGround;
 	switch(this->mapGenerator.type)
 	{
 		case 0:
@@ -413,7 +413,7 @@ int openLife::server::service::database::WorldMap::getInfoBiome(int biome)
 }
 
 
-void openLife::server::service::database::WorldMap::insert(openLife::system::type::record::Biome biome)
+void openLife::server::service::database::WorldMap::insert(openLife::system::type::entity::Biome biome)
 {
 	//!legacy biomeDBPut( int inX, int inY, int inValue, int inSecondPlace, double inSecondPlaceGap )
 	unsigned char key[8];
@@ -470,10 +470,10 @@ void openLife::server::service::database::WorldMap::insert(common::object::entit
  *
  * @return
  */
-openLife::system::type::record::Biome openLife::server::service::database::WorldMap::getBiomeRecord(char forceValue)
+openLife::system::type::entity::Biome openLife::server::service::database::WorldMap::getBiomeRecord(char forceValue)
 {
 	//!legacy int getMapBiomeIndex( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap)
-	openLife::system::type::record::Biome biomeRecord = {this->query.x, this->query.y, -1, -1, 0};
+	openLife::system::type::entity::Biome biomeRecord = {this->query.x, this->query.y, -1, -1, 0};
 
 	if( *(this->notEmptyDB) && this->query.x >= minBiomeXLoc && this->query.x <= maxBiomeXLoc && this->query.y >= minBiomeYLoc && this->query.y <= maxBiomeYLoc )
 	{

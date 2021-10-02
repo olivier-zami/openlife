@@ -6,11 +6,11 @@
 #include "newBiome_v0.h"
 #include "src/system/_base/object/process/handler/image.h"
 
-openLife::system::type::record::Biome openLife::server::process::newBiome_v0(
+openLife::system::type::entity::Biome openLife::server::process::newBiome_v0(
 		openLife::system::type::Value2D_32 position,
 		openLife::system::type::Value2D_32 localMapPosition,
 		std::string filename,
-		openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::record::Biome>* dbBiomeCache)
+		openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::entity::Biome>* dbBiomeCache)
 {
 	if(!dbBiomeCache->getTotalSize())
 	{
@@ -40,7 +40,7 @@ openLife::system::type::record::Biome openLife::server::process::newBiome_v0(
 		}
 	}
 
-	openLife::system::type::record::Biome biome;
+	openLife::system::type::entity::Biome biome;
 	openLife::system::type::Value2D_U32 mapSize = dbBiomeCache->getSize();
 	if((position.x>=localMapPosition.x&&position.x<localMapPosition.x+(int)mapSize.x)&&(position.y>=localMapPosition.y&&position.y<localMapPosition.y+(int)mapSize.y))
 	{
