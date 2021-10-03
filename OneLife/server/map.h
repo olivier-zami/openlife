@@ -239,21 +239,6 @@ void restretchMapContainedDecays( int inX, int inY,
 
 int getMapBiome( int inX, int inY );
 
-
-
-typedef struct {
-        unsigned int uniqueLoadID;
-        char *mapFileName;
-        char fileOpened;
-        FILE *file;
-        int x, y;
-        double startTime;
-        int stepCount;
-    } TutorialLoadProgress;
-
-    
-
-
 // returns true on success
 // example:
 // loadTutorial( newPlayer.tutorialLoad, "tutorialA.txt", 10000, 10000 )

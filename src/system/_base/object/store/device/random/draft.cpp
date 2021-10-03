@@ -705,7 +705,7 @@ uint64_t getBinNumber( LINEARDB3 *inDB, const void *inKey,
 
 	uint64_t hashVal = LINEARDB3_hash( inKey, inDB->keySize );
 
-	printf("\n==============> %li%%%i\n", hashVal, inDB->fingerprintMod);
+	//printf("\n==============> %li%%%i\n", hashVal, inDB->fingerprintMod);
 	*outFingerprint = hashVal % inDB->fingerprintMod;
 
 
@@ -1379,7 +1379,7 @@ int getRecordSizeBytes( int inKeySize, int inValueSize ) {
 
 
 void recomputeFingerprintMod( LINEARDB3 *inDB ) {
-	printf("\n====> recomputeFingerprintMod : %i => %i", inDB->fingerprintMod, inDB->hashTableSizeA);
+	//printf("\n====> recomputeFingerprintMod : %i => %i", inDB->fingerprintMod, inDB->hashTableSizeA);
 	inDB->fingerprintMod = inDB->hashTableSizeA;
 
 	while( true ) {
@@ -1392,7 +1392,7 @@ void recomputeFingerprintMod( LINEARDB3 *inDB ) {
 		}
 		else {
 			inDB->fingerprintMod = newMod;
-			printf("\n====> recomputeFingerprintMod : %i => %i", inDB->fingerprintMod, newMod);
+			//printf("\n====> recomputeFingerprintMod : %i => %i", inDB->fingerprintMod, newMod);
 		}
 	}
 }

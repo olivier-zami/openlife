@@ -356,7 +356,7 @@ DB_open_timeShrunk( &biomeDB,
  */
 void openLife::system::object::store::device::random::LinearDB::recomputeFingerprintMod()
 {
-	printf("\n====> recomputeFingerprintMod : %i => %i", this->fingerprintMod, this->hashTableSizeA);
+	//printf("\n====> recomputeFingerprintMod : %i => %i", this->fingerprintMod, this->hashTableSizeA);
 	this->fingerprintMod = this->hashTableSizeA;
 
 	while( true )
@@ -369,7 +369,7 @@ void openLife::system::object::store::device::random::LinearDB::recomputeFingerp
 		}
 		else
 		{
-			printf("\n====> recomputeFingerprintMod : %i => %i", this->fingerprintMod, newMod);
+			//printf("\n====> recomputeFingerprintMod : %i => %i", this->fingerprintMod, newMod);
 			this->fingerprintMod = newMod;
 		}
 	}

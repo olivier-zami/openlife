@@ -26,6 +26,7 @@ CUSTOM_LINUX_LINK_FLAGS =
 LAYER_SOURCE = \
 ${DIR_APP_SERVER}/server.cpp \
 ${DIR_APP_SERVER}/map.cpp \
+${DIR_APP_SERVER}/../../src/server/main.cpp \
 ${DIR_APP_SERVER}/../../minorGems/io/file/File.cpp \
 ${DIR_APP_SERVER}/../../src/server/service/database/worldMap.cpp \
 ${DIR_APP_SERVER}/../../src/server/process/mapGenerator/newBiome_v0.cpp \

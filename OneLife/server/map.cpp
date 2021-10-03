@@ -5536,7 +5536,7 @@ char isMapSpotBlocking( int inX, int inY ) {
     return false;
 }
 
-static char equal( GridPos inA, GridPos inB ) {
+char equal( GridPos inA, GridPos inB ) {//TODO: same function in pathFind.cpp and LivingPage.cpp
     if( inA.x == inB.x && inA.y == inB.y ) {
         return true;
         }

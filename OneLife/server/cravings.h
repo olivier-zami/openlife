@@ -1,4 +1,5 @@
-
+#ifndef LEGACY_CRAVING_H
+#define LEGACY_CRAVING_H
 
 typedef struct Craving {
         int foodID;
@@ -17,3 +18,5 @@ Craving getCravedFood( int inLineageEveID, int inPlayerGenerationNumber,
 // call periodically to free memory
 // deletes records that contain uniqueID < inLowestUniqueID
 void purgeStaleCravings( int inLowestUniqueID );
+
+#endif //LEGACY_CRAVING_H

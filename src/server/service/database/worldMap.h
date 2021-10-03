@@ -12,11 +12,11 @@
 #include <array>
 #include "src/server/type/settings.h"
 #include "src/server/type/entities.h"
-#include "src/system/_base/type/entities.h"
+#include "../../../../src/system/_base/type.h"
+#include "../../../../src/system/_base/type/entities.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
 #include "src/system/_base/object/store/memory/extendedVector2D.h"
-#include "src/system/_base/type.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/common/object/entity/mapZone.h"
 
@@ -33,7 +33,7 @@ namespace openLife::server::service::database::worldMap
 
 namespace openLife::server::service::database
 {
-class WorldMap
+	class WorldMap
 	{
 		public:
 			WorldMap(openLife::server::settings::WorldMap settings);
@@ -51,8 +51,9 @@ class WorldMap
 			WorldMap* select(int posX, int posY);
 			WorldMap* create();
 			void insert(openLife::system::type::entity::Biome biome);
-			void insert(common::object::entity::MapZone* mapZone);
-			openLife::system::type::entity::Biome getNewBiome();
+			void insert(common::object::entity::MapZone* mapZone);//TODO: mapZone = Record2D/Biome
+			openLife::system::type::entity::Biome getNewBiome();//TODO: create()->getBiome();
+			int get();
 			int getBiome();
 			openLife::system::type::entity::Biome getBiomeRecord(char forceValue = true);
 

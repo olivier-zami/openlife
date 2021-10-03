@@ -1,3 +1,6 @@
+#ifndef LEGACY_CURSE_H
+#define LEGACY_CURSE_H
+
 #include "minorGems/util/SimpleVector.h"
 #include "../gameSource/GridPos.h"
 
@@ -76,3 +79,5 @@ int getCurseReceiverLineageEveID( char *inReceiverName );
 // NOT destroyed by caller
 // NULL if not found
 char *getCurseReceiverEmail( char *inReceiverName );
+
+#endif //LEGACY_CURSE_H

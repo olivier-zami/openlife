@@ -9,6 +9,7 @@
 #include <cstdio>
 
 #include "src/server/main.h"
+#include "src/system/_base/log.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/process/scalar.h"
 #include "src/server/process/mapGenerator/newBiome_v0.h"
@@ -18,7 +19,7 @@
 #include "src/system/_base/object/process/handler/image.h"
 
 //!legacy
-#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
+//#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h" //TODO: use openLife::system::Log::trace(...);
 #include "minorGems/io/file/File.h"
 #include "src/system/_base/object/store/device/random/draft.h"
 #include "minorGems/util/stringUtils.h"
@@ -450,6 +451,7 @@ void openLife::server::service::database::WorldMap::insert(openLife::system::typ
  *
  * @param mapZone
  */
+
 void openLife::server::service::database::WorldMap::insert(common::object::entity::MapZone* mapZone)
 {
 	unsigned int i;
@@ -463,6 +465,11 @@ void openLife::server::service::database::WorldMap::insert(common::object::entit
 		if((targetCoord.y=y+this->query.y)>=this->height)continue;
 		this->mapTile[targetCoord.x+(this->width*targetCoord.y)] = mapZone->p(i);
 	}
+}
+
+int openLife::server::service::database::WorldMap::get()
+{
+	openLife::system::Log::trace("Read mapTile(%i,%i)", this->query.x, this->query.y);
 }
 
 
