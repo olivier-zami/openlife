@@ -294,8 +294,7 @@ openLife::Server::Server(
 		openLife::server::Settings serverSettings,
 		openLife::server::settings::WorldMap worldMapSettings,
 		LINEARDB3* biomeDB,
-		char* anyBiomesInDB,
-		openLife::system::object::store::memory::random::Biome* cachedBiome)
+		char* anyBiomesInDB)
 {
 	worldMapSettings.mapGenerator.type = serverSettings.mapGenerator.type;
 	worldMapSettings.mapGenerator.sketch.filename = serverSettings.mapGenerator.sketch.filename;
@@ -320,7 +319,6 @@ openLife::Server::Server(
 	//this->eveWindowOver = false;
 
 	this->worldMap = new openLife::server::service::database::WorldMap(worldMapSettings);
-	this->worldMap->legacy(biomeDB, anyBiomesInDB, cachedBiome);
 }
 
 openLife::Server::~Server() {}
@@ -17852,7 +17850,7 @@ void sendMessageToPlayer( LiveObject *inPlayer,
 
 					void quitCleanup()
 					{
-					AppLog::info( "Cleaning up on quit..." );
+					AppLog::info( "\nCleaning up on quit..." );
 
 					// FreshConnections are in two different lists
 					// free structures from both

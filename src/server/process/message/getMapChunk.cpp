@@ -27,7 +27,7 @@ unsigned char *getChunkMessage( int inStartX, int inStartY,
 								int *outMessageLength )
 {
 	int chunkCells = inWidth * inHeight;
-	printf("\n=====>Prepare message (%i cells)", chunkCells);
+	//printf("\n=====>Prepare message (%i cells)", chunkCells);
 
 	int *chunk = new int[chunkCells];
 
@@ -91,7 +91,7 @@ unsigned char *getChunkMessage( int inStartX, int inStartY,
 
 				//lastCheckedBiome = biomes[server->getWorldMap()->select( x, y )->getBiomeRecord().value];
 				lastCheckedBiome = server->getWorldMap()->select(x, y)->getBiome();
-				printf("\n=====>Send last checked biome : (%i, %i) = %i\n", x, y, lastCheckedBiome);
+				//printf("\n=====>Send last checked biome : (%i, %i) = %i\n", x, y, lastCheckedBiome);
 
 			}
 			chunkBiomes[ cI ] = lastCheckedBiome;

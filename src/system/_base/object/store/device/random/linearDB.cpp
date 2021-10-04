@@ -8,6 +8,8 @@
 #include <cstring>
 #include <cmath>
 
+#include "src/system/_base/log.h"
+
 #include "src/system/_base/process/hash/murmurhash.h"
 
 //#include "src/common/process/hash.h"
@@ -36,165 +38,23 @@ const double openLife::system::object::store::device::random::LinearDB::MAX_LOAD
  */
 openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::system::settings::LinearDB settings)
 {
-	this->filename = settings.filename;
-	this->keySize = settings.record.keySize;
-	this->valueSize = settings.record.valueSize;
-	this->recordBuffer = nullptr;
-	this->maxOverflowDepth = 0;
-	this->numRecords = 0;
-	this->maxLoad = MAX_LOAD_FOR_OPEN_CALLS;
-	if(!this->isResourceExist())
-	{
-//<<<<<<< Updated upstream
-/*
-		openLife::system::File::create(settings.filename.c_str());
-	}
-	if(!(this->file = fopen(this->filename.c_str(), "w+b"))) throw exception("db file creation failed");//this->file = inDB->file
-
-	unsigned int hashTableSize = (settings.hashTable.size < 2) ? 2 : settings.hashTable.size;
-	this->hashTableSizeA = hashTableSize;
-	this->hashTableSizeB = hashTableSize;
-
-	this->recordSizeBytes = this->keySize + this->valueSize;// first byte in record is present flag
-	this->recordBuffer = new uint8_t[this->recordSizeBytes];
-
-	std::cout << "\ninHashTableStartSize = " << hashTableSize << " is created";
-	this->fingerprintMod = this->hashTableSizeA;
-
-	//test reached 32-bit limit
-	for(uint32_t newMod=this->fingerprintMod*2;newMod>this->fingerprintMod;newMod=this->fingerprintMod*2)this->fingerprintMod=newMod;//recomputeFingerprintMod();
-
-//<<<<<<< HEAD
-	this->hashTable = new openLife::system::object::store::device::random::linearDB::PageManager(); // new PageManager() inPM
-	this->overflowBuckets = new openLife::system::object::store::device::random::linearDB::PageManager(); //new PageManager() inPM
-//=======
-//	this->hashTable = new openLife::system::object::store::device::random::LinearDBPageManager(); // new PageManager() inPM
-//	this->overflowBuckets = new openLife::system::object::store::device::random::LinearDBPageManager(); //new PageManager() inPM
-//>>>>>>> master
-
-	// does the file already contain a header
-
-	// seek to the end to find out file size
-	if(fseeko(this->file, 0, SEEK_END )) throw exception("end of resource file non reachable");
-
-	if(ftello(this->file) < HEADER_SIZE)
-	{
-		// file that doesn't even contain the header
-		// write fresh header and hash table
-		// rewrite header
-		if(!this->createResourceHeader()) throw exception("Fail to create Header in ...");
-		this->lastOp = opWrite;
-		this->hashTable->init(this->hashTableSizeA);
-		this->overflowBuckets->init(2);
-	}
-	else
-	{
-		//isFileHeaderValid()
-		// read header
-		if( fseeko(this->file, 0, SEEK_SET)) throw exception("Fail to read Header in ...");
-		int numRead;
-		char magicBuffer[ 4 ];
-		numRead = fread(magicBuffer, 3, 1, this->file );
-		if( numRead != 1 ) throw exception("Fail to read magic string in dbFile...");
-	   	magicBuffer[3] = '\0';
-	   	//end isFileHeaderValid()
-	   	if(strcmp(magicBuffer, this->magicString.c_str()) != 0)throw exception("lineardb3 magic string '%s' not found at start of file header in %s"/ *this->magicString, this->filename* /);
-
-	   	uint32_t val32;
-	   	numRead = fread(&val32, sizeof(uint32_t), 1, this->file);
-	   	if( numRead != 1 )throw exception("Failed to read key size"/ *this->magicString, this->inPath* /);
-	   	if( val32 != this->keySize ) throw exception("Requested lineardb3 key size of %u does not match size of %u in file header in %s"/ *this->keySize, val32, this->filename* /);
-
-	   	numRead = fread(&val32, sizeof(uint32_t), 1, this->file);
-	   	if( numRead != 1 )throw exception("Failed to read value size"/ *this->magicString, this->inPath* /);
-	   	if( val32 != this->valueSize ) throw exception("Requested lineardb3 value size of %u does not match size of %u in file header in %s"/ *this->keyValue, val32, this->filename* /);
-
-	   	// got here, header matches
-
-	   	// make sure hash table exists in file
-	   	if( fseeko( this->file, 0, SEEK_END ) ) throw exception("Failed to find the hashtable");
-		uint64_t fileSize = ftello( this->file );
-		uint64_t numRecordsInFile = ( fileSize - HEADER_SIZE ) / this->recordSizeBytes;
-		uint64_t expectedSize = this->recordSizeBytes * numRecordsInFile + HEADER_SIZE;
-
-		if( expectedSize != fileSize )
-		{
-			printf( "Requested lineardb3 file %s does not contain a "
-					   "whole number of %d-byte records.  "
-					   "Assuming final record is garbage and truncating it.\n",
-					   this->filename.c_str(), this->recordSizeBytes );
-		   char tempPath[200];
-		   sprintf( tempPath, "%.190s%s", this->filename.c_str(), ".trunc" );
-		   FILE *tempFile = fopen( tempPath, "wb" );
-		   if( tempFile == NULL ) throw exception("Failed to open temp file %s for truncation"/ *, tempPath* /);
-
-		   if( fseeko( this->file, 0, SEEK_SET ) ) throw exception("File seek operation failed");
-
-		   unsigned char headerBuffer[HEADER_SIZE];
-
-		   int numRead = fread( headerBuffer, HEADER_SIZE, 1, this->file );
-		   if( numRead != 1 )throw exception("Failed to read header from lineardb3 file %s"/ *, this->filename.c_str()* /);
-
-		   int numWritten = fwrite( headerBuffer, HEADER_SIZE, 1, tempFile );
-		   if( numWritten != 1 ) throw exception ("Failed to write header to temp lineardb3 truncation file %s"/ *, tempPath* /);
-
-		   for( uint64_t i=0; i<numRecordsInFile; i++ )
-		   {
-				numRead = fread( this->recordBuffer, this->recordSizeBytes, 1, this->file );
-				if( numRead != 1 ) throw exception("Failed to read record from lineardb3 file %s"/ *, this->filename.c_str()* /);
-
-				numWritten = fwrite( this->recordBuffer, this->recordSizeBytes, 1, tempFile );
-				if( numWritten != 1 ) throw exception("Failed to record to temp lineardb3 truncation file %s"/ *, tempPath* /);
-		   }
-		   fclose( this->file );
-		   fclose( tempFile );
-		   if( rename( tempPath, this->filename.c_str() ) != 0 )throw exception("Failed overwrite lineardb3 file %s with truncation file %s"/ *, this->filename.c_str(), tempPath* /);
-		   this->file = fopen( this->filename.c_str(), "r+b" );
-		   if( this->file == NULL ) throw exception("Failed to re-open lineardb3 file %s after trunctation"/ *, this->filename.c_str()* /);
-		}
-
-		// now populate hash table
-		uint32_t minTableBuckets = this->getComputedTableSize(numRecordsInFile);
-		this->hashTableSizeA = minTableBuckets;
-		this->hashTableSizeB = minTableBuckets;
-		this->recomputeFingerprintMod();
-		this->hashTable->init(this->hashTableSizeA);
-		this->overflowBuckets->init(2);
-
-		if(fseeko(this->file, HEADER_SIZE, SEEK_SET)) throw new openLife::system::object::entity::Exception("linearDB file operation failed");
-
-		for( uint64_t i=0; i<numRecordsInFile; i++ )
-		{
-			if(fread(this->recordBuffer, this->recordSizeBytes, 1, this->file) != 1) throw new openLife::system::object::entity::Exception("Failed to read record from linearDB file");
-
-			// put only in RAM part of table
-			// note that this assumes that each key in the file is unique
-			// (it should be, because we generated the file on a previous run)
-			int result = 0;//TODO: a virer
-			/ *
-			int result = LINEARDB3_getOrPut( inDB,
-										   &( inDB->recordBuffer[0] ),
-										   &( inDB->recordBuffer[inDB->keySize] ),
-										   true,
-										   // ignore data file
-										   // update ram only
-										   // don't even verify keys in data file
-										   // this preserves our fread position
-										   true );//mode_put && ignoreDataFile
-										   * /
-
-			if( result != 0 ) throw new openLife::system::object::entity::Exception("Putting lineardb record in RAM hash table failed");
-		}
-		   this->lastOp = opRead;
-	}
- */
-//=======
-
-	}
-//>>>>>>> Stashed changes
+	this->settings.filename = settings.filename;
+	this->settings.mode = settings.mode;
+	this->settings.hTableSize = settings.hTableSize;
+	this->settings.record.keySize = settings.record.keySize;
+	this->settings.record.valSize = settings.record.valSize;
+	openLife::system::Log::notice("Create LinearDB file(%s)", this->settings.filename.c_str());
 }
 
 openLife::system::object::store::device::random::LinearDB::~LinearDB() {}
+
+void openLife::system::object::store::device::random::LinearDB::handle(LINEARDB3 *db)
+{
+	this->db = db;
+}
+
+
+void openLife::system::object::store::device::random::LinearDB::set(int idx, int value) {}
 
 /**
  *
@@ -216,8 +76,6 @@ int openLife::system::object::store::device::random::LinearDB::get(void* key)
 	return 0;
 }
 
-void openLife::system::object::store::device::random::LinearDB::put(int idx, int value) {}
-
 int openLife::system::object::store::device::random::LinearDB::isResourceExist()
 {
 	int response = false;
@@ -227,15 +85,6 @@ int openLife::system::object::store::device::random::LinearDB::isResourceExist()
 		response = true;
 	}
 	return response;
-}
-
-/**
- *
- * @param dbState
- */
-void openLife::system::object::store::device::random::LinearDB::init(LINEARDB3 *dbState)
-{
-	this->dbState = dbState;
 }
 
 /**

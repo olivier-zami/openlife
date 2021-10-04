@@ -40,7 +40,6 @@ namespace openLife::server::service::database
 			~WorldMap();
 
 			//!temporary methods
-			void legacy(LINEARDB3* biomeDB, char* notEmptyDB, openLife::system::object::store::memory::random::Biome* dbCacheBiome);
 			char* notEmptyDB;
 			void updateSecondPlaceIndex(int *outSecondPlaceIndex);
 			void updateSecondPlaceGap(double *outSecondPlaceGap);
@@ -50,6 +49,8 @@ namespace openLife::server::service::database
 			//!data management methods
 			WorldMap* select(int posX, int posY);
 			WorldMap* create();
+			WorldMap* reset();
+
 			void insert(openLife::system::type::entity::Biome biome);
 			void insert(common::object::entity::MapZone* mapZone);//TODO: mapZone = Record2D/Biome
 			openLife::system::type::entity::Biome getNewBiome();//TODO: create()->getBiome();
@@ -57,9 +58,14 @@ namespace openLife::server::service::database
 			int getBiome();
 			openLife::system::type::entity::Biome getBiomeRecord(char forceValue = true);
 
+
+
 			//!data information methods
 			std::vector<int> getBiomes();//TODO should return array of biome struct
 			int getInfoBiome(int biome);//TODO should return biome struct
+
+			//TODO: change to private afterward
+			openLife::system::object::store::device::random::LinearDB* mapDB;
 
 		private:
 			unsigned int width;
@@ -104,8 +110,6 @@ namespace openLife::server::service::database
 			struct mapSettings{
 				float *biomeCumuWeights;
 			};
-
-			LINEARDB3* biomeDB;
 
 			struct{
 				int *outSecondPlaceIndex;

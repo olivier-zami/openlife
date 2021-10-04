@@ -295,8 +295,7 @@ namespace openLife
 					openLife::server::Settings serverSettings,
 					openLife::server::settings::WorldMap worldMapSettings,
 					LINEARDB3* biomeDB,
-					char* anyBiomesInDB,
-					openLife::system::object::store::memory::random::Biome* cachedBiome);
+					char* anyBiomesInDB);
 			~Server();
 
 			void init();

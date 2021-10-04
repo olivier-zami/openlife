@@ -2212,7 +2212,7 @@ void LivingLifePage::computePathToDest( LiveObject *inObject )
 
 				if(mMapBiomes[ mapI ] == 7)
 				{
-					printf("\n=====>water tile should be blocked : %i", mMapBiomes[ mapI ]);
+					//printf("\n=====>water tile should be blocked : %i", mMapBiomes[ mapI ]);
 					blockedMap[ y * pathFindingD + x ] = true;
 				}
 			}

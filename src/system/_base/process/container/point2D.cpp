@@ -51,7 +51,7 @@ std::vector<openLife::system::type::geometric::Point2D_32> openLife::system::pro
 
 
 			unsigned int idxNewPoint = i-(step/2);
-			std::cout << "\n====> ("<< sin <<", "<< cos <<")";
+			//std::cout << "\n====> ("<< sin <<", "<< cos <<")";
 
 			coastalPoint[idxNewPoint].x = middlePoint.x - 20*cos /*- (50*(int32_t)cos)*/;
 			coastalPoint[idxNewPoint].y = middlePoint.y + 20*sin/*+ (50*(int32_t)sin)*/;

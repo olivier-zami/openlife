@@ -13,14 +13,13 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string>
 
 //<<<<<<< Updated upstream:src/common/object/store/memory/randomAccess/linearDB.h
 
 //=======
 //#include "src/system/_base/settings/linearDB.h"
 //>>>>>>> Stashed changes:src/system/_base/object/store/device/random/linearDB.h
-
-#include "src/system/_base/settings/linearDB.h"
 
 #include "src/common/type/database/lineardb3.h"
 #include "minorGems/io/file/File.h"
@@ -36,6 +35,24 @@ uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed );
 #define LINEARDB3_HEADER_SIZE 11
 #define BucketPage LINEARDB3_BucketPage
 
+#define KISSDB_OPEN_MODE_RDONLY 1		//Open mode: read only
+#define KISSDB_OPEN_MODE_RDWR 2			//Open mode: read/write
+#define KISSDB_OPEN_MODE_RWCREAT 3		//Open mode: read/write, create if doesn't exist
+#define KISSDB_OPEN_MODE_RWREPLACE 4	//Open mode: truncate database, open for reading and writing
+
+namespace openLife::system::settings
+{
+	typedef struct{
+		std::string filename;
+		int mode;
+		unsigned int hTableSize;
+		struct{
+			unsigned int keySize;
+			unsigned int valSize;
+		}record;
+	}LinearDB;
+}
+
 namespace openLife::system::object::store::device::random
 {
 	class LinearDB
@@ -44,14 +61,18 @@ namespace openLife::system::object::store::device::random
 			LinearDB(openLife::system::settings::LinearDB settings);
 			~LinearDB();
 
-			void put(int idx, int value);
+			void handle(LINEARDB3* db);
+
+			void set(int key, int value);
 			int get(void* key);
 
 			int isResourceExist();
 
-			void init(LINEARDB3 *dbState);
-
 			static const double MAX_LOAD_FOR_OPEN_CALLS;
+
+			//TODO: change to private
+			LINEARDB3* db;
+			::openLife::system::settings::LinearDB settings;
 
 		private:
 			void createResource();
@@ -66,10 +87,9 @@ namespace openLife::system::object::store::device::random
 			unsigned int keySize;
 			unsigned int valueSize;
 
-
-
 			FILE *file;
-			LINEARDB3* dbState;
+
+
 			double maxLoad;// load above this causes table to expand incrementally
 			// number of inserted records in database
 			uint32_t numRecords;

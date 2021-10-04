@@ -16,7 +16,6 @@
 #include "minorGems/network/SocketPoll.h"
 #include "src/common/object/entity/mapZone.h"
 #include "src/server/service/database/worldMap.h"
-#include "src/system/_base/settings/linearDB.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/system/_base/object/entity/exception.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
@@ -178,7 +177,6 @@ float biomeTotalWeight;
 int numBiomes;
 unsigned int biomeRandSeedA = 727;
 unsigned int biomeRandSeedB = 941;
-openLife::system::object::store::memory::random::Biome* cachedBiome;
 openLife::system::type::Value2D_U32 mapGenSeed;
 int maxSpeechPipeIndex = 0;
 
@@ -316,12 +314,6 @@ int main()
 		 * InitMap() : server/map.cpp => l2879
 		 **/
 
-		//!
-		openLife::system::settings::LinearDB biomeDBSettings;
-		newBiomeDB = new openLife::system::object::store::device::random::LinearDB(biomeDBSettings);
-		newBiomeDB->init(&biomeDB);
-		cachedBiome = new openLife::system::object::store::memory::random::Biome(BIOME_CACHE_SIZE);
-
 		//!set worldMap
 		openLife::server::settings::WorldMap worldMapSettings;
 		worldMapSettings.specialBiomeBandMode = 1;
@@ -418,7 +410,7 @@ int main()
 		int forceShutdownMode = SettingsManager::getIntSetting( "forceShutdownMode", 0 );
 		serverSettings.global.forceShutdownMode = &forceShutdownMode;
 
-		server = new openLife::Server(serverSettings, worldMapSettings, &biomeDB, &anyBiomesInDB, cachedBiome);
+		server = new openLife::Server(serverSettings, worldMapSettings, &biomeDB, &anyBiomesInDB);
 
 
 		/*//TODO: segfault check return value of server->getWorldMap()->getBiomes()
@@ -838,6 +830,10 @@ int main()
 		AppLog::infoF( "Listening for connection on port %d", port );
 
 		server->start();
+
+		//!tests
+		openLife::system::Log::trace("Trying to clean @ position (1,1)");
+		server->getWorldMap()->select(1,1)->reset();
 
 
 

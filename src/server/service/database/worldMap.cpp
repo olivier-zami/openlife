@@ -19,6 +19,7 @@
 #include "src/system/_base/object/process/handler/image.h"
 
 //!legacy
+#include "src/server/main.h" //TODO: set cachesize value in conf file
 //#include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h" //TODO: use openLife::system::Log::trace(...);
 #include "minorGems/io/file/File.h"
 #include "src/system/_base/object/store/device/random/draft.h"
@@ -33,7 +34,6 @@ extern int maxBiomeXLoc;
 extern int maxBiomeYLoc;
 extern int minBiomeXLoc;
 extern int minBiomeYLoc;
-extern openLife::system::object::store::device::random::LinearDB *newBiomeDB;
 extern char lookTimeDBEmpty;
 extern char skipLookTimeCleanup;
 extern int cellsLookedAtToInit;
@@ -47,8 +47,9 @@ extern float biomeTotalWeight;
 extern int numBiomes;
 extern unsigned int biomeRandSeedA;
 extern unsigned int biomeRandSeedB;
-extern openLife::system::object::store::memory::random::Biome* cachedBiome;
 extern openLife::system::type::Value2D_U32 mapGenSeed;
+
+
 
 /**
  *
@@ -111,34 +112,28 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 	this->mapTile = std::vector<int>(this->idxMax);
 	std::fill(this->mapTile.begin(), this->mapTile.end(), -1);
 
-	openLife::system::settings::LinearDB dbBiomeSettings;
+	//openLife::system::settings::LinearDB dbBiomeSettings;
+	this->dbCacheBiome = new openLife::system::object::store::memory::random::Biome(BIOME_CACHE_SIZE);
 	this->dbBiomeCache = new openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::entity::Biome>();
-	this->dbBiome = new openLife::system::object::store::device::random::LinearDB(dbBiomeSettings);
+	//this->dbBiome = new openLife::system::object::store::device::random::LinearDB(dbBiomeSettings);
 
 	//!
 	this->map.relief = settings.relief;
+
+	//!
+	openLife::system::settings::LinearDB mapDBSettings; //TODO: take value from config
+	mapDBSettings.filename = "map.db";
+	mapDBSettings.mode = KISSDB_OPEN_MODE_RWCREAT;
+	mapDBSettings.hTableSize = 80000;
+	mapDBSettings.record.keySize = 16;
+	mapDBSettings.record.valSize = 4;
+	this->mapDB = new openLife::system::object::store::device::random::LinearDB(mapDBSettings);
 }
 
 /**
  *
  */
 openLife::server::service::database::WorldMap::~WorldMap() {}
-
-/**
- *
- * @param biomeDB
- * @note temporary methods
- */
-void openLife::server::service::database::WorldMap::legacy(
-		LINEARDB3* biomeDB,
-		char* notEmptyDB,
-		openLife::system::object::store::memory::random::Biome* dbCacheBiome
-	)
-{
-	this->biomeDB = biomeDB;
-	this->notEmptyDB = notEmptyDB;
-	this->dbCacheBiome = dbCacheBiome;
-}
 
 /**
  *
@@ -409,7 +404,7 @@ std::vector<int> openLife::server::service::database::WorldMap::getBiomes()
 
 int openLife::server::service::database::WorldMap::getInfoBiome(int biome)
 {
-	printf("\n==========>getInfoBiome(%i)", biome);
+	//printf("\n==========>getInfoBiome(%i)", biome);
 	return this->biome[biome];
 }
 
@@ -443,7 +438,7 @@ void openLife::server::service::database::WorldMap::insert(openLife::system::typ
 
 	if(false)
 	{
-		LINEARDB3_put(biomeDB, key, value);//TODO: divide by zero bug must corrected
+		LINEARDB3_put(&biomeDB, key, value);//TODO: divide by zero bug must corrected
 	}
 }
 
@@ -470,6 +465,7 @@ void openLife::server::service::database::WorldMap::insert(common::object::entit
 int openLife::server::service::database::WorldMap::get()
 {
 	openLife::system::Log::trace("Read mapTile(%i,%i)", this->query.x, this->query.y);
+	return 0;
 }
 
 
@@ -482,7 +478,7 @@ openLife::system::type::entity::Biome openLife::server::service::database::World
 	//!legacy int getMapBiomeIndex( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap)
 	openLife::system::type::entity::Biome biomeRecord = {this->query.x, this->query.y, -1, -1, 0};
 
-	if( *(this->notEmptyDB) && this->query.x >= minBiomeXLoc && this->query.x <= maxBiomeXLoc && this->query.y >= minBiomeYLoc && this->query.y <= maxBiomeYLoc )
+	if( /* *(this->notEmptyDB) &&*/ this->query.x >= minBiomeXLoc && this->query.x <= maxBiomeXLoc && this->query.y >= minBiomeYLoc && this->query.y <= maxBiomeYLoc )
 	{
 		// don't bother with this call unless biome DB has
 		// something in it, and this inX,inY is in the region where biomes
@@ -496,7 +492,6 @@ openLife::system::type::entity::Biome openLife::server::service::database::World
 		// look for changes to default in database
 		intPairToKey( this->query.x, this->query.y, key );
 
-		//int result = newBiomeDB->get(key);
 		//int result = LINEARDB3_get( &biomeDB, key, value );//TODO: search LINEARDB3_get ans replace with newBiomeDB->get(...) & may cause divide by zedo exception if some biome added
 		int result = -1;
 
@@ -569,8 +564,18 @@ int openLife::server::service::database::WorldMap::getBiome()
 	//idx = this->query.x+(this->query.y*this->width);
 	//int relief = this->mapTile[idx];
 	int relief = this->select(this->query.x, this->query.y)->getBiomeRecord().value;
-	printf("\n=====>Retrieve biome value from worldMap(%i, %i) : nbrBiome=%lu (rawValue=%i, mappedValue=%i)\n", this->query.x, this->query.y, this->mappedBiomeValue.size(), relief, this->mappedBiomeValue[relief]);
+	//printf("\n=====>Retrieve biome value from worldMap(%i, %i) : nbrBiome=%lu (rawValue=%i, mappedValue=%i)\n", this->query.x, this->query.y, this->mappedBiomeValue.size(), relief, this->mappedBiomeValue[relief]);
 	return this->mappedBiomeValue[relief];
+}
+
+/**
+ *
+ * @return self
+ */
+openLife::server::service::database::WorldMap *openLife::server::service::database::WorldMap::reset()
+{
+	openLife::system::Log::trace("erasing (%i, %i)", this->query.x, this->query.y);
+	return this;
 }
 
 //!

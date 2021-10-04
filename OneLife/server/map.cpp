@@ -2,9 +2,11 @@
 
 #include <iostream>
 #include "src/server/main.h"
-#include "minorGems/io/file/FileOutputStream.h"
+#include "src/system/_base/log.h"
 #include "src/server/server.h"
 #include "src/server/service/database/worldMap.h"
+
+#include "minorGems/io/file/FileOutputStream.h"
 #include "HashTable.h"
 #include "monument.h"
 #include "arcReport.h"
@@ -185,7 +187,6 @@ extern GridPos apocalypseLocation;
 static int edgeObjectID = 0;
 static int currentResponsiblePlayer = -1;
 extern openLife::Server* server;
-extern openLife::server::service::database::WorldMap* worldMap;
 // object ids that occur naturally on map at random, per biome
 extern int numBiomes;
 //int *biomes;//legacy: static int *biomes;/***************************************************************************/
@@ -223,7 +224,7 @@ static float *totalChanceWeight;
 // tracking when a given map cell was last seen
 extern LINEARDB3 lookTimeDB;
 extern char lookTimeDBOpen;
-static DB db;
+static LINEARDB3 db;
 static char dbOpen = false;
 static DB timeDB;
 static char timeDBOpen = false;
@@ -782,13 +783,23 @@ char initMap()
 
 	lookTimeDBOpen = true;
 
+/**********************************************************************************************************************/
 
+	openLife::system::Log::trace("binding mapDB resource file(%s)...", server->getWorldMap()->mapDB->settings.filename);
+	server->getWorldMap()->mapDB->handle(&db);
 
+	/*TODO: replace DB_open_timeShrunk
+	unsigned char key[16];
+	unsigned char value[4];
+	intQuadToKey( 1, 1, 0, 0, key );
+	int result = LINEARDB3_get( server->getWorldMap()->mapDB->db, key, value );
+	openLife::system::Log::trace("value coord (1, 1) = %i", valueToInt( value ));//fonctionne pas .. doit être initialise
+	*/
 
 	// note that the various decay ETA slots in map.db
 	// are define but unused, because we store times separately
 	// in mapTime.db
-	error = DB_open_timeShrunk( &db,
+	error = DB_open_timeShrunk( server->getWorldMap()->mapDB->db,
 								"map.db",
 								KISSDB_OPEN_MODE_RWCREAT,
 								80000,
@@ -1070,7 +1081,7 @@ char initMap()
 	SimpleVector<int> biomeList;
 
 
-	printf("\n=====>Generate biomeList (nbrObjectChecked: %i) (biomeList size : %i)\n\n", numObjects, biomeList.size());
+	//printf("\n=====>Generate biomeList (nbrObjectChecked: %i) (biomeList size : %i)\n\n", numObjects, biomeList.size());
 	/*
 	for( int i=0; i<numObjects; i++ )
 	{
@@ -1096,9 +1107,9 @@ char initMap()
 
 	// manually controll order
 	SimpleVector<int> *biomeOrderList = SettingsManager::getIntSettingMulti( "biomeOrder" );
-	printf("\n=====>Setting Biomes from file(biomeOrder.txt) : [");for(int i=0; i<biomeOrderList->size(); i++){printf(" %i", biomeOrderList->getElementDirect(i));}printf(" ]\n\n");
+	//printf("\n=====>Setting Biomes from file(biomeOrder.txt) : [");for(int i=0; i<biomeOrderList->size(); i++){printf(" %i", biomeOrderList->getElementDirect(i));}printf(" ]\n\n");
 
-	printf("\n=====>Setting Biomes from file(object data generation.txt) : [");for(int i=0; i<biomeList.size(); i++){printf(" %i", biomeList.getElementDirect(i));}printf(" ]\n\n");
+	//printf("\n=====>Setting Biomes from file(object data generation.txt) : [");for(int i=0; i<biomeList.size(); i++){printf(" %i", biomeList.getElementDirect(i));}printf(" ]\n\n");
 
 	SimpleVector<float> *biomeWeightList = SettingsManager::getFloatSettingMulti( "biomeWeights" );
 
@@ -7124,7 +7135,7 @@ void stepMap( SimpleVector<MapChangeRecord> *inMapChanges,
 
             // this call will append changes to our global lists, which
             // we process below
-			printf("\n=====>log before move object 3 idObject:%i position(%i,%i)", oldID, r.x, r.y);
+			//printf("\n=====>log before move object 3 idObject:%i position(%i,%i)", oldID, r.x, r.y);
             checkDecayObject( r.x, r.y, oldID );
             }
         else {

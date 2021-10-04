@@ -39,7 +39,7 @@ client::component::bank::sprite::Ground::Ground()
 
 client::component::bank::sprite::Ground::~Ground()
 {
-	printf("\n=====> Cleaning ground sprite ...");
+	//printf("\n=====> Cleaning ground sprite ...");
 	for( int i=0; i<this->groundSpritesArraySize; i++ ) 
 	{
 		if( this->groundSprites[i] != NULL ) {
@@ -68,7 +68,7 @@ client::component::bank::sprite::Ground::~Ground()
 
 int client::component::bank::sprite::Ground::reset(char inPrintSteps=true)
 {
-	printf("\n=====> Reseting ground sprite bank ...");
+	//printf("\n=====> Reseting ground sprite bank ...");
 
 	this->blurRadius = SettingsManager::getIntSetting( "groundTileEdgeBlurRadius", 12 );
 	this->nextStep = 0;
@@ -113,7 +113,7 @@ int client::component::bank::sprite::Ground::reset(char inPrintSteps=true)
 
 float client::component::bank::sprite::Ground::create()
 {
-	printf("\n=====> Create ground sprite ...");
+	//printf("\n=====> Create ground sprite ...");
 
 	if( this->nextStep < allBiomes.size() )
 	{
