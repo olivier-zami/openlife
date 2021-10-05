@@ -2,12 +2,9 @@
 // Created by olivier on 14/08/2021.
 //
 
-//<<<<<<< Updated upstream:src/common/object/store/memory/randomAccess/draft.cpp
-//=======
 //#include "draft.h"
-//>>>>>>> Stashed changes:src/system/_base/object/store/device/random/draft.cpp
-
 #include "src/system/_base/log.h"
+#include "src/system/_base/file.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 
 
@@ -44,6 +41,7 @@ int DB_open_timeShrunk(
 		unsigned long value_size)
 {
 	openLife::system::Log::trace(" ##### DB_open_timeShrunk dbFile(%s) #####\n", path);
+
 	File dbFile( NULL, path );
 
 	//!create file.db if not exists
@@ -100,8 +98,7 @@ int DB_open_timeShrunk(
 							   value_size );
 	}
 
-	//!open ancient db
-	//printf("\n=====>Try to open %s", path);
+	//!open db as oldDB
 	LINEARDB3 oldDB;
 	int error = LINEARDB3_open( &oldDB,
 								path,
@@ -129,9 +126,7 @@ int DB_open_timeShrunk(
 	int stale = 0;
 	int nonStale = 0;
 
-
-
-	// first, just count
+	//!first, just count
 	while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 )
 	{
 		total++;
@@ -151,67 +146,54 @@ int DB_open_timeShrunk(
 		}
 	}
 
-
-
-	// optimial size for DB of remaining elements
+	//! get optimial size for DB of remaining elements
 	unsigned int newSize = LINEARDB3_getShrinkSize( &oldDB, nonStale );
-
 	AppLog::infoF( "Shrinking hash table in %s from %d down to %d",
 				   path,
 				   LINEARDB3_getCurrentSize( &oldDB ),
 				   newSize );
 
-
+	//!create db.temp
 	LINEARDB3 tempDB;
-
 	error = LINEARDB3_open( &tempDB,
-							dbTempName,
+							dbTempName,//!filename = xxx.db.temp
 							mode,
 							newSize,
 							key_size,
 							value_size );
 	if( error ) {
-		AppLog::errorF( "Failed to open DB file %s in DB_open_timeShrunk",
-						dbTempName );
+		AppLog::errorF( "Failed to open DB file %s in DB_open_timeShrunk", dbTempName );
 		delete [] dbTempName;
 		LINEARDB3_close( &oldDB );
 		return error;
 	}
 
 
+	//!
 	// now that we have new temp db properly sized,
 	// iterate again and insert, but don't count
 	LINEARDB3_Iterator_init( &oldDB, &dbi );
-
-	while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 ) {
+	while( LINEARDB3_Iterator_next( &dbi, key, value ) > 0 )
+	{
 		int x = valueToInt( key );
 		int y = valueToInt( &( key[4] ) );
-
-		if( dbLookTimeGet( x, y ) > 0 ) {
+		if( dbLookTimeGet( x, y ) > 0 )//!if lifeTime > 0
+		{
 			// keep
 			// insert it in temp
 			LINEARDB3_put( &tempDB, key, value );
 		}
-		else {
+		else
+		{
 			// stale
 			// ignore
 		}
 	}
-
-
-
-	AppLog::infoF( "Cleaned %d / %d stale map cells from %s", stale, total,
-				   path );
-
-	printf( "\n" );
-
-
+	AppLog::infoF( "Cleaned %d / %d stale map cells from %s", stale, total, path );
 	LINEARDB3_close( &tempDB );
 	LINEARDB3_close( &oldDB );
-
-	dbTempFile.copy( &dbFile );
+	dbTempFile.copy( &dbFile );//!copy xxx.db.temp in db.temp
 	dbTempFile.remove();
-
 	delete [] dbTempName;
 
 	// now open new, shrunk file
@@ -491,6 +473,20 @@ int LINEARDB3_get( LINEARDB3 *inDB, const void *inKey, void *outValue )
 	return LINEARDB3_getOrPut( inDB, inKey, outValue, false, false );
 }
 
+
+int LINEARDB3_put( LINEARDB3 *inDB, const void *inKey, const void *inValue )
+{
+	int result = LINEARDB3_getOrPut( inDB, inKey, (void *)inValue, true, false );
+
+	if( result == -1 ) return result;
+
+	if( inDB->numRecords > ( inDB->hashTableSizeB * RECORDS_PER_BUCKET ) * inDB->maxLoad )
+	{
+		result = expandTable( inDB );
+	}
+	return result;
+}
+
 /**
  *
  * @param inDB
@@ -536,107 +532,81 @@ int LINEARDB3_getOrPut(
 
 	uint32_t thisBucketIndex = 0;
 
-		while( thisBucket->overflowIndex > 0 ) {
-			// consider overflow
-			overflowDepth++;
+	while( thisBucket->overflowIndex > 0 )
+	{
+		// consider overflow
+		overflowDepth++;
 
-			if( overflowDepth > inDB->maxOverflowDepth ) {
-				inDB->maxOverflowDepth = overflowDepth;
-			}
-
-
-			thisBucketIndex = thisBucket->overflowIndex;
-
-			thisBucket = getBucket( inDB->overflowBuckets, thisBucketIndex );
-
-			if( !skipToOverflow || thisBucket->overflowIndex == 0 )
-				for( int i=0; i<RECORDS_PER_BUCKET; i++ ) {
-
-					int result = LINEARDB3_considerFingerprintBucket(
-							inDB, inKey, inOutValue,
-							fingerprint,
-							inPut, inIgnoreDataFile,
-							thisBucket,
-							i );
-
-					if( result < 2 ) {
-						return result;
-					}
-					// 2 means record didn't match, keep going
-				}
+		if( overflowDepth > inDB->maxOverflowDepth )
+		{
+			inDB->maxOverflowDepth = overflowDepth;
 		}
 
+		thisBucketIndex = thisBucket->overflowIndex;
+		thisBucket = getBucket( inDB->overflowBuckets, thisBucketIndex );
 
-		if( inPut &&
-		thisBucket->overflowIndex == 0 ) {
+		if( !skipToOverflow || thisBucket->overflowIndex == 0 ) {
+			for (int i = 0; i < RECORDS_PER_BUCKET; i++) {
 
-			// reached end of overflow chain without finding place to put value
+				int result = LINEARDB3_considerFingerprintBucket(
+						inDB, inKey, inOutValue,
+						fingerprint,
+						inPut, inIgnoreDataFile,
+						thisBucket,
+						i);
 
-			// need to make a new overflow bucket
-
-			overflowDepth++;
-
-			if( overflowDepth > inDB->maxOverflowDepth ) {
-				inDB->maxOverflowDepth = overflowDepth;
-			}
-
-
-			thisBucket->overflowIndex =
-					getFirstEmptyBucketIndex( inDB->overflowBuckets );
-
-			LINEARDB3_FingerprintBucket *newBucket = getBucket( inDB->overflowBuckets,
-													  thisBucket->overflowIndex );
-			newBucket->fingerprints[0] = fingerprint;
-
-			// will go at end of file
-			newBucket->fileIndex[0] = inDB->numRecords;
-
-
-			inDB->numRecords++;
-
-			if( ! inIgnoreDataFile ) {
-
-				uint64_t filePosRec =
-						LINEARDB3_HEADER_SIZE +
-						newBucket->fileIndex[0] *
-						inDB->recordSizeBytes;
-
-				// don't seek unless we have to
-				if( inDB->lastOp == opRead ||
-				ftello( inDB->file ) != (signed)filePosRec ) {
-
-					// go to end of file
-					if( fseeko( inDB->file, 0, SEEK_END ) ) {
-						return -1;
-					}
-
-					// make sure it matches where we've documented that
-					// the record should go
-					if( ftello( inDB->file ) != (signed)filePosRec ) {
-						return -1;
-					}
+				if (result < 2) {
+					return result;
 				}
+				// 2 means record didn't match, keep going
+			}
+		}
+	}
 
+	if( inPut && thisBucket->overflowIndex == 0 )
+	{
+		// reached end of overflow chain without finding place to put value
+		// need to make a new overflow bucket
+		overflowDepth++;
+		if( overflowDepth > inDB->maxOverflowDepth )
+		{
+			inDB->maxOverflowDepth = overflowDepth;
+		}
+		thisBucket->overflowIndex = getFirstEmptyBucketIndex( inDB->overflowBuckets );
+		LINEARDB3_FingerprintBucket *newBucket = getBucket( inDB->overflowBuckets, thisBucket->overflowIndex );
+		newBucket->fingerprints[0] = fingerprint;
+		newBucket->fileIndex[0] = inDB->numRecords;// will go at end of file
+		inDB->numRecords++;
 
-				int numWritten = fwrite( inKey, inDB->keySize, 1, inDB->file );
-				inDB->lastOp = opWrite;
+		if( ! inIgnoreDataFile ) //write in dbFile if not ignored
+		{
+			uint64_t filePosRec = LINEARDB3_HEADER_SIZE + newBucket->fileIndex[0] * inDB->recordSizeBytes;
 
-				numWritten += fwrite( inOutValue, inDB->valueSize, 1, inDB->file );
-
-				if( numWritten != 2 ) {
+			// don't seek unless we have to
+			if( inDB->lastOp == opRead || ftello( inDB->file ) != (signed)filePosRec )
+			{
+				// go to end of file
+				if( fseeko( inDB->file, 0, SEEK_END ) ) {
 					return -1;
 				}
-				return 0;
+
+				// make sure it matches where we've documented that
+				// the record should go
+				if( ftello( inDB->file ) != (signed)filePosRec ) {
+					return -1;
+				}
 			}
 
+			int numWritten = fwrite( inKey, inDB->keySize, 1, inDB->file );
+			inDB->lastOp = opWrite;
+			numWritten += fwrite( inOutValue, inDB->valueSize, 1, inDB->file );
 
+			if( numWritten != 2 ) return -1;
 			return 0;
 		}
-
-
-
-		// not found
-		return 1;
+		return 0;
+	}
+	return 1;// not found
 }
 
 uint64_t MurmurHash64B ( const void * key, int len, uint64_t seed );
@@ -757,10 +727,12 @@ int LINEARDB3_considerFingerprintBucket( LINEARDB3 *inDB,
 
 	char emptyRec = false;
 
-	if( binFP == 0 ) {
+	if( binFP == 0 )
+	{
 		emptyRec = true;
 
-		if( inPut ) {
+		if( inPut )
+		{
 			// set fingerprint and file pos for insert
 			binFP = inFingerprint;
 			inBucket->fingerprints[ i ] = inFingerprint;
@@ -781,7 +753,8 @@ int LINEARDB3_considerFingerprintBucket( LINEARDB3 *inDB,
 		}
 	}
 
-	if( binFP == inFingerprint ) {
+	if( binFP == inFingerprint )
+	{
 		// hit
 
 		if( inIgnoreDataFile ) {
@@ -800,16 +773,15 @@ int LINEARDB3_considerFingerprintBucket( LINEARDB3 *inDB,
 			// read key to make sure it actually matches
 
 			// never seek unless we have to
-			if( inDB->lastOp == opWrite ||
-			ftello( inDB->file ) != (signed)filePosRec ) {
+			if( inDB->lastOp == opWrite || ftello( inDB->file ) != (signed)filePosRec )
+			{
 
 				if( fseeko( inDB->file, filePosRec, SEEK_SET ) ) {
 					return -1;
 				}
 			}
 
-			int numRead = fread( inDB->recordBuffer, inDB->keySize, 1,
-								 inDB->file );
+			int numRead = fread( inDB->recordBuffer, inDB->keySize, 1, inDB->file );
 			inDB->lastOp = opRead;
 
 			if( numRead != 1 ) {
@@ -823,7 +795,8 @@ int LINEARDB3_considerFingerprintBucket( LINEARDB3 *inDB,
 		}
 
 
-		if( inPut ) {
+		if( inPut )
+		{
 			if( emptyRec ) {
 
 				// don't seek unless we have to
@@ -874,14 +847,14 @@ int LINEARDB3_considerFingerprintBucket( LINEARDB3 *inDB,
 			// successful put
 			return 0;
 		}
-		else {
+		else
+		{
 			// we don't need to seek here
 			// we know (!emptyRec), so we already seeked and
 			// read the key above
 			// ready to read value now
 
-			int numRead = fread( inOutValue, inDB->valueSize, 1,
-								 inDB->file );
+			int numRead = fread( inOutValue, inDB->valueSize, 1, inDB->file );
 			inDB->lastOp = opRead;
 
 			if( numRead != 1 ) {
@@ -1207,25 +1180,8 @@ void freePageManager( LINEARDB3_PageManager *inPM ) {
 	inPM->numBuckets = 0;
 }
 
-int LINEARDB3_put( LINEARDB3 *inDB, const void *inKey, const void *inValue )
+void LINEARDB3_Iterator_init( LINEARDB3 *inDB, LINEARDB3_Iterator *inDBi )
 {
-	int result = LINEARDB3_getOrPut( inDB, inKey, (void *)inValue, true, false );
-
-	if( result == -1 ) {
-		return result;
-	}
-
-	if( inDB->numRecords >
-	( inDB->hashTableSizeB * RECORDS_PER_BUCKET ) * inDB->maxLoad ) {
-
-		result = expandTable( inDB );
-	}
-	return result;
-}
-
-
-
-void LINEARDB3_Iterator_init( LINEARDB3 *inDB, LINEARDB3_Iterator *inDBi ) {
 	inDBi->db = inDB;
 	inDBi->nextRecordIndex = 0;
 }

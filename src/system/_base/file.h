@@ -15,8 +15,7 @@ namespace openLife::system
 		public:
 			static int create(const char* filename);
 			static int remove(const char* filename);
-			static int exists(const char* filename);
-			static std::vector<std::string> find(const char* filename);
+			static bool find(const char* filename);
 			static std::string fullName(const char* filename);
 	};
 }

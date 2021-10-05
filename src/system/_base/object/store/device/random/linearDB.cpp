@@ -9,6 +9,7 @@
 #include <cmath>
 
 #include "src/system/_base/log.h"
+#include "src/system/_base/file.h"
 
 #include "src/system/_base/process/hash/murmurhash.h"
 
@@ -43,6 +44,10 @@ openLife::system::object::store::device::random::LinearDB::LinearDB(openLife::sy
 	this->settings.hTableSize = settings.hTableSize;
 	this->settings.record.keySize = settings.record.keySize;
 	this->settings.record.valSize = settings.record.valSize;
+
+	openLife::system::Log::trace("Is file(%s) founded ? %s",
+			this->settings.filename.c_str(),
+			openLife::system::File::find(this->settings.filename.c_str()) ? "true" : "false");
 	openLife::system::Log::notice("Create LinearDB file(%s)", this->settings.filename.c_str());
 }
 

@@ -20,8 +20,14 @@ int openLife::system::File::create(const char *filename)
 	return success;
 }
 
-int openLife::system::File::exists(const char *filename)
+int openLife::system::File::remove(const char *filename)
 {
+	return ::remove(filename);
+}
+
+bool openLife::system::File::find(const char *filename)
+{
+	//if simple file syntax
 	int exists;
 	if(FILE *file = fopen(filename, "r"))
 	{
@@ -30,17 +36,11 @@ int openLife::system::File::exists(const char *filename)
 	}
 	else exists = false;
 	return exists;
-}
 
-int openLife::system::File::remove(const char *filename)
-{
-	return ::remove(filename);
-}
-
-std::vector<std::string> openLife::system::File::find(const char *filename)
-{
+	/*
 	std::vector<std::string> found;
 	return found;
+ 	*/
 }
 
 std::string openLife::system::File::fullName(const char *filename)

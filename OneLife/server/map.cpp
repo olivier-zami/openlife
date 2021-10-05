@@ -788,14 +788,6 @@ char initMap()
 	openLife::system::Log::trace("binding mapDB resource file(%s)...", server->getWorldMap()->mapDB->settings.filename);
 	server->getWorldMap()->mapDB->handle(&db);
 
-	/*TODO: replace DB_open_timeShrunk
-	unsigned char key[16];
-	unsigned char value[4];
-	intQuadToKey( 1, 1, 0, 0, key );
-	int result = LINEARDB3_get( server->getWorldMap()->mapDB->db, key, value );
-	openLife::system::Log::trace("value coord (1, 1) = %i", valueToInt( value ));//fonctionne pas .. doit être initialise
-	*/
-
 	// note that the various decay ETA slots in map.db
 	// are define but unused, because we store times separately
 	// in mapTime.db
@@ -838,6 +830,17 @@ char initMap()
 
 	dbOpen = true;
 
+
+	//!trying to read @ (1, 1) 67 => 4709 Its work !!!
+	/*
+	unsigned char key[16];
+	unsigned char value[4];
+	intQuadToKey( 1, 1, 0, 0, key );
+	intToValue( 0, value );
+	LINEARDB3_put( server->getWorldMap()->mapDB->db, key, value );
+	//LINEARDB3_get( server->getWorldMap()->mapDB->db, key, value );
+	openLife::system::Log::trace("value coord (1, 1) = %i", valueToInt( value ));//fonctionne pas .. doit être initialise
+	*/
 
 
 	// this DB uses the same slot numbers as the map.db

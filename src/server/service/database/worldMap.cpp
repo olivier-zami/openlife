@@ -111,11 +111,9 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 
 	this->mapTile = std::vector<int>(this->idxMax);
 	std::fill(this->mapTile.begin(), this->mapTile.end(), -1);
-
-	//openLife::system::settings::LinearDB dbBiomeSettings;
+	
 	this->dbCacheBiome = new openLife::system::object::store::memory::random::Biome(BIOME_CACHE_SIZE);
 	this->dbBiomeCache = new openLife::system::object::store::memory::ExtendedVector2D<openLife::system::type::entity::Biome>();
-	//this->dbBiome = new openLife::system::object::store::device::random::LinearDB(dbBiomeSettings);
 
 	//!
 	this->map.relief = settings.relief;
