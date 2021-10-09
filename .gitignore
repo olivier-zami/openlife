@@ -49,5 +49,7 @@ OneLife/server/curseSave.txt
 OneLife/server/familyDataLog.txt
 OneLife/server/myLog.txt
 
+src/third_party/imgui
+
 #
 var/
