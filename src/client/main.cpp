@@ -8,8 +8,6 @@ int maxSpeechPipeIndex = 0;
 
 client::Game* game;
 
-int mainFunction( int inArgCount, char **inArgs );
-
 int main( int inArgCount, char **inArgs )
 {
 	game = new client::Game();

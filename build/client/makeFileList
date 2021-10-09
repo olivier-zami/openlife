@@ -18,6 +18,11 @@ LAYER_SOURCE = \
 ${DIR_SRC_CLIENT}/../../src/client/game.cpp \
 ${DIR_SRC_CLIENT}/../../src/client/component/bank/sprite.cpp \
 ${DIR_SRC_CLIENT}/../../src/client/component/bank/sprite/ground.cpp \
+${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/AppLog.cpp \
+${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/FileLog.cpp \
+${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/Log.cpp \
+${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/PrintLog.cpp \
+${DIR_SRC_CLIENT}/../../minorGems/game/platforms/SDL/demoCodePanel.cpp \
 ${DIR_SRC_CLIENT}/game.cpp \
 ${DIR_SRC_CLIENT}/spriteBank.cpp \
 ${DIR_SRC_CLIENT}/objectBank.cpp \
@@ -158,10 +163,6 @@ NEEDED_MINOR_GEMS_OBJECTS = \
  ${SHA1_O} \
  ${ENCODING_UTILS_O} \
  ${DIRECTORY_O} \
- ${LOG_O} \
- ${APP_LOG_O} \
- ${FILE_LOG_O} \
- ${PRINT_LOG_O} \
  ${PRINT_UTILS_O} \
  ${GAME_SDL_O} \
  ${GAME_GRAPHICS_GL_O} \
