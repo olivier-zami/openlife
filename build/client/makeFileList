@@ -18,6 +18,11 @@ LAYER_SOURCE = \
 ${DIR_SRC_CLIENT}/../../src/client/game.cpp \
 ${DIR_SRC_CLIENT}/../../src/client/component/bank/sprite.cpp \
 ${DIR_SRC_CLIENT}/../../src/client/component/bank/sprite/ground.cpp \
+${DIR_SRC_CLIENT}/../../src/system/_base/init.cpp \
+${DIR_SRC_CLIENT}/../../src/system/_base/log.cpp \
+${DIR_SRC_CLIENT}/../../src/system/linux/init.cpp \
+${DIR_SRC_CLIENT}/../../src/system/win32/init.cpp \
+${DIR_SRC_CLIENT}/../../src/system/mac/init.cpp \
 ${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/AppLog.cpp \
 ${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/FileLog.cpp \
 ${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/Log.cpp \

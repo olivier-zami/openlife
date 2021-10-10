@@ -69,77 +69,8 @@ client::component::bank::Sprite* client::Game::getSprites()
 	return this->spriteBank;
 }
 
-int mainFunction( int inNumArgs, char **inArgs ) {
-
-#ifdef WIN32
-
-
-	HMODULE hShcore = LoadLibrary( _T( "shcore.dll" ) );
-
-    if( hShcore != NULL ) {
-        printf( "shcore.dll loaded successfully\n" );
-
-        typedef enum _PROCESS_DPI_AWARENESS {
-            PROCESS_DPI_UNAWARE            = 0,
-            PROCESS_SYSTEM_DPI_AWARE       = 1,
-            PROCESS_PER_MONITOR_DPI_AWARE  = 2
-            } PROCESS_DPI_AWARENESS;
-
-        typedef HRESULT (*SetProcessDpiAwarenessFunc)( PROCESS_DPI_AWARENESS );
-
-        SetProcessDpiAwarenessFunc setAwareness =
-            (SetProcessDpiAwarenessFunc)GetProcAddress(
-                hShcore,
-                "SetProcessDpiAwareness" );
-
-        if( setAwareness ) {
-            printf( "Found SetProcessDpiAwareness function in shcore.dll\n" );
-            setAwareness( PROCESS_PER_MONITOR_DPI_AWARE );
-            }
-        else {
-            printf( "Could NOT find SetProcessDpiAwareness function in "
-                    "Shcore.dll\n" );
-            }
-        FreeLibrary( hShcore );
-        }
-    else {
-        printf( "shcore.dll NOT loaded successfully... pre Win 8.1 ?\n" );
-
-
-        printf( "   Trying to load user32.dll instead\n" );
-
-
-        // backwards compatible code
-        // on vista and higher, this will tell Windows that we are DPI aware
-        // and that we should not be artificially scaled.
-        //
-        // Found here:  http://www.rw-designer.com/DPI-aware
-        HMODULE hUser32 = LoadLibrary( _T( "user32.dll" ) );
-
-        if( hUser32 != NULL ) {
-
-            typedef BOOL (*SetProcessDPIAwareFunc)();
-
-            SetProcessDPIAwareFunc setDPIAware =
-                (SetProcessDPIAwareFunc)GetProcAddress( hUser32,
-                                                        "SetProcessDPIAware" );
-            if( setDPIAware ) {
-                printf( "Found SetProcessDPIAware function in user32.dll\n" );
-                setDPIAware();
-                }
-            else {
-                printf( "Could NOT find SetProcessDPIAware function in "
-                        "user32.dll\n" );
-                }
-            FreeLibrary( hUser32 );
-            }
-        else {
-            printf( "Failed to load user32.dll\n" );
-            }
-        }
-#endif
-
-
+int mainFunction( int inNumArgs, char **inArgs )
+{
 	// check result below, after opening log, so we can log failure
 	Uint32 flags = SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE;
 	if( getUsesSound() ) {
@@ -161,21 +92,19 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 
         // arg 0 is the path to the app executable
         char *appDirectoryPath = stringDuplicate( inArgs[0] );
-
-        char *bundleName = autoSprintf( "%s_%d.app",
-                                        getAppName(), getAppVersion() );
-
+        char *bundleName = autoSprintf( "%s_%d.app",getAppName(), getAppVersion() );
         char *appNamePointer = strstr( appDirectoryPath, bundleName );
 
-        if( appNamePointer != NULL ) {
+        if( appNamePointer != NULL )
+		{
             // terminate full app path to get parent directory
             appNamePointer[0] = '\0';
-
             chdir( appDirectoryPath );
-            }
+		}
 
 
-        if( ! isSettingsFolderFound() ) {
+        if( ! isSettingsFolderFound() )
+		{
             // first, try setting dir based on preferences file
             char *prefFilePath = getPrefFilePath();
 
@@ -197,7 +126,8 @@ int mainFunction( int inNumArgs, char **inArgs ) {
             }
 
 
-        if( ! isSettingsFolderFound() ) {
+        if( ! isSettingsFolderFound() )
+		{
 
             showMessage( getAppName(), "First Start Up Error",
                          "Cannot find game data.\n\n"
@@ -279,28 +209,21 @@ int mainFunction( int inNumArgs, char **inArgs ) {
                 return 1;
                 }
 
-            }
+		}
 
 
         delete [] bundleName;
         delete [] appDirectoryPath;
 #endif
 
-
-
 	AppLog::setLog( new FileLog( "log.txt" ) );
 	AppLog::setLoggingLevel( Log::DETAIL_LEVEL );
-
 	AppLog::info( "New game starting up" );
 
-
 	if( sdlResult < 0 ) {
-		AppLog::getLog()->logPrintf(
-				Log::CRITICAL_ERROR_LEVEL,
-				"Couldn't initialize SDL: %s\n", SDL_GetError() );
+		AppLog::getLog()->logPrintf(Log::CRITICAL_ERROR_LEVEL, "Couldn't initialize SDL: %s\n", SDL_GetError() );
 		return 0;
 	}
-
 
 	if( doesOverrideGameImageSize() ) {
 		getGameImageSize( &gameWidth, &gameHeight );
@@ -314,11 +237,9 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 
 	// read screen size from settings
 	char widthFound = false;
-	int readWidth = SettingsManager::getIntSetting( "screenWidth",
-													&widthFound );
+	int readWidth = SettingsManager::getIntSetting( "screenWidth", &widthFound );
 	char heightFound = false;
-	int readHeight = SettingsManager::getIntSetting( "screenHeight",
-													 &heightFound );
+	int readHeight = SettingsManager::getIntSetting( "screenHeight", &heightFound );
 
 	if( widthFound && heightFound ) {
 		// override hard-coded defaults
@@ -326,28 +247,21 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 		screenHeight = readHeight;
 	}
 
-	AppLog::getLog()->logPrintf(
-			Log::INFO_LEVEL,
-			"Ideal window dimensions:  %dx%d\n",
-			screenWidth, screenHeight );
+	AppLog::getLog()->logPrintf(Log::INFO_LEVEL, "Ideal window dimensions:  %dx%d\n", screenWidth, screenHeight );
 
-
-	if( ! isNonIntegerScalingAllowed() &&
-		screenWidth < gameWidth ) {
-
-		AppLog::info(
-				"Screen width smaller than target game width, fixing" );
+	if( ! isNonIntegerScalingAllowed() && screenWidth < gameWidth )
+	{
+		AppLog::info( "Screen width smaller than target game width, fixing" );
 		screenWidth = gameWidth;
 	}
-	if( ! isNonIntegerScalingAllowed() &&
-		screenHeight < gameHeight ) {
-		AppLog::info(
-				"Screen height smaller than target game height, fixing" );
+	if( ! isNonIntegerScalingAllowed() && screenHeight < gameHeight )
+	{
+		AppLog::info( "Screen height smaller than target game height, fixing" );
 		screenHeight = gameHeight;
 	}
 
-
-	if( isNonIntegerScalingAllowed() ) {
+	if( isNonIntegerScalingAllowed() )
+	{
 
 		double screenRatio = (double)screenWidth / (double)screenHeight;
 		double gameRatio = (double)gameWidth / (double)gameHeight;
@@ -369,8 +283,7 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 
 
 	char fullscreenFound = false;
-	int readFullscreen = SettingsManager::getIntSetting( "fullscreen",
-														 &fullscreenFound );
+	int readFullscreen = SettingsManager::getIntSetting( "fullscreen", &fullscreenFound );
 
 	char fullscreen = true;
 
@@ -387,9 +300,7 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 
 
 	char useLargestWindowFound = false;
-	int readUseLargestWindow =
-			SettingsManager::getIntSetting( "useLargestWindow",
-											&useLargestWindowFound );
+	int readUseLargestWindow = SettingsManager::getIntSetting( "useLargestWindow", &useLargestWindowFound );
 
 	char useLargestWindow = true;
 
@@ -398,7 +309,8 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 	}
 
 
-	if( !fullscreen && useLargestWindow ) {
+	if( !fullscreen && useLargestWindow )
+	{
 		AppLog::info( "Want to use largest window that fits on screen." );
 
 		const SDL_VideoInfo* currentScreenInfo = SDL_GetVideoInfo();
@@ -406,7 +318,8 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 		int currentW = currentScreenInfo->current_w;
 		int currentH = currentScreenInfo->current_h;
 
-		if( isNonIntegerScalingAllowed() ) {
+		if( isNonIntegerScalingAllowed() )
+		{
 			double aspectRatio = screenHeight / (double) screenWidth;
 
 			int tryW = currentW;
@@ -443,7 +356,8 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 				}
 			}
 		}
-		else {
+		else
+		{
 
 			int blowUpFactor = 1;
 
@@ -475,7 +389,8 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 				"Screen dimensions for largest-window mode:  %dx%d\n",
 				screenWidth, screenHeight );
 	}
-	else if( !fullscreen && !useLargestWindow ) {
+	else if( !fullscreen && !useLargestWindow )
+	{
 		// make sure window isn't too big for screen
 
 		const SDL_VideoInfo* currentScreenInfo = SDL_GetVideoInfo();
@@ -524,8 +439,7 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 
 
 	char frameRateFound = false;
-	int readFrameRate = SettingsManager::getIntSetting( "halfFrameRate",
-														&frameRateFound );
+	int readFrameRate = SettingsManager::getIntSetting( "halfFrameRate", &frameRateFound );
 
 	if( frameRateFound && readFrameRate >= 1 ) {
 		// cut frame rate in half N times
@@ -537,10 +451,10 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 		targetFrameRate = 1;
 	}
 
-	SimpleVector<char*> *possibleFrameRatesSetting =
-			SettingsManager::getSetting( "possibleFrameRates" );
+	SimpleVector<char*> *possibleFrameRatesSetting = SettingsManager::getSetting( "possibleFrameRates" );
 
-	for( int i=0; i<possibleFrameRatesSetting->size(); i++ ) {
+	for( int i=0; i<possibleFrameRatesSetting->size(); i++ )
+	{
 		char *f = possibleFrameRatesSetting->getElementDirect( i );
 
 		int v;
@@ -572,8 +486,7 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 
 
 	char recordFound = false;
-	int readRecordFlag = SettingsManager::getIntSetting( "recordGame",
-														 &recordFound );
+	int readRecordFlag = SettingsManager::getIntSetting( "recordGame", &recordFound );
 
 	char recordGame = false;
 
@@ -582,8 +495,7 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 	}
 
 
-	int speedControlKeysFlag =
-			SettingsManager::getIntSetting( "enableSpeedControlKeys", 0 );
+	int speedControlKeysFlag = SettingsManager::getIntSetting( "enableSpeedControlKeys", 0 );
 
 	if( speedControlKeysFlag == 1 ) {
 		enableSpeedControlKeys = true;
@@ -591,8 +503,7 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 
 
 
-	int outputAllFramesFlag =
-			SettingsManager::getIntSetting( "outputAllFrames", 0 );
+	int outputAllFramesFlag = SettingsManager::getIntSetting( "outputAllFrames", 0 );
 
 	if( outputAllFramesFlag == 1 ) {
 		outputAllFrames = true;
@@ -602,15 +513,13 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 		screenShotPrefix = stringDuplicate( "frame" );
 	}
 
-	int blendOutputFramePairsFlag =
-			SettingsManager::getIntSetting( "blendOutputFramePairs", 0 );
+	int blendOutputFramePairsFlag = SettingsManager::getIntSetting( "blendOutputFramePairs", 0 );
 
 	if( blendOutputFramePairsFlag == 1 ) {
 		blendOutputFramePairs = true;
 	}
 
-	blendOutputFrameFraction =
-			SettingsManager::getFloatSetting( "blendOutputFrameFraction", 0.0f );
+	blendOutputFrameFraction = SettingsManager::getFloatSetting( "blendOutputFrameFraction", 0.0f );
 
 	webProxy = SettingsManager::getStringSetting( "webProxy" );
 
@@ -660,6 +569,7 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 						   hashSalt,
 						   getWindowTitle(), NULL, NULL, NULL );
 
+
 	delete [] customData;
 	delete [] hashSalt;
 
@@ -687,7 +597,8 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 
 		Image *cursorImage = readTGAFile( "bigPointer.tga" );
 
-		if( cursorImage != NULL ) {
+		if( cursorImage != NULL )
+		{
 
 			if( cursorImage->getWidth() == 32 &&
 				cursorImage->getHeight() == 32 &&
@@ -743,18 +654,6 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 		}
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
 	// adjust gameWidth to match available screen space
 	// keep gameHeight constant
 
@@ -769,7 +668,8 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 	// the screen vertically as well as we can
 	pixelZoomFactor = screenHeight / gameHeight;
 
-	if( pixelZoomFactor < 1 ) {
+	if( pixelZoomFactor < 1 )
+	{
 		pixelZoomFactor = 1;
 	}
 
@@ -830,8 +730,7 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 
 	// hard to quit mode?
 	char hardToQuitFound = false;
-	int readHardToQuit = SettingsManager::getIntSetting( "hardToQuitMode",
-														 &hardToQuitFound );
+	int readHardToQuit = SettingsManager::getIntSetting( "hardToQuitMode",&hardToQuitFound );
 
 	if( readHardToQuit == 1 ) {
 		hardToQuitMode = true;
@@ -844,7 +743,8 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 	// translation language
 	File *languageNameFile = new File( NULL, "language.txt" );
 
-	if( languageNameFile->exists() ) {
+	if( languageNameFile->exists() )
+	{
 		char *languageNameText = languageNameFile->readFileContents();
 
 		SimpleVector<char *> *tokens = tokenizeString( languageNameText );
@@ -894,14 +794,10 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 	// register cleanup function, since screen->start() will never return
 	atexit( cleanUpAtExit );
 
-
-
-
 	screen->switchTo2DMode();
 
-
-
-	if( getUsesSound() ) {
+	if( getUsesSound() )
+	{
 
 		soundSampleRate =
 				SettingsManager::getIntSetting( "soundSampleRate", 22050 );
@@ -1071,13 +967,11 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 	}
 
 
-
-
-
-
-	if( ! writeFailed ) {
+	if( ! writeFailed )
+	{
 		demoMode = isDemoMode();
 	}
+
 
 
 
@@ -1089,18 +983,20 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 	//glLineWidth( pixelZoomFactor );
 
 
-	if( demoMode ) {
-		showDemoCodePanel( screen, getFontTGAFileName(), gameWidth,
-						   gameHeight );
+	if( demoMode )
+	{
+		showDemoCodePanel( screen, getFontTGAFileName(), gameWidth, gameHeight );
 
 		// wait to start handling events
 		// wait to start recording/playback
 	}
-	else if( writeFailed ) {
+	else if( writeFailed )
+	{
 		// handle key events right away to listen for ESC
 		screen->addKeyboardHandler( sceneHandler );
 	}
-	else {
+	else
+	{
 		// handle events right away
 		screen->addMouseHandler( sceneHandler );
 		screen->addKeyboardHandler( sceneHandler );
@@ -1121,7 +1017,8 @@ int mainFunction( int inNumArgs, char **inArgs ) {
 	int readTarget = SettingsManager::getIntSetting( "targetFrameRate", -1 );
 	int readCounting = SettingsManager::getIntSetting( "countingOnVsync", -1 );
 
-	if( readTarget != -1 && readCounting != -1 ) {
+	if( readTarget != -1 && readCounting != -1 )
+	{
 		targetFrameRate = readTarget;
 		countingOnVsync = readCounting;
 
