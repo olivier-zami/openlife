@@ -10,7 +10,7 @@
  
 
 #include "TestHandlerGL.h"
-#include "ScreenGL.h"
+#include "src/client/screen.h"
 
 #include "minorGems/util/random/StdRandomSource.h"
 

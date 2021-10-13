@@ -43,7 +43,7 @@
 #include "minorGems/graphics/openGL/MouseHandlerGL.h"
 #include "minorGems/graphics/openGL/KeyboardHandlerGL.h"
 #include "minorGems/graphics/openGL/SceneHandlerGL.h"
-#include "minorGems/graphics/openGL/ScreenGL.h"
+#include "src/client/screen.h"
 
 /**
  * A class that translates coordinates for a gui component.

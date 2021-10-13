@@ -137,7 +137,7 @@
  */
 
 
-#include "minorGems/graphics/openGL/ScreenGL.h"
+#include "src/client/screen.h"
 #include "minorGems/graphics/openGL/SingleTextureGL.h"
 
 #include "minorGems/graphics/openGL/glInclude.h"
@@ -495,15 +495,15 @@ ScreenGL::ScreenGL( int inWide, int inHigh, char inFullScreen,
     SDL_EnableKeyRepeat( 0, 0 );
 
     SDL_EnableUNICODE( true );
-    
-    
-    
-
-    
-    
 
 
-    
+
+
+
+
+
+
+
 
     for( int i=0; i<256; i++ ) {
         keyMap[i] = (unsigned char)i;
@@ -1680,7 +1680,9 @@ void ScreenGL::start() {
 
     
     // main loop
-    while( true ) {
+    while( true )
+	{
+		printf("\n============>in progress ...");
         
         timeSec_t frameStartSec;
         unsigned long frameStartMSec;
@@ -1704,7 +1706,8 @@ void ScreenGL::start() {
         SDL_Event event;
         
         while( !( mPlaybackEvents && mRecordingOrPlaybackStarted )
-               && SDL_PollEvent( &event ) ) {
+               && SDL_PollEvent( &event ) )
+		{
             
             SDLMod mods = SDL_GetModState();
 
@@ -1955,14 +1958,15 @@ void ScreenGL::start() {
                 }
                 }
             
-            }
+		}
 
         
 
         
 
         if( mPlaybackEvents && mRecordingOrPlaybackStarted && 
-            mEventFile != NULL ) {
+            mEventFile != NULL )
+		{
             
             
             if( !mTimeValuePlayedBack ) {
@@ -2118,7 +2122,7 @@ void ScreenGL::start() {
                 }
             
 
-            }
+		}
         
         
 
@@ -3065,4 +3069,9 @@ char mapSDLKeyToASCII( int inSDLKey ) {
         default: return 0;
         }
     }
+
+void ScreenGL::display()
+{
+	printf("\nAffichage du contenu de l'ecran...............................");
+}
  

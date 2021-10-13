@@ -14,7 +14,7 @@
 #include "minorGems/util/TranslationManager.h"
 #include "minorGems/game/gameGraphics.h"
 #include "minorGems/util/SettingsManager.h"
-#include "minorGems/graphics/openGL/ScreenGL.h"
+#include "src/client/screen.h"
 
 // shows panel until a correct code has been entered
 // assumes font TGA in "graphics" folder

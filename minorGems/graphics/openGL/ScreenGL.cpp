@@ -69,7 +69,7 @@
  */
 
 
-#include "ScreenGL.h" 
+#include "src/client/screen.h"
 
 #include <GL/gl.h>
 #include <GL/glut.h>
@@ -208,6 +208,7 @@ ScreenGL::~ScreenGL() {
 
 
 void ScreenGL::start() {
+	printf("\n======================================>Start main loop");
 	currentScreenGL = this;
 	glutMainLoop();
 	}

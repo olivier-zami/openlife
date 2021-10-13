@@ -20,7 +20,7 @@
 #ifndef SCENE_NAVIGATOR_DISPLAY_GL_INCLUDED
 #define SCENE_NAVIGATOR_DISPLAY_GL_INCLUDED 
 
-#include "ScreenGL.h"
+#include "src/client/screen.h"
 
 #include "MouseHandlerGL.h"
 #include "KeyboardHandlerGL.h"

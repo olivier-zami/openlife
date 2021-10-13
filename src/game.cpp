@@ -1037,6 +1037,9 @@ int mainFunction( int inNumArgs, char **inArgs )
 	glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
 
+	screen->display();
+
+
 	screen->start();
 
 

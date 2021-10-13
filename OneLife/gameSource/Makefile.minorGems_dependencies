@@ -1,5 +1,4 @@
 ${SCREEN_GL_O}: ../../minorGems/graphics/openGL/ScreenGL_SDL.cpp \
- ../../minorGems/graphics/openGL/ScreenGL.h \
  ../../minorGems/graphics/openGL/MouseHandlerGL.h \
  ../../minorGems/graphics/openGL/KeyboardHandlerGL.h \
  ../../minorGems/graphics/openGL/SceneHandlerGL.h \
@@ -235,7 +234,6 @@ printUtils.o: ../../minorGems/util/printUtils.cpp \
  ../../minorGems/util/development/memory/debugMemory.h \
  ../../minorGems/system/MutexLock.h
 ${GAME_SDL_O}: ../../minorGems/game/platforms/SDL/gameSDL.cpp \
- ../../minorGems/graphics/openGL/ScreenGL.h \
  ../../minorGems/graphics/openGL/MouseHandlerGL.h \
  ../../minorGems/graphics/openGL/KeyboardHandlerGL.h \
  ../../minorGems/graphics/openGL/SceneHandlerGL.h \

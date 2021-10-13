@@ -42,7 +42,7 @@
 #define M_PI		3.14159265358979323846
 #endif
 
-#include "ScreenGL.h"
+#include "src/client/screen.h"
 
 #include "MouseHandlerGL.h"
 #include "KeyboardHandlerGL.h"

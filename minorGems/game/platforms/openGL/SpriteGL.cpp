@@ -663,7 +663,8 @@ void SpriteGL::prepareDraw( int inFrame,
     // this is expensive, and the game never needs it
     // (all frame references are specific and never auto-cycling)
     // inFrame = inFrame % mNumFrames;
-    
+
+	printf("\nTest prepareDraw ...");
     
     if( inComputeCornerPos ) {
         

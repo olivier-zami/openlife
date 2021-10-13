@@ -30,7 +30,7 @@ void cleanUpAtExit();
 
 
 #include "minorGems/ui/GUIComponent.h"
-#include "minorGems/graphics/openGL/ScreenGL.h"
+#include "src/client/screen.h"
 #include "minorGems/graphics/openGL/SceneHandlerGL.h"
 #include "minorGems/graphics/openGL/MouseHandlerGL.h"
 #include "minorGems/graphics/openGL/KeyboardHandlerGL.h"

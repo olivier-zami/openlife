@@ -32,7 +32,7 @@ int main( int inArgCount, char **inArgs )
 
 
 
-#include "minorGems/graphics/openGL/ScreenGL.h"
+#include "src/client/screen.h"
 #include "minorGems/graphics/openGL/SceneHandlerGL.h"
 #include "minorGems/graphics/Color.h"
 
@@ -137,7 +137,7 @@ typedef struct AsyncFileRecord {
 #include "minorGems/system/StopSignalThread.h"
 #include "minorGems/system/MutexLock.h"
 #include "minorGems/system/BinarySemaphore.h"
-#include "src/client/game.h"
+#include "src/game.h"
 
 static MutexLock asyncLock;
 static BinarySemaphore newFileToReadSem;

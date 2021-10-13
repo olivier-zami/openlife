@@ -117,11 +117,11 @@
 #define SCREEN_GL_INCLUDED 
 
 
-#include "MouseHandlerGL.h"
-#include "KeyboardHandlerGL.h"
-#include "SceneHandlerGL.h"
+#include "../../minorGems/graphics/openGL/MouseHandlerGL.h"
+#include "../../minorGems/graphics/openGL/KeyboardHandlerGL.h"
+#include "../../minorGems/graphics/openGL/SceneHandlerGL.h"
 
-#include "RedrawListenerGL.h"
+#include "../../minorGems/graphics/openGL/RedrawListenerGL.h"
 
 #include "minorGems/math/geometry/Vector3D.h"
 #include "minorGems/math/geometry/Angle3D.h"
@@ -235,7 +235,9 @@ class ScreenGL {
 		/**
 		 * Destructor closes and releases the screen.
 		 */	
-		~ScreenGL();	
+		~ScreenGL();
+
+		void display();
 		
 
 
