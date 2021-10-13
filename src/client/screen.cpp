@@ -137,8 +137,8 @@
  */
 
 
-#include "ScreenGL.h" 
-#include "SingleTextureGL.h" 
+#include "minorGems/graphics/openGL/ScreenGL.h"
+#include "minorGems/graphics/openGL/SingleTextureGL.h"
 
 #include "minorGems/graphics/openGL/glInclude.h"
 
@@ -169,7 +169,8 @@
 
 #ifdef RASPBIAN
 
-#include "RaspbianGLSurface.cpp"
+//#include "RaspbianGLSurface.cpp"
+#include "minorGems/graphics/openGL/RaspbianGLSurface.cpp"
 
 #endif
 
@@ -2893,9 +2894,10 @@ void callbackPreDisplay() {
 		}
     }
 
-
+#include "src/client/renderer/openGL/drawConsole.h"
 
 void callbackDisplay() {
+	printf("\nScreenGL_SDL........");
     ScreenGL *s = currentScreenGL;
 
 	if( ! s->m2DMode ) {    
@@ -2916,6 +2918,8 @@ void callbackDisplay() {
 			= *( s->mRedrawListenerVector->getElement( r ) );
 		listener->postRedraw();
 		}
+
+	//openLife::client::renderer::openGL::drawConsole();
 
 #ifdef RASPBIAN
     raspbianSwapBuffers();

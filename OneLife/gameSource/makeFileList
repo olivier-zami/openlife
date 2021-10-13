@@ -126,7 +126,6 @@ graphics/hintArrow.tga \
 
 
 NEEDED_MINOR_GEMS_OBJECTS = \
- ${SCREEN_GL_SDL_O} \
  ${SINGLE_TEXTURE_GL_O} \
  ${TYPE_IO_O} \
  ${STRING_UTILS_O} \

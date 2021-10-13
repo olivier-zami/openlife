@@ -17,6 +17,7 @@ LAYER_SOURCE = \
 ${DIR_SRC_CLIENT}/../../src/game.cpp \
 ${DIR_SRC_CLIENT}/../../src/client/component/bank/sprite.cpp \
 ${DIR_SRC_CLIENT}/../../src/client/component/bank/sprite/ground.cpp \
+${DIR_SRC_CLIENT}/../../src/client/screen.cpp \
 ${DIR_SRC_CLIENT}/../../src/system/_base/init.cpp \
 ${DIR_SRC_CLIENT}/../../src/system/_base/log.cpp \
 ${DIR_SRC_CLIENT}/../../src/system/linux/init.cpp \
@@ -141,7 +142,6 @@ ${DIR_SRC_CLIENT}/graphics/hintArrow.tga \
 
 
 NEEDED_MINOR_GEMS_OBJECTS = \
- ${SCREEN_GL_SDL_O} \
  ${SINGLE_TEXTURE_GL_O} \
  ${TYPE_IO_O} \
  ${STRING_UTILS_O} \
