@@ -15,7 +15,7 @@
 #include "minorGems/crypto/hashes/sha1.h"
 #include "minorGems/network/web/URLUtils.h"
 
-#include "src/client/game.h"
+#include "src/game.h"
 
 
 static int webRequest = -1;

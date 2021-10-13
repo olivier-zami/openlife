@@ -52,7 +52,7 @@
 
 #define OHOL_NON_EDITOR 1
 #include "ObjectPickable.h"
-#include "src/client/game.h"
+#include "src/game.h"
 
 /**********************************************************************************************************************/
 

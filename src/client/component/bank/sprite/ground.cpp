@@ -11,7 +11,7 @@
 #include "minorGems/graphics/filters/BoxBlurFilter.h"
 #include "minorGems/game/gameGraphics.h"
 #include "minorGems/graphics/Image.h"
-#include "src/client/game.h"
+#include "src/game.h"
 #include "OneLife/gameSource/objectBank.h"
 #include "minorGems/util/SettingsManager.h"
 

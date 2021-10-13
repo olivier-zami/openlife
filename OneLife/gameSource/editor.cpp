@@ -84,7 +84,7 @@ int accountHmacVersionNumber = 0;
 #include "minorGems/io/file/File.h"
 #include "minorGems/system/Time.h"
 
-#include "src/client/game.h"
+#include "src/game.h"
 
 /**********************************************************************************************************************/
 

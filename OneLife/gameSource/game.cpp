@@ -297,7 +297,7 @@ const char *getDemoCodeServerURL() {
     return "http://FIXME/demoServer/server.php";
     }
 
-#include "src/client/game.h"
+#include "src/game.h"
 /**********************************************************************************************************************/
 
 char gamePlayingBack = false;

@@ -12,7 +12,7 @@
 #define STRING_VAL( arg )  QUOTE( arg )
 #define NUM_GROUND_STRING_NAMES 30
 
-#include "src/client/game.h"
+#include "src/game.h"
 
 extern GroundSpriteSet **groundSprites;
 

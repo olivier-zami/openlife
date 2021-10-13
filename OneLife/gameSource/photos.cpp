@@ -17,7 +17,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
 #include "stb_image_write.h"
-#include "src/client/game.h"
+#include "src/game.h"
 
 extern GroundSpriteSet **groundSprites;
 
