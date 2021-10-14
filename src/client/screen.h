@@ -692,6 +692,11 @@ class ScreenGL {
 		friend void callbackPreDisplay();
         friend void callbackDisplay();
 		friend void callbackIdle();
+
+
+		// oversleep on last loop (discount it from next sleep)
+		// can be negative (add to next sleep)
+		int oversleepMSec = 0;
 		
 
 
@@ -939,23 +944,24 @@ inline void ScreenGL::removeMouseHandler( MouseHandlerGL *inListener ) {
 
 
 
-inline void ScreenGL::addKeyboardHandler( KeyboardHandlerGL *inListener,
-                                          char inFirstHandler ) {
-	if( !inFirstHandler ) {
+inline void ScreenGL::addKeyboardHandler(//TODO: use std::list instead unless new contextSystem
+	KeyboardHandlerGL *inListener,
+	char inFirstHandler )
+{
+	if( !inFirstHandler )
+	{
         mKeyboardHandlerVector->push_back( inListener );
-        }
-    else {
+	}
+    else
+	{
         int numExisting= mKeyboardHandlerVector->size();
-        KeyboardHandlerGL **oldHandlers = 
-            mKeyboardHandlerVector->getElementArray();
-        
+        KeyboardHandlerGL **oldHandlers = mKeyboardHandlerVector->getElementArray();
         mKeyboardHandlerVector->deleteAll();
-        
         mKeyboardHandlerVector->push_back( inListener );
         mKeyboardHandlerVector->appendArray( oldHandlers, numExisting );
         delete [] oldHandlers;
-        }
 	}
+}
 		
 
 

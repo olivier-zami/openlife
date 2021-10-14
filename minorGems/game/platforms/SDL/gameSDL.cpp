@@ -2560,10 +2560,12 @@ void GameSceneHandler::keyPressed(
     mPausedSleepTime = 0;
     
 
-    if( mPaused && inKey == '%' && ! mBlockQuitting ) {
+    if( mPaused && inKey == '%' && ! mBlockQuitting )
+	{
+		printf("\nTrying to exit nicely (PAUSE + %%)");
         // % to quit from pause
         exit( 0 );
-        }
+	}
     
 
     if( inKey == 9 && isCommandKeyDown() &&

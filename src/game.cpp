@@ -1037,10 +1037,13 @@ int mainFunction( int inNumArgs, char **inArgs )
 	glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
 
-	screen->display();
-
-
 	screen->start();
+
+	while( true )//!get out from loop in keybordhandler exit(0) in minorGems/game/platforms/SDL/gameSDL.cpp
+	{
+		//this->eventLister->getEvents();
+		screen->display();
+	}
 
 
 	return 0;
