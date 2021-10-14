@@ -51,6 +51,7 @@ OneLife/server/familyDataLog.txt
 OneLife/server/myLog.txt
 
 src/third_party/imgui
+src/third_party/gl3w
 
 #
 var/

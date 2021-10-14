@@ -1037,12 +1037,13 @@ int mainFunction( int inNumArgs, char **inArgs )
 	glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
 
+	//TODO: this->context = new context::SDL(); and make friend with sdl::Observer, sdl::Renderer, ... in src/context/sdl.cpp
 	screen->start();
 
 	while( true )//!get out from loop in keybordhandler exit(0) in minorGems/game/platforms/SDL/gameSDL.cpp
 	{
-		//this->eventLister->getEvents();
-		screen->display();
+		screen->getEvents();//TODO: this->eventLister = new sdl::Observer(); this->eventLister->getEvents(); /src/event/keyboard.cpp
+		screen->display();//TODO: composition display(sdl::Renderer()) use builder::sdl
 	}
 
 

@@ -237,6 +237,7 @@ class ScreenGL {
 		 */	
 		~ScreenGL();
 
+		void getEvents();
 		void display();
 		
 
@@ -693,13 +694,9 @@ class ScreenGL {
         friend void callbackDisplay();
 		friend void callbackIdle();
 
-
-		// oversleep on last loop (discount it from next sleep)
-		// can be negative (add to next sleep)
-		int oversleepMSec = 0;
-		
-
-
+		int oversleepMSec = 0;// oversleep on last loop (discount it from next sleep)// can be negative (add to next sleep)
+		timeSec_t frameStartSec;
+		unsigned long frameStartMSec;
 
         // our private members
 

@@ -2401,50 +2401,6 @@ void callbackPreDisplay() {
 		}
     }
 
-#include "src/client/renderer/openGL/drawConsole.h"
-
-void callbackDisplay() {
-	printf("\nScreenGL_SDL........");
-    ScreenGL *s = currentScreenGL;
-
-	if( ! s->m2DMode ) {    
-        // apply our view transform
-        s->applyViewTransform();
-        }
-
-
-	// fire to all handlers
-	for( int h=0; h<currentScreenGL->mSceneHandlerVector->size(); h++ ) {
-		SceneHandlerGL *handler 
-			= *( currentScreenGL->mSceneHandlerVector->getElement( h ) );
-		handler->drawScene();
-		}
-
-    for( int r=0; r<s->mRedrawListenerVector->size(); r++ ) {
-		RedrawListenerGL *listener 
-			= *( s->mRedrawListenerVector->getElement( r ) );
-		listener->postRedraw();
-		}
-
-	//openLife::client::renderer::openGL::drawConsole();
-
-#ifdef RASPBIAN
-    raspbianSwapBuffers();
-#else
-	SDL_GL_SwapBuffers();
-#endif
-
-    // thanks to Andrew McClure for the idea of doing this AFTER
-    // the next redraw (for pretty minimization)
-    if( s->mWantToMimimize ) {
-        s->mWantToMimimize = false;
-        SDL_WM_IconifyWindow();
-        s->mMinimized = true;
-        }
-    }
-
-
-
 void callbackIdle() {
 	//glutPostRedisplay();
 	}		
@@ -2573,11 +2529,10 @@ char mapSDLKeyToASCII( int inSDLKey ) {
         }
     }
 
-void ScreenGL::display()
+void ScreenGL::getEvents()
 {
-	timeSec_t frameStartSec;
-	unsigned long frameStartMSec;
-	Time::getCurrentTime( &frameStartSec, &frameStartMSec );
+
+	Time::getCurrentTime( &(this->frameStartSec), &(this->frameStartMSec) );
 	callbackPreDisplay();// pre-display first, this might involve a sleep for frame timing// purposes
 
 	// now handle pending events BEFORE actually drawing the screen.
@@ -3007,13 +2962,52 @@ void ScreenGL::display()
 
 
 	}
+}
 
-
-
-
-
+void ScreenGL::display()
+{
 	// now all events handled, actually draw the screen
-	callbackDisplay();
+	//callbackDisplay();
+	//#include "src/client/renderer/openGL/drawConsole.h"
+	//void callbackDisplay() {
+	printf("\nScreenGL_SDL........");
+	ScreenGL *s = currentScreenGL;
+
+	if( ! s->m2DMode ) {
+		// apply our view transform
+		s->applyViewTransform();
+	}
+
+
+	// fire to all handlers
+	for( int h=0; h<currentScreenGL->mSceneHandlerVector->size(); h++ )
+	{
+		SceneHandlerGL *handler = *( currentScreenGL->mSceneHandlerVector->getElement( h ) );
+		handler->drawScene();
+	}
+
+	for( int r=0; r<s->mRedrawListenerVector->size(); r++ ) {
+		RedrawListenerGL *listener = *( s->mRedrawListenerVector->getElement( r ) );
+		listener->postRedraw();
+	}
+
+	//openLife::client::renderer::openGL::drawConsole();
+
+#ifdef RASPBIAN
+	raspbianSwapBuffers();
+#else
+	SDL_GL_SwapBuffers();
+#endif
+
+	// thanks to Andrew McClure for the idea of doing this AFTER
+	// the next redraw (for pretty minimization)
+	if( s->mWantToMimimize )
+	{
+		s->mWantToMimimize = false;
+		SDL_WM_IconifyWindow();
+		s->mMinimized = true;
+	}
+	//}
 
 
 	// record them?
@@ -3023,10 +3017,7 @@ void ScreenGL::display()
 		writeEventBatchToFile();
 	}
 
-
-	int frameTime =
-			Time::getMillisecondsSince( frameStartSec, frameStartMSec );
-
+	int frameTime = Time::getMillisecondsSince( this->frameStartSec, this->frameStartMSec );
 
 	// frame time should never be negative
 	// BUT it can be if system time changes while game is running
