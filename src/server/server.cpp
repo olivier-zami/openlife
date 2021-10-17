@@ -13,6 +13,7 @@
 #include "src/common/system.h"
 
 //!spaghetti include ...
+#include "OneLife/server/dbCommon.h"
 #include "OneLife/server/specialBiomes.h"
 #include <stdio.h>
 #include <stdlib.h> //system()
@@ -258,6 +259,7 @@ extern SimpleVector<GraveInfo> newGraves;
 extern SimpleVector<GraveMoveInfo> newGraveMoves;
 extern int usePersonalCurses;
 
+extern openLife::Server* server;
 extern SocketServer *socketServer;
 extern int port;
 
@@ -346,14 +348,20 @@ void openLife::Server::start()
 		if(!this->ipcManager->isEmpty())
 		{
 			printf("\n");
-			//printf("\n===>");
-			//printf("return(%i)", this->ipcManager->isEmpty());
 			command = this->ipcManager->getOut();
-			//printf("\n===>");
-			//printf("return(%i)", this->ipcManager->isEmpty());
 			printf("receive command %u=>%s",
 				command.id,
 				command.name);
+			int idObject = 334;//steel axe
+			if(command.id==1)
+			{
+				unsigned char key[16];
+				unsigned char value[4];
+				intQuadToKey( 1, 1, 0, 0, key );
+				intToValue( idObject, value );
+				LINEARDB3_put( this->getWorldMap()->mapDB->db, key, value );
+			}
+
 		}
 
 
