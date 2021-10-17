@@ -25,6 +25,12 @@ namespace openLife::server::type::entity
 	typedef struct{
 		std::string label;
 	}Climate;
+
+	typedef struct{
+		unsigned int id;
+		char name[32];
+		char parameters[256];
+	}Command;
 }
 
 typedef struct {

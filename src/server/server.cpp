@@ -5,10 +5,11 @@
 #include "server.h"
 
 #include <iostream>
-#include "src/server/component/channel/speech.h"
-#include "src/server/component/database/gameFeatures.h"
+#include "src/server/type/entities.h"
 
 //!TODO move these files
+#include "src/server/component/channel/speech.h"
+#include "src/server/component/database/gameFeatures.h"
 #include "src/common/system.h"
 
 //!spaghetti include ...
@@ -318,7 +319,7 @@ openLife::Server::Server(
 	this->rAir = 0.04;
 	//this->eveWindowOver = false;
 
-	this->ipcManager = new openLife::server::channel::Ipc();
+	this->ipcManager = new openLife::server::channel::Ipc("/home/olivier/Projets/OpenLife/app/version.txt");
 	this->worldMap = new openLife::server::bank::WorldMap(worldMapSettings);
 }
 
@@ -332,12 +333,29 @@ void openLife::Server::init()
 
 void openLife::Server::start()
 {
-	std::cout << "\n\nStart main routine";
+	printf("\n\nStart main routine");
+
+	openLife::server::type::entity::Command command;
+
 	while( !quit )
 	{
 		double curStepTime = Time::getCurrentTime();
 
 		this->ipcManager->read();
+
+		if(!this->ipcManager->isEmpty())
+		{
+			printf("\n");
+			//printf("\n===>");
+			//printf("return(%i)", this->ipcManager->isEmpty());
+			command = this->ipcManager->getOut();
+			//printf("\n===>");
+			//printf("return(%i)", this->ipcManager->isEmpty());
+			printf("receive command %u=>%s",
+				command.id,
+				command.name);
+		}
+
 
 		// flush past players hourly
 		if( curStepTime - this->lastPastPlayerFlushTime > 3600 )
