@@ -12,8 +12,8 @@
 #include <array>
 #include "src/server/type/settings.h"
 #include "src/server/type/entities.h"
-#include "../../../../src/system/_base/type.h"
-#include "../../../../src/system/_base/type/entities.h"
+#include "../../system/_base/type.h"
+#include "../../system/_base/type/entities.h"
 #include "src/system/_base/object/store/device/random/linearDB.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
 #include "src/system/_base/object/store/memory/extendedVector2D.h"
@@ -23,7 +23,7 @@
 //!legacy
 #include "OneLife/server/map.h"
 
-namespace openLife::server::service::database::worldMap
+namespace openLife::server::bank::worldMap
 {
 	typedef struct
 	{
@@ -31,7 +31,7 @@ namespace openLife::server::service::database::worldMap
 	}Biome;
 }
 
-namespace openLife::server::service::database
+namespace openLife::server::bank
 {
 	class WorldMap
 	{

@@ -10,7 +10,7 @@
 
 #include "minorGems/game/doublePair.h"
 
-#include "src/server/service/database/worldMap.h"
+#include "src/server/bank/worldMap.h"
 
 
 

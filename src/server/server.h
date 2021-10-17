@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "src/server/channel/ipc.h"
-#include "src/server/service/database/worldMap.h"
+#include "src/server/bank/worldMap.h"
 #include "src/server/type/entities.h"
 #include "src/system/_base/object/abstract/service.h"
 #include "OneLife/gameSource/GridPos.h"
@@ -301,7 +301,7 @@ namespace openLife
 
 			void init();
 			void start();
-			openLife::server::service::database::WorldMap* getWorldMap();
+			openLife::server::bank::WorldMap* getWorldMap();
 
 			//private:
 			int initMap();
@@ -326,7 +326,7 @@ namespace openLife
 			float rAir;// air itself offers some insulation// a vacuum panel has R-value that is 25x greater than air
 			char eveWindowOver;
 
-			openLife::server::service::database::WorldMap* worldMap;
+			openLife::server::bank::WorldMap* worldMap;
 
 			static const unsigned int WORLD_MAP;
 	};

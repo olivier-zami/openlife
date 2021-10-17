@@ -27,7 +27,7 @@
 #include "OneLife/server/dbCommon.h"
 #include "OneLife/commonSource/fractalNoise.h"
 
-extern openLife::server::service::database::WorldMap* worldMap;
+extern openLife::server::bank::WorldMap* worldMap;
 extern LINEARDB3 biomeDB;
 extern char anyBiomesInDB;
 extern int maxBiomeXLoc;
@@ -57,7 +57,7 @@ extern openLife::system::type::Value2D_U32 mapGenSeed;
  * @param height
  * @param detail
  */
-openLife::server::service::database::WorldMap::WorldMap(openLife::server::settings::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail=4*/)
+openLife::server::bank::WorldMap::WorldMap(openLife::server::settings::WorldMap settings/*unsigned int width, unsigned int height, unsigned int detail=4*/)
 {
 	this->mapGenerator.type = (int)settings.mapGenerator.type;
 	this->mapGenerator.sketch.filename = settings.mapGenerator.sketch.filename;
@@ -101,7 +101,7 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 	std::cout << "\nregister " << settings.climate.size() << " biomes in size " << this->biome.capacity();
 	for(unsigned int i=0; i<settings.climate.size(); i++)
 	{
-		openLife::server::service::database::worldMap::Biome dataBiome;
+		openLife::server::bank::worldMap::Biome dataBiome;
 		dataBiome.label = settings.climate[i].label;
 		this->biome.push_back(dataBiome);
 	}
@@ -131,12 +131,12 @@ openLife::server::service::database::WorldMap::WorldMap(openLife::server::settin
 /**
  *
  */
-openLife::server::service::database::WorldMap::~WorldMap() {}
+openLife::server::bank::WorldMap::~WorldMap() {}
 
 /**
  *
  */
-int openLife::server::service::database::WorldMap::init()//TODO: put code in constructor
+int openLife::server::bank::WorldMap::init()//TODO: put code in constructor
 {
 	//!legacy => DB_open_timeShrunk(db=>this->biomeDB, path=>s.filename, mode=>KISSDB_OPEN_MODE_RWCREAT, hash_table_size=>80000, key_size=>8, value_size=>12)
 	//error = DB_open_timeShrunk( &biomeDB,
@@ -335,7 +335,7 @@ int openLife::server::service::database::WorldMap::init()//TODO: put code in con
  * @param x
  * @param y
  */
-void openLife::server::service::database::WorldMap::setMapSeed(unsigned int x, unsigned int y)
+void openLife::server::bank::WorldMap::setMapSeed(unsigned int x, unsigned int y)
 {
 	this->map.seed.x = x;
 	this->map.seed.y = y;
@@ -347,7 +347,7 @@ void openLife::server::service::database::WorldMap::setMapSeed(unsigned int x, u
  * @param posY
  * @return
  */
-openLife::server::service::database::WorldMap* openLife::server::service::database::WorldMap::select(int posX, int posY)
+openLife::server::bank::WorldMap* openLife::server::bank::WorldMap::select(int posX, int posY)
 {
 	this->query.x = posX;
 	this->query.y = posY;
@@ -359,7 +359,7 @@ openLife::server::service::database::WorldMap* openLife::server::service::databa
  * @return
  * @note topographic rings
  */
-openLife::system::type::entity::Biome openLife::server::service::database::WorldMap::getNewBiome()
+openLife::system::type::entity::Biome openLife::server::bank::WorldMap::getNewBiome()
 {
 	openLife::system::type::entity::Biome newGround;
 	switch(this->mapGenerator.type)
@@ -395,19 +395,19 @@ openLife::system::type::entity::Biome openLife::server::service::database::World
 	return newGround;
 }
 
-std::vector<int> openLife::server::service::database::WorldMap::getBiomes()
+std::vector<int> openLife::server::bank::WorldMap::getBiomes()
 {
 	return this->biome;
 }
 
-int openLife::server::service::database::WorldMap::getInfoBiome(int biome)
+int openLife::server::bank::WorldMap::getInfoBiome(int biome)
 {
 	//printf("\n==========>getInfoBiome(%i)", biome);
 	return this->biome[biome];
 }
 
 
-void openLife::server::service::database::WorldMap::insert(openLife::system::type::entity::Biome biome)
+void openLife::server::bank::WorldMap::insert(openLife::system::type::entity::Biome biome)
 {
 	//!legacy biomeDBPut( int inX, int inY, int inValue, int inSecondPlace, double inSecondPlaceGap )
 	unsigned char key[8];
@@ -445,7 +445,7 @@ void openLife::server::service::database::WorldMap::insert(openLife::system::typ
  * @param mapZone
  */
 
-void openLife::server::service::database::WorldMap::insert(common::object::entity::MapZone* mapZone)
+void openLife::server::bank::WorldMap::insert(common::object::entity::MapZone* mapZone)
 {
 	unsigned int i;
 	unsigned int x, y;
@@ -460,7 +460,7 @@ void openLife::server::service::database::WorldMap::insert(common::object::entit
 	}
 }
 
-int openLife::server::service::database::WorldMap::get()
+int openLife::server::bank::WorldMap::get()
 {
 	openLife::system::Log::trace("Read mapTile(%i,%i)", this->query.x, this->query.y);
 	return 0;
@@ -471,7 +471,7 @@ int openLife::server::service::database::WorldMap::get()
  *
  * @return
  */
-openLife::system::type::entity::Biome openLife::server::service::database::WorldMap::getBiomeRecord(char forceValue)
+openLife::system::type::entity::Biome openLife::server::bank::WorldMap::getBiomeRecord(char forceValue)
 {
 	//!legacy int getMapBiomeIndex( int inX, int inY, int *outSecondPlaceIndex, double *outSecondPlaceGap)
 	openLife::system::type::entity::Biome biomeRecord = {this->query.x, this->query.y, -1, -1, 0};
@@ -556,7 +556,7 @@ openLife::system::type::entity::Biome openLife::server::service::database::World
  *
  * @return
  */
-int openLife::server::service::database::WorldMap::getBiome()
+int openLife::server::bank::WorldMap::getBiome()
 {
 	//unsigned int idx;
 	//idx = this->query.x+(this->query.y*this->width);
@@ -570,7 +570,7 @@ int openLife::server::service::database::WorldMap::getBiome()
  *
  * @return self
  */
-openLife::server::service::database::WorldMap *openLife::server::service::database::WorldMap::reset()
+openLife::server::bank::WorldMap *openLife::server::bank::WorldMap::reset()
 {
 	openLife::system::Log::trace("erasing (%i, %i)", this->query.x, this->query.y);
 	return this;
@@ -578,12 +578,12 @@ openLife::server::service::database::WorldMap *openLife::server::service::databa
 
 //!
 
-void openLife::server::service::database::WorldMap::updateSecondPlaceIndex(int *outSecondPlaceIndex)
+void openLife::server::bank::WorldMap::updateSecondPlaceIndex(int *outSecondPlaceIndex)
 {
 	this->tmp.outSecondPlaceIndex = outSecondPlaceIndex;
 }
 
-void openLife::server::service::database::WorldMap::updateSecondPlaceGap(double *outSecondPlaceGap)
+void openLife::server::bank::WorldMap::updateSecondPlaceGap(double *outSecondPlaceGap)
 {
 	this->tmp.outSecondPlaceGap = outSecondPlaceGap;
 }

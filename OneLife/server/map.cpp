@@ -4,7 +4,7 @@
 #include "src/server/main.h"
 #include "src/system/_base/log.h"
 #include "src/server/server.h"
-#include "src/server/service/database/worldMap.h"
+#include "src/server/bank/worldMap.h"
 
 #include "minorGems/io/file/FileOutputStream.h"
 #include "HashTable.h"
@@ -445,7 +445,7 @@ extern SimpleVector<GridPos> *speechPipesOut;
 static SimpleVector<GridPos> flightLandingPos;
 
 //!patch
-extern openLife::server::service::database::WorldMap* worldMap;
+extern openLife::server::bank::WorldMap* worldMap;
 
 /**********************************************************************************************************************/
 

@@ -319,7 +319,7 @@ openLife::Server::Server(
 	//this->eveWindowOver = false;
 
 	this->ipcManager = new openLife::server::channel::Ipc();
-	this->worldMap = new openLife::server::service::database::WorldMap(worldMapSettings);
+	this->worldMap = new openLife::server::bank::WorldMap(worldMapSettings);
 }
 
 openLife::Server::~Server() {}
@@ -12286,7 +12286,7 @@ void openLife::Server::start()
 	}
 }
 
-openLife::server::service::database::WorldMap* openLife::Server::getWorldMap()
+openLife::server::bank::WorldMap* openLife::Server::getWorldMap()
 {
 	return this->worldMap;
 }

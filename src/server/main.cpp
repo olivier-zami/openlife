@@ -15,7 +15,7 @@
 #include "minorGems/util/random/JenkinsRandomSource.h"
 #include "minorGems/network/SocketPoll.h"
 #include "src/common/object/entity/mapZone.h"
-#include "src/server/service/database/worldMap.h"
+#include "src/server/bank/worldMap.h"
 #include "src/common/type/database/lineardb3.h"
 #include "src/system/_base/object/entity/exception.h"
 #include "src/system/_base/object/store/memory/random/biome.h"
