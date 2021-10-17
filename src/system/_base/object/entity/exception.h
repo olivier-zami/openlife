@@ -5,11 +5,13 @@
 #ifndef ONELIFETEST_SYSTEM_OBJECT_ENTITY_EXCEPTION_H
 #define ONELIFETEST_SYSTEM_OBJECT_ENTITY_EXCEPTION_H
 
+#include <exception>
 #include <string>
+
 
 namespace openLife::system::object::entity
 {
-	class Exception
+	class Exception : public std::exception
 	{
 		public:
 			Exception(const char* message = nullptr, ...);
