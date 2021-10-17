@@ -9,8 +9,9 @@
 #include <array>
 #include <vector>
 
-#include "src/server/type/entities.h"
+#include "src/server/channel/ipc.h"
 #include "src/server/service/database/worldMap.h"
+#include "src/server/type/entities.h"
 #include "src/system/_base/object/abstract/service.h"
 #include "OneLife/gameSource/GridPos.h"
 #include "minorGems/network/web/WebRequest.h"
@@ -305,6 +306,7 @@ namespace openLife
 			//private:
 			int initMap();
 			void initSpeechService();
+			openLife::server::channel::Ipc* ipcManager;
 
 			int* shutdownMode;
 			int* forceShutdownMode;

@@ -318,6 +318,7 @@ openLife::Server::Server(
 	this->rAir = 0.04;
 	//this->eveWindowOver = false;
 
+	this->ipcManager = new openLife::server::channel::Ipc();
 	this->worldMap = new openLife::server::service::database::WorldMap(worldMapSettings);
 }
 
@@ -335,6 +336,8 @@ void openLife::Server::start()
 	while( !quit )
 	{
 		double curStepTime = Time::getCurrentTime();
+
+		this->ipcManager->read();
 
 		// flush past players hourly
 		if( curStepTime - this->lastPastPlayerFlushTime > 3600 )
