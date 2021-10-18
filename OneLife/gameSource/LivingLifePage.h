@@ -1114,6 +1114,6 @@ class LivingLifePage : public GamePage, public ActionListener {
 
     };
 
-
+LiveObject *getGameObject( int inID );
 
 #endif

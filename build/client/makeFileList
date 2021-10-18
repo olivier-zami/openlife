@@ -19,6 +19,7 @@ ${DIR_SRC_CLIENT}/../../src/client/agent/player.cpp \
 ${DIR_SRC_CLIENT}/../../src/client/component/bank/sprite.cpp \
 ${DIR_SRC_CLIENT}/../../src/client/component/bank/sprite/ground.cpp \
 ${DIR_SRC_CLIENT}/../../src/client/screen.cpp \
+${DIR_SRC_CLIENT}/../../src/client/procedure/leadership.cpp \
 ${DIR_SRC_CLIENT}/../../src/system/_base/init.cpp \
 ${DIR_SRC_CLIENT}/../../src/system/_base/log.cpp \
 ${DIR_SRC_CLIENT}/../../src/system/linux/init.cpp \
