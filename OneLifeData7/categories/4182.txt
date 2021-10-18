@@ -1,5 +1,0 @@
-parentID=4182
-pattern
-numObjects=2
-2742
-3978
