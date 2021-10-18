@@ -2,6 +2,7 @@
 
 #include "src/client/agent/player.h"
 #include "src/client/procedure/leadership.h"
+#include "src/client/procedure/statistic.h"
 
 #include "objectBank.h"
 #include "spriteBank.h"
@@ -42,7 +43,6 @@
 
 #define MAP_D 64
 #define MAP_NUM_CELLS 4096
-#define MEASURE_TIME_NUM_CATEGORIES 3
 
 /**********************************************************************************************************************/
 
@@ -57,6 +57,8 @@ extern Font *handwritingFont;
 extern Font *pencilFont;
 extern Font *pencilErasedFont;
 extern doublePair lastScreenViewCenter;
+extern int historyGraphLength;
+extern FloatColor* timeMeasureGraphColors;
 
 /**********************************************************************************************************************/
 
@@ -104,7 +106,6 @@ static char waitingForPhotoSig = false;
 static char *photoSig = NULL;
 static double noMoveAge = 0.20;// no moving for first 20 seconds of life
 static double emotDuration = 10;
-static int historyGraphLength = 100;
 static char showFPS = false;
 static double frameBatchMeasureStartTime = -1;
 static int framesInBatch = 0;
@@ -116,24 +117,13 @@ static const char *timeMeasureNames[ MEASURE_TIME_NUM_CATEGORIES ] =
   "updates",
   "drawing" };
 
-static FloatColor timeMeasureGraphColors[ MEASURE_TIME_NUM_CATEGORIES ] =
-{ { 1, 1, 0, 1 },
-  { 0, 1, 0, 1 },
-  { 1, 0, 0, 1 } };
-
 static double timeMeasureToDraw[ MEASURE_TIME_NUM_CATEGORIES ];
 
-typedef struct TimeMeasureRecord {
-        double timeMeasureAverage[ MEASURE_TIME_NUM_CATEGORIES ];
-        double total;
-    } TimeMeasureRecord;
-
+/**********************************************************************************************************************/
 
 double runningPixelCount = 0;
-
 double spriteCountToDraw = 0;
 double uniqueSpriteCountToDraw = 0;
-
 double pixelCountToDraw = 0;
 
 
@@ -5193,120 +5183,6 @@ static void drawFixedShadowStringWhite( const char *inString,
     setDrawColor( 1, 1, 1, 1 );
     drawFixedShadowString( inString, inPos );
     }
-
-
-
-static void addToGraph( SimpleVector<double> *inHistory, double inValue ) {
-    inHistory->push_back( inValue );
-                
-    while( inHistory->size() > historyGraphLength ) {
-        inHistory->deleteElement( 0 );
-        }
-    }
-
-
-static void addToGraph( SimpleVector<TimeMeasureRecord> *inHistory, 
-                        double inValue[ MEASURE_TIME_NUM_CATEGORIES ] ) {
-    TimeMeasureRecord r;
-    r.total = 0;
-    for( int i=0; i<MEASURE_TIME_NUM_CATEGORIES; i++ ) {
-        r.timeMeasureAverage[i] = inValue[i];
-        r.total += inValue[i];
-        }
-    
-    inHistory->push_back( r );
-                
-    while( inHistory->size() > historyGraphLength ) {
-        inHistory->deleteElement( 0 );
-        }
-    }
-
-
-
-static void drawGraph( SimpleVector<double> *inHistory, doublePair inPos,
-                       FloatColor inColor ) {
-    double max = 0;
-    for( int i=0; i<inHistory->size(); i++ ) {
-        double val = inHistory->getElementDirect( i );
-        if( val > max ) {
-            max = val;
-            }
-        }
-
-    setDrawColor( 0, 0, 0, 0.5 );
-
-    double graphHeight = 40;
-
-    drawRect( inPos.x - 2, 
-              inPos.y - 2,
-              inPos.x + historyGraphLength + 2,
-              inPos.y + graphHeight + 2 );
-        
-    
-
-    setDrawColor( inColor.r, inColor.g, inColor.b, 0.75 );
-    for( int i=0; i<inHistory->size(); i++ ) {
-        double val = inHistory->getElementDirect( i );
-
-        double scaledVal = val / max;
-        
-        drawRect( inPos.x + i, 
-                  inPos.y,
-                  inPos.x + i + 1,
-                  inPos.y + scaledVal * graphHeight );
-        }
-    }
-
-
-
-
-static void drawGraph( SimpleVector<TimeMeasureRecord> *inHistory, 
-                       doublePair inPos,
-                       FloatColor inColor[MEASURE_TIME_NUM_CATEGORIES] ) {
-    double max = 0;
-    for( int i=0; i<inHistory->size(); i++ ) {
-        double val = inHistory->getElementDirect( i ).total;
-        if( val > max ) {
-            max = val;
-            }
-        }
-
-    setDrawColor( 0, 0, 0, 0.5 );
-
-    double graphHeight = 40;
-
-    drawRect( inPos.x - 2, 
-              inPos.y - 2,
-              inPos.x + historyGraphLength + 2,
-              inPos.y + graphHeight + 2 );
-        
-    
-
-    for( int i=0; i<inHistory->size(); i++ ) {
-
-        for( int m=MEASURE_TIME_NUM_CATEGORIES - 1; m >= 0; m-- ) {
-            
-            double sum = 0;
-            
-            for( int n=m; n>=0; n-- ) {
-            
-                sum += inHistory->getElementDirect( i ).timeMeasureAverage[n];
-                }
-
-            FloatColor c = timeMeasureGraphColors[m];
-            
-            setDrawColor( c.r, c.g, c.b, 0.75 );
-            
-            double scaledVal = sum / max;
-            
-            drawRect( inPos.x + i, 
-                      inPos.y,
-                      inPos.x + i + 1,
-                      inPos.y + scaledVal * graphHeight );
-            }
-        }
-    }
-
 
 // found here:
 // https://stackoverflow.com/questions/1449805/how-to-format-a-number-from-1123456789-to-1-123-456-789-in-c/24795133#24795133
