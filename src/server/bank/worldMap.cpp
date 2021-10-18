@@ -49,6 +49,8 @@ extern unsigned int biomeRandSeedA;
 extern unsigned int biomeRandSeedB;
 extern openLife::system::type::Value2D_U32 mapGenSeed;
 
+SimpleVector<LiveObject> players;
+
 
 
 /**
@@ -587,3 +589,20 @@ void openLife::server::bank::WorldMap::updateSecondPlaceGap(double *outSecondPla
 {
 	this->tmp.outSecondPlaceGap = outSecondPlaceGap;
 }
+
+/**********************************************************************************************************************/
+
+LiveObject *getLiveObject( int inID )
+{
+	for( int i=0; i<players.size(); i++ ) {
+		LiveObject *o = players.getElement( i );
+
+		if( o->id == inID ) {
+			return o;
+		}
+	}
+
+	return NULL;
+}
+
+

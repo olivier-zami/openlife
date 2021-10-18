@@ -118,4 +118,6 @@ namespace openLife::server::bank
 	};
 }
 
+LiveObject *getLiveObject( int inID );
+
 #endif //OPENLIFE_SERVER_SERVICE_DATABASE_WORLDMAP_H

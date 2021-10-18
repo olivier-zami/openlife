@@ -90,8 +90,6 @@ int getUnusedLeadershipColor();
 char removeFromContainerToHold( LiveObject *inPlayer, int inContX, int inContY, int inSlotNumber );
 char *getLeadershipName( LiveObject *nextPlayer, char inNoName = false );
 double computeAge( LiveObject *inPlayer );
-char isExiled( LiveObject *inViewer, LiveObject *inTarget );
-LiveObject *getLiveObject( int inID );
 void handleDrop( int inX, int inY, LiveObject *inDroppingPlayer, SimpleVector<int> *inPlayerIndicesToSendUpdatesAbout );
 */
 
