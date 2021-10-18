@@ -11,194 +11,117 @@
 #include "whiteSprites.h"
 #include "message.h"
 #include "accountHmac.h"
-
 #include "liveObjectSet.h"
 #include "ageControl.h"
 #include "musicPlayer.h"
-
 #include "emotion.h"
-
 #include "photos.h"
-
 #include "spriteDrawColorOverride.h"
-
-
 #include "liveAnimationTriggers.h"
-
 #include "../commonSource/fractalNoise.h"
 #include "../commonSource/sayLimit.h"
-
-
 #include "minorGems/util/SimpleVector.h"
 #include "minorGems/util/MinPriorityQueue.h"
-
-
 #include "minorGems/game/Font.h"
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/util/SettingsManager.h"
 #include "minorGems/util/random/JenkinsRandomSource.h"
 #include "minorGems/game/drawUtils.h"
-
 #include "minorGems/io/file/File.h"
-
 #include "minorGems/formats/encodingUtils.h"
-
 #include "minorGems/system/Thread.h"
-
 #include "src/third_party/jason_rohrer/minorGems/util/log/AppLog.h"
-
 #include "minorGems/crypto/hashes/sha1.h"
-
 #include <stdlib.h>//#include <math.h>
 #include "src/system/_base/process/scalar.h"
-
-
-#define OHOL_NON_EDITOR 1
-#include "ObjectPickable.h"
 #include "src/game.h"
 
 /**********************************************************************************************************************/
-
-static ObjectPickable objectPickable;
-
-
+#define OHOL_NON_EDITOR 1
+#include "ObjectPickable.h"
 
 #define MAP_D 64
 #define MAP_NUM_CELLS 4096
+#define MEASURE_TIME_NUM_CATEGORIES 3
+
+/**********************************************************************************************************************/
 
 extern int versionNumber;
 extern int dataVersionNumber;
-
 extern const char *clientTag;
-
-
 extern double frameRateFactor;
-
 extern Font *mainFont;
 extern Font *numbersFontFixed;
 extern Font *mainFontReview;
 extern Font *handwritingFont;
 extern Font *pencilFont;
 extern Font *pencilErasedFont;
-
-
-// seconds
-static double maxCurseTagDisplayGap = 15.0;
-
-
-// to make all erased pencil fonts lighter
-static float pencilErasedFontExtraFade = 0.75;
-
-
 extern doublePair lastScreenViewCenter;
 
+/**********************************************************************************************************************/
+
+static ObjectPickable objectPickable;
+static double maxCurseTagDisplayGap = 15.0;// seconds
+static float pencilErasedFontExtraFade = 0.75;// to make all erased pencil fonts lighter
 static char shouldMoveCamera = true;
-
-
 extern double viewWidth;
 extern double viewHeight;
-
 extern int screenW, screenH;
-
 extern char usingCustomServer;
 extern char *serverIP;
 extern int serverPort;
-
 extern char *userEmail;
 extern char *userTwinCode;
 extern int userTwinCount;
-
 extern char userReconnect;
-
 static char vogMode = false;
 static char vogModeActuallyOn = false;
-
 static doublePair vogPos = { 0, 0 };
-
 static char vogPickerOn = false;
-
-    
-
 extern float musicLoudness;
-
-
 static JenkinsRandomSource randSource( 340403 );
 static JenkinsRandomSource remapRandSource( 340403 );
-
-
 static int lastScreenMouseX, lastScreenMouseY;
 static char mouseDown = false;
 static int mouseDownFrames = 0;
-
 static int minMouseDownFrames = 30;
-
-
 static int screenCenterPlayerOffsetX, screenCenterPlayerOffsetY;
-
-
 static float lastMouseX = 0;
 static float lastMouseY = 0;
-
-
-// set to true to render for teaser video
-static char teaserVideo = false;
-
-
+static char teaserVideo = false;// set to true to render for teaser video
 static int showBugMessage = 0;
 static const char *bugEmail = "jason" "rohrer" "@" "fastmail.fm";
-
-
-
-// if true, pressing S key (capital S)
-// causes current speech and mask to be saved to the screenShots folder
-static char savingSpeechEnabled = false;
+static char savingSpeechEnabled = false;// if true, pressing S key (capital S)// causes current speech and mask to be saved to the screenShots folder
 static char savingSpeech = false;
 static char savingSpeechColor = false;
 static char savingSpeechMask = false;
-
 static char savingSpeechNumber = 1;
-
 static char takingPhoto = false;
 static GridPos takingPhotoGlobalPos;
 static char takingPhotoFlip = false;
 static int photoSequenceNumber = -1;
 static char waitingForPhotoSig = false;
 static char *photoSig = NULL;
-
-// no moving for first 20 seconds of life
-static double noMoveAge = 0.20;
-
-
+static double noMoveAge = 0.20;// no moving for first 20 seconds of life
 static double emotDuration = 10;
-
-
 static int historyGraphLength = 100;
-
 static char showFPS = false;
 static double frameBatchMeasureStartTime = -1;
 static int framesInBatch = 0;
 static double fpsToDraw = -1;
-
-#define MEASURE_TIME_NUM_CATEGORIES 3
-
-
 static double timeMeasures[ MEASURE_TIME_NUM_CATEGORIES ];
 
-    
-    
-static const char *timeMeasureNames[ MEASURE_TIME_NUM_CATEGORIES ] = 
+static const char *timeMeasureNames[ MEASURE_TIME_NUM_CATEGORIES ] =
 { "message",
   "updates",
   "drawing" };
 
-static FloatColor timeMeasureGraphColors[ MEASURE_TIME_NUM_CATEGORIES ] = 
+static FloatColor timeMeasureGraphColors[ MEASURE_TIME_NUM_CATEGORIES ] =
 { { 1, 1, 0, 1 },
   { 0, 1, 0, 1 },
   { 1, 0, 0, 1 } };
 
-
 static double timeMeasureToDraw[ MEASURE_TIME_NUM_CATEGORIES ];
-
 
 typedef struct TimeMeasureRecord {
         double timeMeasureAverage[ MEASURE_TIME_NUM_CATEGORIES ];

@@ -3,6 +3,7 @@
 //
 
 #include "player.h"
+#include "OneLife/gameSource/LivingLifePage.h"
 
 extern char isAutoClick;//from LivingPage.cpp
 

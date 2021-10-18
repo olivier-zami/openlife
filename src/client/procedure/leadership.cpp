@@ -4,6 +4,7 @@
 
 #include "leadership.h"
 
+#include "src/client/agent/player.h"
 #include <cstddef>
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/game/game.h"
