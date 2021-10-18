@@ -148,7 +148,6 @@ SimpleVector<LiveObject> tutorialLoadingPlayers;
 SimpleVector<DeadObject> pastPlayers;
 SimpleVector<GridPos> newOwnerPos;
 SimpleVector<GridPos> recentlyRemovedOwnerPos;
-SimpleVector<WarPeaceMessageRecord> warPeaceRecords;
 SimpleVector<int> killStatePosseChangedPlayerIDs;
 SimpleVector<ChangePosition> newSpeechPos;
 SimpleVector<char*> newSpeechPhrases;
@@ -233,7 +232,6 @@ SimpleVector<char*> namedRedeemPhrases;
 SimpleVector<char*> youKillPhrases;
 SimpleVector<char*> namedKillPhrases;
 SimpleVector<char*> namedAfterKillPhrases;
-SimpleVector<WarState> warStates;
 char *orderPhrase = NULL;
 char *eveName = NULL;
 char allowedSayCharMap[256];// maps extended ascii codes to true/false for characters allowed in SAY// messages
@@ -248,7 +246,6 @@ int recentScoreWindowForPickingEve = 10;
 double eveWindowStart = 0;
 FILE *familyDataLogFile = NULL;
 JenkinsRandomSource randSource;
-SimpleVector<PeaceTreaty> peaceTreaties;
 double minGlobalMessageSpacingSeconds = 7;// messages with no follow-up hang out on client for 10 seconds// 7 seconds should be long enough to read if there's a follow-up waiting
 SimpleVector<DeadlyMapSpot> deadlyMapSpots;
 double diagLength = 1.41421356237;// diags are square root of 2 in length

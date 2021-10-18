@@ -89,8 +89,6 @@ void makePlayerBiomeSick( LiveObject *nextPlayer, int sicknessObjectID );
 int getUnusedLeadershipColor();
 char removeFromContainerToHold( LiveObject *inPlayer, int inContX, int inContY, int inSlotNumber );
 char *getLeadershipName( LiveObject *nextPlayer, char inNoName = false );
-void sendWarReportToAll();
-void sendPeaceWarMessage( const char *inPeaceOrWar, char inWar, int inLineageAEveID, int inLineageBEveID );
 double computeAge( LiveObject *inPlayer );
 char isExiled( LiveObject *inViewer, LiveObject *inTarget );
 LiveObject *getLiveObject( int inID );

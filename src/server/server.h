@@ -107,27 +107,6 @@ typedef struct UpdateRecord{
 	int absoluteHeldOriginX, absoluteHeldOriginY;
 } UpdateRecord;
 
-typedef struct PeaceTreaty
-{
-	int lineageAEveID;
-	int lineageBEveID;
-
-	// they have to say it in both directions
-	// before it comes into effect
-	char dirAToB;
-	char dirBToA;
-
-	// track directions of breaking it later
-	char dirAToBBroken;
-	char dirBToABroken;
-} PeaceTreaty;
-
-typedef struct WarState
-{
-	int lineageAEveID;
-	int lineageBEveID;
-} WarState;
-
 typedef struct DeadObject
 {
 	int id;
@@ -249,13 +228,6 @@ typedef struct MoveRecord
 	char *formatString;
 	int absoluteX, absoluteY;
 }MoveRecord;
-
-typedef struct WarPeaceMessageRecord {
-	char war;
-	int lineageAEveID;
-	int lineageBEveID;
-	double t;
-}WarPeaceMessageRecord;
 
 typedef struct ForcedEffects {
 	// -1 if no emot specified
@@ -413,8 +385,6 @@ double measurePathLength(int inXS, int inYS, GridPos *inPathPos, int inPathLengt
 void addDeadlyMapSpot( GridPos inPos );
 char wasRecentlyDeadly( GridPos inPos );
 void addPastPlayer( LiveObject *inPlayer );
-void removePeaceTreaty( int inLineageAEveID, int inLineageBEveID );
-void addPeaceTreaty( int inLineageAEveID, int inLineageBEveID );
 void sendMessageToPlayer( LiveObject *inPlayer, char *inMessage, int inLength );
 int getLiveObjectIndex( int inID );
 char realSpriteBank();
@@ -505,8 +475,6 @@ char *isBabyNamingSay( char *inSaidString );
 char *isReverseNamingSay( char *inSaidString, SimpleVector<char*> *inPhraseList );
 char *isNamingSay( char *inSaidString, SimpleVector<char*> *inPhraseList );
 void readPhrases( const char *inSettingsName, SimpleVector<char*> *inList );
-void sendWarReportToAll();
-char *getWarReportMessage();
 unsigned char *makeCompressedMessage( char *inMessage, int inLength, int *outLength );
 void handleHoldingChange( LiveObject *inPlayer, int inNewHeldID );
 char removeFromContainerToHold( LiveObject *inPlayer, int inContX, int inContY, int inSlotNumber );
@@ -561,7 +529,6 @@ char isMapSpotEmptyOfPlayers( int inX, int inY );
 char *getHoldingString( LiveObject *inObject );
 int sendMapChunkMessage( LiveObject *inO, char inDestOverride = false, int inDestOverrideX = 0, int inDestOverrideY = 0 );
 void checkCustomGlobalMessage();
-void sendPeaceWarMessage( const char *inPeaceOrWar, char inWar, int inLineageAEveID, int inLineageBEveID );
 void sendGlobalMessage( char *inMessage, LiveObject *inOnePlayerOnly = NULL );
 void setPlayerDisconnected( LiveObject *inPlayer, const char *inReason );
 int getMaxChunkDimension();
@@ -630,8 +597,6 @@ char getFemale( LiveObject *inPlayer );
 char doesEveLineExist( int inEveID );
 int getNumPlayers();
 char isWarState( int inLineageAEveID, int inLineageBEveID );
-char isPeaceTreaty( int inLineageAEveID, int inLineageBEveID, PeaceTreaty **outPartialTreaty = NULL );
-PeaceTreaty *getMatchingTreaty( int inLineageAEveID, int inLineageBEveID );
 float getHighestRecentScore();
 void addRecentScore( char *inEmail, float inScore );
 void cleanRecentScores();

@@ -29,6 +29,7 @@ ${DIR_APP_SERVER}/map.cpp \
 ${DIR_APP_SERVER}/../../src/server/main.cpp \
 ${DIR_APP_SERVER}/../../src/server/bank/worldMap.cpp \
 ${DIR_APP_SERVER}/../../src/server/channel/ipc.cpp \
+${DIR_APP_SERVER}/../../src/server/feature/peaceTreaty.cpp \
 ${DIR_APP_SERVER}/../../src/server/process/mapGenerator/newBiome_v0.cpp \
 ${DIR_APP_SERVER}/../../src/server/process/newBiome_v1.cpp \
 ${DIR_APP_SERVER}/../../src/server/process/message/getMapChunk.cpp \
