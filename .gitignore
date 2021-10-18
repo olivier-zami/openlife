@@ -27,6 +27,7 @@ OneLife/gameSource/screenShots/*
 OneLife/gameSource/groundTileCache/*
 OneLife/gameSource/log.txt.backup
 OneLife/gameSource/graphics/*
+OneLife/gameSource/spriteImportCache/
 
 OneLife/server/OneLifeServer
 OneLife/server/log.txt
