@@ -4,6 +4,7 @@
 
 #include "player.h"
 #include "OneLife/gameSource/LivingLifePage.h"
+#include "minorGems/util/stringUtils.h"
 
 extern char isAutoClick;//from LivingPage.cpp
 
@@ -296,4 +297,120 @@ void LivingLifePage::computePathToDest( LiveObject *inObject )
 	inObject->onFinalPathStep = false;
 
 	delete [] blockedMap;
+}
+
+void printPath( GridPos *inPath, int inLength )
+{
+	for( int i=0; i<inLength; i++ ) {
+		printf( "(%d,%d) ", inPath[i].x, inPath[i].y );
+	}
+	printf( "\n" );
+}
+
+void removeDoubleBacksFromPath( GridPos **inPath, int *inLength )
+{
+
+	SimpleVector<GridPos> filteredPath;
+
+	int dbA = -1;
+	int dbB = -1;
+
+	int longestDB = 0;
+
+	GridPos *path = *inPath;
+	int length = *inLength;
+
+	for( int e=0; e<length; e++ ) {
+
+		for( int f=e; f<length; f++ ) {
+
+			if( equal( path[e],
+					   path[f] ) ) {
+
+				int dist = f - e;
+
+				if( dist > longestDB ) {
+
+					dbA = e;
+					dbB = f;
+					longestDB = dist;
+				}
+			}
+		}
+	}
+
+	if( longestDB > 0 ) {
+
+		printf( "Removing loop with %d elements\n",
+				longestDB );
+
+		for( int e=0; e<=dbA; e++ ) {
+			filteredPath.push_back(
+					path[e] );
+		}
+
+		// skip loop between
+
+		for( int e=dbB + 1; e<length; e++ ) {
+			filteredPath.push_back(
+					path[e] );
+		}
+
+		*inLength = filteredPath.size();
+
+		delete [] path;
+
+		*inPath =
+				filteredPath.getElementArray();
+	}
+}
+
+double computeCurrentAgeNoOverride( LiveObject *inObj )
+{
+	if( inObj->finalAgeSet ) {
+		return inObj->age;
+	}
+	else {
+		return inObj->age +
+			   inObj->ageRate * ( game_getCurrentTime() - inObj->lastAgeSetTime );
+	}
+}
+
+double computeCurrentAge( LiveObject *inObj )
+{
+	if( inObj->finalAgeSet ) {
+		return inObj->age;
+	}
+	else {
+		if( inObj->tempAgeOverrideSet ) {
+			double curTime = game_getCurrentTime();
+
+			if( curTime - inObj->tempAgeOverrideSetTime < 5 ) {
+				// baby cries for 5 seconds each time they speak
+
+				// update age using clock
+				return inObj->tempAgeOverride +
+					   inObj->ageRate *
+					   ( curTime - inObj->tempAgeOverrideSetTime );
+			}
+			else {
+				// temp override over
+				inObj->tempAgeOverrideSet = false;
+			}
+		}
+
+		return computeCurrentAgeNoOverride( inObj );
+	}
+
+}
+
+char *getDisplayObjectDescription( int inID )//TODO: put in agent::object or agent::animal npc ...
+{
+	ObjectRecord *o = getObject( inID );
+	if( o == NULL ) {
+		return NULL;
+	}
+	char *upper = stringToUpperCase( o->description );
+	stripDescriptionComment( upper );
+	return upper;
 }

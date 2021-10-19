@@ -361,4 +361,10 @@ namespace openLife::client::agent
 	};
 }
 
+void printPath( GridPos *inPath, int inLength );
+void removeDoubleBacksFromPath( GridPos **inPath, int *inLength );
+double computeCurrentAgeNoOverride( LiveObject *inObj );
+double computeCurrentAge( LiveObject *inObj );
+char *getDisplayObjectDescription( int inID );
+
 #endif //OPENLIFE_PLAYER_H
