@@ -1,7 +1,9 @@
 #include "LivingLifePage.h"
 
+#include "src/client/socket.h"
 #include "src/client/agent/player.h"
 #include "src/client/procedure/communication.h"
+#include "src/client/procedure/family.h"
 #include "src/client/procedure/leadership.h"
 #include "src/client/procedure/nation.h"
 #include "src/client/procedure/statistic.h"
@@ -45,6 +47,7 @@
 
 #define MAP_D 64
 #define MAP_NUM_CELLS 4096
+#define BASE_SPEED 3.75// base speed for animations that aren't speeded up or slowed down // when player moving at a different speed, anim speed is modified
 
 /**********************************************************************************************************************/
 
@@ -72,10 +75,29 @@ extern int serverPort;
 extern char *userEmail;
 extern char *userTwinCode;
 extern int userTwinCount;
-extern char userReconnect;
 extern float musicLoudness;
 extern SimpleVector<HomePos> homePosStack;
 extern SimpleVector<HomePos> oldHomePosStack;
+extern int groundSpritesArraySize;//TODO: find a new way to synchronize server and client biome
+extern GroundSpriteSet **groundSprites;//TODO: find a new way to synchronize server and client biome
+extern char leaderCommandTyped;
+extern char *lastMessageSentToServer;
+extern SimpleVector<unsigned char> serverSocketBuffer;
+extern char serverSocketConnected;
+extern char serverSocketHardFail;
+extern float connectionMessageFade;
+extern double connectedTime;
+extern char forceDisconnect;
+extern double timeLastMessageSent;
+extern char *nextActionMessageToSend;// if user clicks to initiate an action while still moving, we// queue it here
+extern int numServerBytesRead;
+extern int numServerBytesSent;
+extern int overheadServerBytesSent;
+extern int overheadServerBytesRead;
+extern int messagesOutCount;
+extern int bytesOutCount;
+extern char userReconnect;
+extern int bytesInCount;
 
 /**********************************************************************************************************************/
 
@@ -97,7 +119,6 @@ static int screenCenterPlayerOffsetX, screenCenterPlayerOffsetY;
 static float lastMouseX = 0;
 static float lastMouseY = 0;
 static char teaserVideo = false;// set to true to render for teaser video
-static int showBugMessage = 0;
 static const char *bugEmail = "jason" "rohrer" "@" "fastmail.fm";
 static char savingSpeechEnabled = false;// if true, pressing S key (capital S)// causes current speech and mask to be saved to the screenShots folder
 static char savingSpeech = false;
@@ -136,9 +157,6 @@ static int messagesOutPerSec = -1;
 static int bytesInPerSec = -1;
 static int bytesOutPerSec = -1;
 static int messagesInCount = 0;
-static int messagesOutCount = 0;
-static int bytesInCount = 0;
-static int bytesOutCount = 0;
 static SimpleVector<double> messagesInHistoryGraph;
 static SimpleVector<double> messagesOutHistoryGraph;
 static SimpleVector<double> bytesInHistoryGraph;
@@ -156,12 +174,11 @@ static double culvertFractalAmp = 98;
 static int usedToolSlots = 0;
 static int totalToolSlots = 0;
 static int lastPlayerID = -1;// used on reconnect to decide whether to delete old home positions
-extern int groundSpritesArraySize;//TODO: find a new way to synchronize server and client biome
-extern GroundSpriteSet **groundSprites;//TODO: find a new way to synchronize server and client biome
-extern char leaderCommandTyped;
+static char hideGuiPanel = false;
 
 /**********************************************************************************************************************/
 
+int showBugMessage = 0;
 double runningPixelCount = 0;
 double spriteCountToDraw = 0;
 double uniqueSpriteCountToDraw = 0;
@@ -173,409 +190,6 @@ extern client::Game* game;
 extern openLife::system::type::Value2D_U32 mapGenSeed;
 
 /**********************************************************************************************************************/
-
-char *getRelationName( SimpleVector<int> *ourLin, 
-                       SimpleVector<int> *theirLin, 
-                       int ourID, int theirID,
-                       int ourDisplayID, int theirDisplayID,
-                       double ourAge, double theirAge,
-                       int ourEveID, int theirEveID ) {
-    
-
-    ObjectRecord *theirDisplayO = getObject( theirDisplayID );
-    
-    char theyMale = false;
-    
-    if( theirDisplayO != NULL ) {
-        theyMale = theirDisplayO->male;
-        }
-    
-
-    if( ourLin->size() == 0 && theirLin->size() == 0 ) {
-        // both eve, no relation
-        return NULL;
-        }
-
-    const char *main = "";
-    char grand = false;
-    int numGreats = 0;
-    int cousinNum = 0;
-    int cousinRemovedNum = 0;
-    
-    char found = false;
-
-    for( int i=0; i<theirLin->size(); i++ ) {
-        if( theirLin->getElementDirect( i ) == ourID ) {
-            found = true;
-            
-            if( theyMale ) {
-                main = translate( "son" );
-                }
-            else {
-                main = translate( "daughter" );
-                }
-            if( i > 0  ) {
-                grand = true;
-                }
-            numGreats = i - 1;
-            }
-        }
-
-    if( ! found ) {
-        for( int i=0; i<ourLin->size(); i++ ) {
-            if( ourLin->getElementDirect( i ) == theirID ) {
-                found = true;
-                main = translate( "mother" );
-                if( i > 0  ) {
-                    grand = true;
-                    }
-                numGreats = i - 1;
-                }
-            }
-        }
-    
-    char big = false;
-    char little = false;
-    char twin = false;
-    char identical = false;
-
-    if( ! found ) {
-        // not a direct descendent or ancestor
-
-        // look for shared relation
-        int ourMatchIndex = -1;
-        int theirMatchIndex = -1;
-        
-        for( int i=0; i<ourLin->size(); i++ ) {
-            for( int j=0; j<theirLin->size(); j++ ) {
-                
-                if( ourLin->getElementDirect( i ) == 
-                    theirLin->getElementDirect( j ) ) {
-                    ourMatchIndex = i;
-                    theirMatchIndex = j;
-                    break;
-                    }
-                }
-            if( ourMatchIndex != -1 ) {
-                break;
-                }
-            }
-        
-        if( ourMatchIndex == -1 ) {
-            
-            if( ourEveID != -1 && theirEveID != -1 &&
-                ourEveID == theirEveID ) {
-                // no shared lineage, but same eve beyond lineage cuttoff
-                return stringDuplicate( translate( "distantRelative" ) );
-                }
-
-            return NULL;
-            }
-        
-        found = true;
-
-        if( theirMatchIndex == 0 && ourMatchIndex == 0 ) {
-            if( theyMale ) {
-                main = translate( "brother" );
-                }
-            else {
-                main = translate( "sister" );
-                }
-            
-            if( ourAge < theirAge - 0.1 ) {
-                big = true;
-                }
-            else if( ourAge > theirAge + 0.1 ) {
-                little = true;
-                }
-            else {
-                // close enough together in age
-                twin = true;
-                
-                if( ourDisplayID == theirDisplayID ) {
-                    identical = true;
-                    }
-                }
-            }
-        else if( theirMatchIndex == 0 ) {
-            if( theyMale ) {
-                main = translate( "uncle" );
-                }
-            else {
-                main = translate( "aunt" );
-                }
-            numGreats = ourMatchIndex - 1;
-            }
-        else if( ourMatchIndex == 0 ) {
-            if( theyMale ) {
-                main = translate( "nephew" );
-                }
-            else {
-                main = translate( "niece" );
-                }
-            numGreats = theirMatchIndex - 1;
-            }
-        else {
-            // cousin of some kind
-            
-            main = translate( "cousin" );
-            
-            // shallowest determines cousin number
-            // diff determines removed number
-            if( ourMatchIndex <= theirMatchIndex ) {
-                cousinNum = ourMatchIndex;
-                cousinRemovedNum = theirMatchIndex - ourMatchIndex;
-                }
-            else {
-                cousinNum = theirMatchIndex;
-                cousinRemovedNum = ourMatchIndex - theirMatchIndex;
-                }
-            }
-        }
-
-
-    SimpleVector<char> buffer;
-    
-    buffer.appendElementString( translate( "your" ) );
-    buffer.appendElementString( " " );
-
-
-    if( numGreats <= 4 ) {    
-        for( int i=0; i<numGreats; i++ ) {
-            buffer.appendElementString( translate( "great" ) );
-            }
-        }
-    else {
-        char *greatCount = autoSprintf( "%dX %s", 
-                                        numGreats, translate( "great") );
-        buffer.appendElementString( greatCount );
-        delete [] greatCount;
-        }
-    
-    
-    if( grand ) {
-        buffer.appendElementString( translate( "grand" ) );
-        }
-    
-    if( cousinNum > 0 ) {
-        int remainingCousinNum = cousinNum;
-
-        if( cousinNum >= 30 ) {
-            buffer.appendElementString( translate( "distant" ) );
-            remainingCousinNum = 0;
-            }
-        
-        if( cousinNum > 20 && cousinNum < 30 ) {
-            buffer.appendElementString( translate( "twentyHyphen" ) );
-            remainingCousinNum = cousinNum - 20;
-            }
-
-        if( remainingCousinNum > 0  ) {
-            char *numth = autoSprintf( "%dth", remainingCousinNum );
-            buffer.appendElementString( translate( numth ) );
-            delete [] numth;
-            }
-        buffer.appendElementString( " " );
-        }
-
-    if( little ) {
-        buffer.appendElementString( translate( "little" ) );
-        buffer.appendElementString( " " );
-        }
-    else if( big ) {
-        buffer.appendElementString( translate( "big" ) );
-        buffer.appendElementString( " " );
-        }
-    else if( twin ) {
-        if( identical ) {
-            buffer.appendElementString( translate( "identical" ) );
-            buffer.appendElementString( " " );
-            }
-        
-        buffer.appendElementString( translate( "twin" ) );
-        buffer.appendElementString( " " );
-        }
-    
-    
-    buffer.appendElementString( main );
-    
-    if( cousinRemovedNum > 0 ) {
-        buffer.appendElementString( " " );
-        
-        if( cousinRemovedNum > 9 ) {
-            buffer.appendElementString( translate( "manyTimes" ) );
-            }
-        else {
-            char *numTimes = autoSprintf( "%dTimes", cousinRemovedNum );
-            buffer.appendElementString( translate( numTimes ) );
-            delete [] numTimes;
-            }
-        buffer.appendElementString( " " );
-        buffer.appendElementString( translate( "removed" ) );
-        }
-
-    return buffer.getElementString();
-    }
-
-
-
-char *getRelationName( LiveObject *inOurObject, LiveObject *inTheirObject ) {
-    SimpleVector<int> *ourLin = &( inOurObject->lineage );
-    SimpleVector<int> *theirLin = &( inTheirObject->lineage );
-    
-    int ourID = inOurObject->id;
-    int theirID = inTheirObject->id;
-
-    
-    return getRelationName( ourLin, theirLin, ourID, theirID,
-                            inOurObject->displayID, inTheirObject->displayID,
-                            inOurObject->age,
-                            inTheirObject->age,
-                            inOurObject->lineageEveID,
-                            inTheirObject->lineageEveID );
-    }
-
-
-
-
-
-
-
-
-// base speed for animations that aren't speeded up or slowed down
-// when player moving at a different speed, anim speed is modified
-#define BASE_SPEED 3.75
-
-
-int numServerBytesRead = 0;
-int numServerBytesSent = 0;
-
-int overheadServerBytesSent = 0;
-int overheadServerBytesRead = 0;
-
-
-static char hideGuiPanel = false;
-
-
-
-
-static char *lastMessageSentToServer = NULL;
-
-
-// destroyed internally if not NULL
-static void replaceLastMessageSent( char *inNewMessage ) {
-    if( lastMessageSentToServer != NULL ) {
-        delete [] lastMessageSentToServer;
-        }
-    lastMessageSentToServer = inNewMessage;
-    }
-
-
-
-
-SimpleVector<unsigned char> serverSocketBuffer;
-
-static char serverSocketConnected = false;
-static char serverSocketHardFail = false;
-static float connectionMessageFade = 1.0f;
-static double connectedTime = 0;
-
-static char forceDisconnect = false;
-
-
-// reads all waiting data from socket and stores it in buffer
-// returns false on socket error
-static char readServerSocketFull( int inServerSocket ) {
-
-    if( forceDisconnect ) {
-        forceDisconnect = false;
-        return false;
-        }
-    
-
-    unsigned char buffer[512];
-    
-    int numRead = readFromSocket( inServerSocket, buffer, 512 );
-    
-    
-    while( numRead > 0 ) {
-        if( ! serverSocketConnected ) {    
-            serverSocketConnected = true;
-            connectedTime = game_getCurrentTime();
-            }
-        
-        serverSocketBuffer.appendArray( buffer, numRead );
-        numServerBytesRead += numRead;
-        bytesInCount += numRead;
-        
-        numRead = readFromSocket( inServerSocket, buffer, 512 );
-        }    
-
-    if( numRead == -1 ) {
-        printf( "Failed to read from server socket at time %f\n",
-                game_getCurrentTime() );
-        return false;
-        }
-    
-    return true;
-    }
-
-
-
-static double timeLastMessageSent = 0;
-
-
-
-void LivingLifePage::sendToServerSocket( char *inMessage ) {
-    timeLastMessageSent = game_getCurrentTime();
-    
-    printf( "Sending message to server: %s\n", inMessage );
-    
-    replaceLastMessageSent( stringDuplicate( inMessage ) );    
-
-    int len = strlen( inMessage );
-    
-    int numSent = sendToSocket( mServerSocket, (unsigned char*)inMessage, len );
-    
-    if( numSent == len ) {
-        numServerBytesSent += len;
-        overheadServerBytesSent += 52;
-        
-        messagesOutCount++;
-        bytesOutCount += len;
-        }
-    else {
-        printf( "Failed to send message to server socket "
-                "at time %f "
-                "(tried to send %d, but numSent=%d)\n", 
-                game_getCurrentTime(), len, numSent );
-        closeSocket( mServerSocket );
-        mServerSocket = -1;
-
-        if( mFirstServerMessagesReceived  ) {
-            
-            if( mDeathReason != NULL ) {
-                delete [] mDeathReason;
-                }
-            mDeathReason = stringDuplicate( translate( "reasonDisconnected" ) );
-            
-            handleOurDeath( true );
-            }
-        else {
-            setWaiting( false );
-            
-            if( userReconnect ) {
-                setSignal( "reconnectFailed" );
-                }
-            else {
-                setSignal( "loginFailed" );
-                }
-            }
-        }
-    
-    }
-
-
 
 
 static char equal( GridPos inA, GridPos inB ) {
@@ -1689,13 +1303,6 @@ static void addNewAnim( LiveObject *inObject, AnimType inNewAnim ) {
     }
 
 
-
-
-
-
-// if user clicks to initiate an action while still moving, we
-// queue it here
-static char *nextActionMessageToSend = NULL;
 static char nextActionEating = false;
 static char nextActionDropping = false;
 
@@ -11295,71 +10902,6 @@ static char checkIfHeldContChanged( LiveObject *inOld, LiveObject *inNew ) {
         }
     return false;
     }
-
-
-
-
-void LivingLifePage::sendBugReport( int inBugNumber ) {
-    char *bugString = stringDuplicate( "" );
-
-    if( lastMessageSentToServer != NULL ) {
-        char *temp = bugString;
-        bugString = autoSprintf( "%s   Just sent: [%s]",
-                                 temp, lastMessageSentToServer );
-        delete [] temp;
-        }
-    if( nextActionMessageToSend != NULL ) {
-        char *temp = bugString;
-        bugString = autoSprintf( "%s   Waiting to send: [%s]",
-                                 temp, nextActionMessageToSend );
-        delete [] temp;
-        }
-    
-    // clear # terminators from message
-    char *spot = strstr( bugString, "#" );
-    
-    while( spot != NULL ) {
-        spot[0] = ' ';
-        spot = strstr( bugString, "#" );
-        }
-    
-    
-    char *bugMessage = autoSprintf( "BUG %d %s#", inBugNumber, bugString );
-    
-    delete [] bugString;
-
-    sendToServerSocket( bugMessage );
-    delete [] bugMessage;
-    
-    if( ! SettingsManager::getIntSetting( "reportWildBugToUser", 1 ) ) {
-        return;
-        }
-
-    FILE *f = fopen( "stdout.txt", "r" );
-
-    int recordGame = SettingsManager::getIntSetting( "recordGame", 0 );
-    
-    if( f != NULL ) {
-        // stdout.txt exists
-        
-        printf( "Bug report sent, telling user to email files to us.\n" );
-        
-        fclose( f );
-
-        showBugMessage = 3;
-        
-        if( recordGame ) {
-            showBugMessage = 2;
-            }
-        }
-    else if( recordGame ) {
-        printf( "Bug report sent, telling user to email files to us.\n" );
-        showBugMessage = 1;
-        }
-    
-    }
-
-
 
 void LivingLifePage::endExtraObjectMove( int inExtraIndex ) {
     int i = inExtraIndex;
@@ -22876,8 +22418,7 @@ void LivingLifePage::pointerDown( float inX, float inY ) {
                             else if( d2 == closestDist ) {
                                 // break tie by whats closest to player
                                 
-                                double dPlayerOld = distance2( closestP,
-                                                               ourP );
+                                double dPlayerOld = distance2( closestP, ourP );
                                 double dPlayerNew = distance2( p, ourP );
                                 
                                 if( dPlayerNew < dPlayerOld ) {

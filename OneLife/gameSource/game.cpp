@@ -125,7 +125,7 @@ char *userEmail = NULL;
 char *accountKey = NULL;
 char *userTwinCode = NULL;
 int userTwinCount = 0;
-char userReconnect = false;
+extern char userReconnect;
 
 
 // these are needed by ServerActionPage, but we don't use them
