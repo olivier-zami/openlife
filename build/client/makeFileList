@@ -34,6 +34,7 @@ ${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/AppLog.c
 ${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/FileLog.cpp \
 ${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/Log.cpp \
 ${DIR_SRC_CLIENT}/../../src/third_party/jason_rohrer/minorGems/util/log/PrintLog.cpp \
+${DIR_SRC_CLIENT}/../../OneLife/gameSource/GridPos.cpp \
 ${DIR_SRC_CLIENT}/../../minorGems/game/platforms/SDL/demoCodePanel.cpp \
 ${DIR_SRC_CLIENT}/game.cpp \
 ${DIR_SRC_CLIENT}/spriteBank.cpp \

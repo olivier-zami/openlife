@@ -8,6 +8,7 @@
 #include "src/client/procedure/nation.h"
 #include "src/client/procedure/statistic.h"
 
+#include "OneLife/gameSource/GridPos.h"
 #include "objectBank.h"
 #include "spriteBank.h"
 #include "transitionBank.h"
@@ -190,23 +191,6 @@ extern client::Game* game;
 extern openLife::system::type::Value2D_U32 mapGenSeed;
 
 /**********************************************************************************************************************/
-
-
-static char equal( GridPos inA, GridPos inB ) {
-    if( inA.x == inB.x && inA.y == inB.y ) {
-        return true;
-        }
-    return false;
-    }
-
-
-static double distance2( GridPos inA, GridPos inB ) {
-    int dX = inA.x - inB.x;
-    int dY = inA.y - inB.y;
-    
-    return dX * dX + dY * dY;
-    }
-
 
 
 static void printPath( GridPos *inPath, int inLength ) {

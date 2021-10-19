@@ -8,6 +8,7 @@ typedef struct GridPos {
 
 
 double distance( GridPos inA, GridPos inB );
-
+char equal( GridPos inA, GridPos inB );
+double distance2( GridPos inA, GridPos inB );
 
 #endif

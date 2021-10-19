@@ -6,10 +6,7 @@
 
 
 #include "minorGems/util/SimpleVector.h"
-
-
-
-
+#include "OneLife/gameSource/GridPos.h"
 
 
 typedef struct pathSearchRecord {
@@ -38,12 +35,6 @@ static double getGridDistance( GridPos inA, GridPos inB ) {
     return fabs( dX ) + fabs( dY );
     //return sqrt( dX * dX + dY * dY );
     }
-
-
-static char equal( GridPos inA, GridPos inB ) {
-    return inA.x == inB.x && inA.y == inB.y;
-    }
-
 
 
 typedef struct pathSearchQueue {
