@@ -1,7 +1,9 @@
 #include "LivingLifePage.h"
 
 #include "src/client/agent/player.h"
+#include "src/client/procedure/communication.h"
 #include "src/client/procedure/leadership.h"
+#include "src/client/procedure/nation.h"
 #include "src/client/procedure/statistic.h"
 
 #include "objectBank.h"
@@ -59,13 +61,8 @@ extern Font *pencilErasedFont;
 extern doublePair lastScreenViewCenter;
 extern int historyGraphLength;
 extern FloatColor* timeMeasureGraphColors;
-
-/**********************************************************************************************************************/
-
-static ObjectPickable objectPickable;
-static double maxCurseTagDisplayGap = 15.0;// seconds
-static float pencilErasedFontExtraFade = 0.75;// to make all erased pencil fonts lighter
-static char shouldMoveCamera = true;
+extern SimpleVector<Homeland> homelands;
+extern SimpleVector<LocationSpeech> locationSpeech;
 extern double viewWidth;
 extern double viewHeight;
 extern int screenW, screenH;
@@ -76,11 +73,20 @@ extern char *userEmail;
 extern char *userTwinCode;
 extern int userTwinCount;
 extern char userReconnect;
+extern float musicLoudness;
+extern SimpleVector<HomePos> homePosStack;
+extern SimpleVector<HomePos> oldHomePosStack;
+
+/**********************************************************************************************************************/
+
+static ObjectPickable objectPickable;
+static double maxCurseTagDisplayGap = 15.0;// seconds
+static float pencilErasedFontExtraFade = 0.75;// to make all erased pencil fonts lighter
+static char shouldMoveCamera = true;
 static char vogMode = false;
 static char vogModeActuallyOn = false;
 static doublePair vogPos = { 0, 0 };
 static char vogPickerOn = false;
-extern float musicLoudness;
 static JenkinsRandomSource randSource( 340403 );
 static JenkinsRandomSource remapRandSource( 340403 );
 static int lastScreenMouseX, lastScreenMouseY;
@@ -118,23 +124,11 @@ static const char *timeMeasureNames[ MEASURE_TIME_NUM_CATEGORIES ] =
   "drawing" };
 
 static double timeMeasureToDraw[ MEASURE_TIME_NUM_CATEGORIES ];
-
-/**********************************************************************************************************************/
-
-double runningPixelCount = 0;
-double spriteCountToDraw = 0;
-double uniqueSpriteCountToDraw = 0;
-double pixelCountToDraw = 0;
-
-
-
 static SimpleVector<double> fpsHistoryGraph;
 static SimpleVector<TimeMeasureRecord> timeMeasureHistoryGraph;
 static SimpleVector<double> spriteCountHistoryGraph;
 static SimpleVector<double> uniqueSpriteHistoryGraph;
 static SimpleVector<double> pixelCountHistoryGraph;
-
-
 static char showNet = false;
 static double netBatchMeasureStartTime = -1;
 static int messagesInPerSec = -1;
@@ -145,472 +139,40 @@ static int messagesInCount = 0;
 static int messagesOutCount = 0;
 static int bytesInCount = 0;
 static int bytesOutCount = 0;
-
 static SimpleVector<double> messagesInHistoryGraph;
 static SimpleVector<double> messagesOutHistoryGraph;
 static SimpleVector<double> bytesInHistoryGraph;
 static SimpleVector<double> bytesOutHistoryGraph;
-
-
 static SimpleVector<GridPos> graveRequestPos;
 static SimpleVector<GridPos> ownerRequestPos;
-
-
-// IDs of pointed-to offspring that don't exist yet
-static SimpleVector<int> ourUnmarkedOffspring;
-
-
-
+static SimpleVector<int> ourUnmarkedOffspring;// IDs of pointed-to offspring that don't exist yet
 static char showPing = false;
 static double pingSentTime = -1;
 static double pongDeltaTime = -1;
 static double pingDisplayStartTime = -1;
-
-
 static double culvertFractalScale = 20;
 static double culvertFractalRoughness = 0.62;
 static double culvertFractalAmp = 98;
-
-
 static int usedToolSlots = 0;
 static int totalToolSlots = 0;
+static int lastPlayerID = -1;// used on reconnect to decide whether to delete old home positions
+extern int groundSpritesArraySize;//TODO: find a new way to synchronize server and client biome
+extern GroundSpriteSet **groundSprites;//TODO: find a new way to synchronize server and client biome
+extern char leaderCommandTyped;
 
+/**********************************************************************************************************************/
 
-typedef struct Homeland {
-        int x, y;
-        char *familyName;
-    } Homeland;
-    
-
-static SimpleVector<Homeland> homelands;
+double runningPixelCount = 0;
+double spriteCountToDraw = 0;
+double uniqueSpriteCountToDraw = 0;
+double pixelCountToDraw = 0;
 
 /**********************************************************************************************************************/
 
 extern client::Game* game;
-
-/**********************************************************************************************************************/
-static Homeland *getHomeland( int inCenterX, int inCenterY ) {
-    for( int i=0; i<homelands.size(); i++ ) {
-        Homeland *h = homelands.getElement( i );
-        
-        if( h->x == inCenterX && h->y == inCenterY ) {
-            return h;
-            }
-        }
-    return NULL;
-    }
-
-
-
-
-typedef struct LocationSpeech {
-        doublePair pos;
-        char *speech;
-        double fade;
-        // wall clock time when speech should start fading
-        double fadeETATime;
-    } LocationSpeech;
-
-
-
-SimpleVector<LocationSpeech> locationSpeech;
-
-
-static void clearLocationSpeech() {
-    for( int i=0; i<locationSpeech.size(); i++ ) {
-        delete [] locationSpeech.getElementDirect( i ).speech;
-        }
-    locationSpeech.deleteAll();
-    }
-
-
-
-
-// most recent home at end
-
-typedef struct {
-        GridPos pos;
-        char ancient;
-        char temporary;
-        char tempPerson;
-        int personID;
-        const char *tempPersonKey;
-        // 0 if not set
-        double temporaryExpireETA;
-    } HomePos;
-
-    
-
-static SimpleVector<HomePos> homePosStack;
-
-static SimpleVector<HomePos> oldHomePosStack;
-
-// used on reconnect to decide whether to delete old home positions
-static int lastPlayerID = -1;
-
 extern openLife::system::type::Value2D_U32 mapGenSeed;
-extern int groundSpritesArraySize;
-extern GroundSpriteSet **groundSprites;
 
 /**********************************************************************************************************************/
-
-static void processHomePosStack() {
-    int num = homePosStack.size();
-    if( num > 0 ) {
-        HomePos *r = homePosStack.getElement( num - 1 );
-        
-        if( r->temporary && r->temporaryExpireETA != 0 &&
-            game_getCurrentTime() > r->temporaryExpireETA ) {
-            // expired
-            homePosStack.deleteElement( num - 1 );
-            }
-        }
-    }
-
-
-
-static HomePos *getHomePosRecord() {
-    processHomePosStack();
-    
-    int num = homePosStack.size();
-    if( num > 0 ) {
-        return homePosStack.getElement( num - 1 );
-        }
-    else {
-        return NULL;
-        }
-    }
-
-
-// returns pointer to record, NOT destroyed by caller, or NULL if 
-// home unknown
-static  GridPos *getHomeLocation( char *outTemp, char *outTempPerson,
-                                  const char **outTempPersonKey,
-                                  char inAncient ) {
-    *outTemp = false;
-    
-    if( inAncient ) {
-        GridPos *returnPos = NULL;
-        
-        if( homePosStack.size() > 0 ) {
-            HomePos *r = homePosStack.getElement( 0 );
-            if( r->ancient ) {
-                returnPos = &( r->pos );
-                }
-            }
-        return returnPos;
-        }
-        
-
-    HomePos *r = getHomePosRecord();
-
-    // don't consider ancient marker here, if it's the only one
-    if( r != NULL && ! r->ancient ) {
-        *outTemp = r->temporary;
-        *outTempPerson = r->tempPerson;
-        *outTempPersonKey = r->tempPersonKey;
-        return &( r->pos );
-        }
-    else {
-        return NULL;
-        }
-    }
-
-
-
-static void removeHomeLocation( int inX, int inY ) {
-    for( int i=0; i<homePosStack.size(); i++ ) {
-        GridPos p = homePosStack.getElementDirect( i ).pos;
-        
-        if( p.x == inX && p.y == inY ) {
-            homePosStack.deleteElement( i );
-            break;
-            }
-        }
-    }
-
-
-static void removeAllTempHomeLocations() {
-    for( int i=0; i<homePosStack.size(); i++ ) {
-        if( homePosStack.getElementDirect( i ).temporary ) {
-            homePosStack.deleteElement( i );
-            i --;
-            break;
-            }
-        }
-    }
-
-
-
-static void addHomeLocation( int inX, int inY ) {
-    removeAllTempHomeLocations();
-
-    removeHomeLocation( inX, inY );
-    GridPos newPos = { inX, inY };
-    HomePos p;
-    p.pos = newPos;
-    p.ancient = false;
-    p.temporary = false;
-    
-    homePosStack.push_back( p );
-    }
-
-
-
-// make leader arrow higher priority if /LEADER command typed manually
-// (automatic leader arrows are lower priority)
-static char leaderCommandTyped = false;
-
-
-
-// inPersonKey can be NULL for map temp locations
-static int getLocationKeyPriority( const char *inPersonKey ) {
-    if( inPersonKey == NULL ||
-        // these are all triggered by explicit user actions
-        // where they are asking for an arrow to something
-        // explicitly touched an expert waystone
-        strcmp( inPersonKey, "expt" ) == 0 ||
-        // explicitly touched a locked gate
-        strcmp( inPersonKey, "owner" ) == 0 ||
-        // manually-requested leader arrow
-        ( leaderCommandTyped && strcmp( inPersonKey, "lead" ) == 0 ) ) {
-        
-        leaderCommandTyped = false;
-        return 1;
-        }
-    // this is automatic, out of user control, when they inherit some
-    // property
-    else if( strcmp( inPersonKey, "property" ) == 0 ) {
-        return 2;
-        }
-    // non-manual leader arrow (like when you receive an order)
-    // and supp arrow (automatic, when you issue an order)
-    else if( strcmp( inPersonKey, "lead" ) == 0 ||
-             strcmp( inPersonKey, "supp" ) == 0 ) {
-        return 3;
-        }
-    else if( strcmp( inPersonKey, "baby" ) == 0 ) {
-        return 4;
-        }
-    else if( strcmp( inPersonKey, "visitor" ) == 0 ) {
-        // don't bug owner with spurious visitor arrows, unless there
-        // is nothing else going on
-        return 5;
-        }
-    else {
-        return 6;
-        }
-    }
-    
-
-// inPersonKey can be NULL for map temp locations
-// enforces priority for different classes of temp home locations
-static char doesNewTempLocationTrumpPrevious( const char *inPersonKey ) {
-    
-    // see what our current one is
-    const char *currentKey = NULL;
-    char currentFound = false;
-    
-    for( int i=0; i<homePosStack.size(); i++ ) {
-        if( homePosStack.getElementDirect( i ).temporary ) {            
-            currentKey = homePosStack.getElementDirect( i ).tempPersonKey;
-            currentFound = true;
-            break;
-            }
-        }
-    
-    
-    if( ! currentFound ) {
-        // no temp location currently
-        // all new ones can replace this state
-        return true;
-        }
-    
-    if( getLocationKeyPriority( inPersonKey ) <= 
-        getLocationKeyPriority( currentKey ) ) {
-        return true;
-        }
-    else {
-        return false;
-        }
-    }
-
-
-
-static void addTempHomeLocation( int inX, int inY, 
-                                 char inPerson, int inPersonID,
-                                 LiveObject *inPersonO,
-                                 const char *inPersonKey ) {
-    if( ! doesNewTempLocationTrumpPrevious( inPersonKey ) ) {
-        // existing key has higher priority
-        // don't replace with this new key
-        return;
-        }
-    
-    removeAllTempHomeLocations();
-    
-    GridPos newPos = { inX, inY };
-    HomePos p;
-    p.pos = newPos;
-    p.ancient = false;
-    p.temporary = true;
-    // no expiration for now
-    // until we drop the map
-    p.temporaryExpireETA = 0;
-    
-    p.tempPerson = inPerson;
-
-    p.personID = -1;
-    
-    p.tempPersonKey = NULL;
-
-    if( inPerson ) {
-        // person pointer does not depend on held map
-        p.temporaryExpireETA = game_getCurrentTime() + 60;
-
-        if( strcmp( inPersonKey, "expt" ) == 0 ) {
-            // 3 minutes total when searching for an expert
-            p.temporaryExpireETA += 120;
-            }
-        
-        p.personID = inPersonID;
-        p.tempPersonKey = inPersonKey;
-                                            
-        if( inPersonO != NULL && 
-            inPersonO->currentSpeech != NULL &&
-            inPersonO->speechIsOverheadLabel ) {
-            // clear any old label speech 
-            // to make room for new label
-            delete [] inPersonO->currentSpeech;
-            inPersonO->currentSpeech = NULL;
-            inPersonO->speechIsOverheadLabel = false;
-            }
-        }
-
-    homePosStack.push_back( p );
-    }
-
-
-
-static void updatePersonHomeLocation( int inPersonID, int inX, int inY ) {
-    for( int i=0; i<homePosStack.size(); i++ ) {
-        HomePos *p = homePosStack.getElement( i );
-        
-        if( p->tempPerson && p->personID == inPersonID ) {
-            p->pos.x = inX;
-            p->pos.y = inY;
-            }
-        }
-    }
-
-
-
-static void addAncientHomeLocation( int inX, int inY ) {
-    removeHomeLocation( inX, inY );
-
-    // remove all ancient pos
-    // there can be only one ancient
-    for( int i=0; i<homePosStack.size(); i++ ) {
-        if( homePosStack.getElementDirect( i ).ancient ) {
-            homePosStack.deleteElement( i );
-            i--;
-            }
-        }
-
-    GridPos newPos = { inX, inY };
-    HomePos p;
-    p.pos = newPos;
-    p.ancient = true;
-    p.temporary = false;
-    
-    homePosStack.push_front( p );
-    }
-
-
-
-
-
-
-// returns if -1 no home needs to be shown (home unknown)
-// otherwise, returns 0..7 index of arrow
-static int getHomeDir( doublePair inCurrentPlayerPos, 
-                       double *outTileDistance = NULL,
-                       char *outTooClose = NULL,
-                       char *outTemp = NULL,
-                       char *outTempPerson = NULL,
-                       const char **outTempPersonKey = NULL,
-                       // 1 for ancient marker
-                       int inIndex = 0 ) {
-    char temporary = false;
-    
-    char tempPerson = false;
-    const char *tempPersonKey;
-    
-    GridPos *p = getHomeLocation( &temporary, &tempPerson, &tempPersonKey,
-                                  ( inIndex == 1 ) );
-    
-    if( p == NULL ) {
-        return -1;
-        }
-    
-    if( outTemp != NULL ) {
-        *outTemp = temporary;
-        }
-    if( outTempPerson != NULL ) {
-        *outTempPerson = tempPerson;
-        }
-    
-    if( outTooClose != NULL ) {
-        *outTooClose = false;
-        }
-    
-    if( outTempPersonKey != NULL ) {
-        *outTempPersonKey = tempPersonKey;
-        }
-    
-
-    doublePair homePos = { (double)p->x, (double)p->y };
-    
-    doublePair vector = sub( homePos, inCurrentPlayerPos );
-
-    double dist = length( vector );
-
-    if( outTileDistance != NULL ) {
-        *outTileDistance = dist;
-        }
-
-    if( dist < 5 ) {
-        // too close
-
-        if( outTooClose != NULL ) {
-            *outTooClose = true;
-            }
-        
-        if( dist == 0 ) {
-            // can't compute angle
-            return -1;
-            }
-        }
-    
-    
-    double a = angle( vector );
-
-    // north is 0
-    a -= M_PI / 2; 
-
-    
-    if( a <  - M_PI / 8 ) {
-        a += 2 * M_PI;
-        }
-    
-    int index = lrint( 8 * a / ( 2 * M_PI ) );
-    
-    return index;
-    }
-
-
-
-
 
 char *getRelationName( SimpleVector<int> *ourLin, 
                        SimpleVector<int> *theirLin, 

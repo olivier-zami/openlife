@@ -9,6 +9,7 @@
 #include "minorGems/util/stringUtils.h"
 #include "minorGems/game/game.h"
 #include "OneLife/gameSource/LivingLifePage.h"
+#include "src/client/procedure/nation.h"//TODO: handle homeDirection stuff in nation
 
 extern int ourID;
 extern SimpleVector<LiveObject> gameObjects;//from OneLife/gameSource/LivingLifePage.cpp
@@ -23,6 +24,8 @@ static const char * leadershipNameKeys[NUM_LEADERSHIP_NAMES][2] = {
 	{ "emperor", "empress" },
 	{ "highEmperor", "highEmpress" },
 	{ "supremeEmperor", "supremeEmpress" }};
+
+char leaderCommandTyped = false;// make leader arrow higher priority if /LEADER command typed manually// (automatic leader arrows are lower priority)
 
 static void prependLeadershipTag( LiveObject *inPlayer, const char *inPrefix )
 {
@@ -292,4 +295,44 @@ SimpleVector<int> LivingLifePage::getOurLeadershipChain()
 		}
 	}
 	return ourLeadershipChain;
+}
+
+// inPersonKey can be NULL for map temp locations
+int getLocationKeyPriority( const char *inPersonKey )
+{
+	if( inPersonKey == NULL ||
+		// these are all triggered by explicit user actions
+		// where they are asking for an arrow to something
+		// explicitly touched an expert waystone
+		strcmp( inPersonKey, "expt" ) == 0 ||
+		// explicitly touched a locked gate
+		strcmp( inPersonKey, "owner" ) == 0 ||
+		// manually-requested leader arrow
+		( leaderCommandTyped && strcmp( inPersonKey, "lead" ) == 0 ) ) {
+
+		leaderCommandTyped = false;
+		return 1;
+	}
+		// this is automatic, out of user control, when they inherit some
+		// property
+	else if( strcmp( inPersonKey, "property" ) == 0 ) {
+		return 2;
+	}
+		// non-manual leader arrow (like when you receive an order)
+		// and supp arrow (automatic, when you issue an order)
+	else if( strcmp( inPersonKey, "lead" ) == 0 ||
+			 strcmp( inPersonKey, "supp" ) == 0 ) {
+		return 3;
+	}
+	else if( strcmp( inPersonKey, "baby" ) == 0 ) {
+		return 4;
+	}
+	else if( strcmp( inPersonKey, "visitor" ) == 0 ) {
+		// don't bug owner with spurious visitor arrows, unless there
+		// is nothing else going on
+		return 5;
+	}
+	else {
+		return 6;
+	}
 }
