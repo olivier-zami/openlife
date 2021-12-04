@@ -721,7 +721,8 @@ static Vector3D spritePos( 0, 0, 0 );
 
 // draw with current draw color
 void drawSprite( SpriteHandle inSprite, doublePair inCenter, 
-                 double inZoom, double inRotation, char inFlipH ) {
+                 double inZoom, double inRotation, char inFlipH )
+{
     SpriteGL *sprite = (SpriteGL *)inSprite;
     
     spritePos.mX = inCenter.x;
@@ -734,7 +735,7 @@ void drawSprite( SpriteHandle inSprite, doublePair inCenter,
                   mipMapTextureFilterOn, inRotation, inFlipH );
     
     numSpritesDrawn++;
-    }
+}
 
 
 
@@ -758,8 +759,8 @@ void drawSprite( SpriteHandle inSprite, doublePair inCenter,
 
 
 
-void drawSprite( SpriteHandle inSprite, doublePair inCornerPos[4], 
-                 FloatColor inCornerColors[4] ) {
+void drawSprite( SpriteHandle inSprite, doublePair inCornerPos[4], FloatColor inCornerColors[4] )
+{
     SpriteGL *sprite = (SpriteGL *)inSprite;
     
     sprite->draw( 0,
@@ -768,7 +769,7 @@ void drawSprite( SpriteHandle inSprite, doublePair inCornerPos[4],
                   linearTextureFilterOn, mipMapTextureFilterOn );
     
     numSpritesDrawn++;
-    }
+}
 
 
 

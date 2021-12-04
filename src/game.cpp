@@ -1038,11 +1038,16 @@ int mainFunction( int inNumArgs, char **inArgs )
 
 
 	//TODO: this->context = new context::SDL(); and make friend with sdl::Observer, sdl::Renderer, ... in src/context/sdl.cpp
+	//TODO: event definition this->onEvent()->updateScreen();
 	screen->start();
 
 	while( true )//!get out from loop in keybordhandler exit(0) in minorGems/game/platforms/SDL/gameSDL.cpp
 	{
 		screen->getEvents();//TODO: this->eventLister = new sdl::Observer(); this->eventLister->getEvents(); /src/event/keyboard.cpp
+		//TODO: this->update(screen)->apply(event);
+		//TODO: this->update(sprite)->apply(event);
+		//TODO: this->update(uiComponent)->apply(Event);
+		//!for sprite in sprite list
 		screen->display();//TODO: composition display(sdl::Renderer()) use builder::sdl
 	}
 

@@ -2970,7 +2970,6 @@ void ScreenGL::display()
 	//callbackDisplay();
 	//#include "src/client/renderer/openGL/drawConsole.h"
 	//void callbackDisplay() {
-	printf("\nScreenGL_SDL........");
 	ScreenGL *s = currentScreenGL;
 
 	if( ! s->m2DMode ) {

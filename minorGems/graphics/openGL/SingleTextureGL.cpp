@@ -232,8 +232,8 @@ void SingleTextureGL::setTextureData( unsigned char *inBytes,
                                       char inAlphaOnly,
                                       unsigned int inWidth, 
                                       unsigned int inHeight,
-                                      char inExpandEdge ) {
-    
+                                      char inExpandEdge )
+{
     if( inExpandEdge && !inAlphaOnly ) {
         
         unsigned int maxY = 0;
@@ -443,7 +443,7 @@ void SingleTextureGL::setTextureData( unsigned char *inBytes,
                 "Width = %u, Height = %u\n",
                 inWidth, inHeight );
 		}
-	}
+}
 
 
 void SingleTextureGL::replaceTextureData( unsigned char *inBytes,

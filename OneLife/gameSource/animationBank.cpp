@@ -3016,9 +3016,9 @@ HoldingPos drawObjectAnim( int inObjectID, int inDrawBehindSlots,
                     if( f && spriteNoFlip ) {
                         f = false;
                         }
-                    
-                    drawSprite( sh, pos, 1.0, rot, 
-                                logicalXOR( f, obj->spriteHFlip[i] ) );
+
+					printf("\n=====>display player %i : %s peron ? %i", obj->id, obj->description, obj->person);
+                    drawSprite( sh, pos, 1.0, rot, logicalXOR( f, obj->spriteHFlip[i] ) );
                     }
                 }
             

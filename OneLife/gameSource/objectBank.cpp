@@ -4232,16 +4232,15 @@ HoldingPos drawObject( ObjectRecord *inObject, int inDrawBehindSlots,
                        char inHideAllLimbs,
                        char inHeldNotInPlaceYet,
                        ClothingSet inClothing,
-                       double inScale ) {
+                       double inScale )
+{
 
     checkDrawPos( inObject->id, inPos );
     
-    if( inObject->noFlip ) {
-        inFlipH = false;
-        }
+    if( inObject->noFlip ) inFlipH = false;
 
     HoldingPos returnHoldingPos = { false, {0, 0}, 0 };
-    
+
     SimpleVector <int> frontArmIndices;
     getFrontArmIndices( inObject, inAge, &frontArmIndices );
 
@@ -4250,8 +4249,7 @@ HoldingPos drawObject( ObjectRecord *inObject, int inDrawBehindSlots,
 
     SimpleVector <int> legIndices;
     getAllLegIndices( inObject, inAge, &legIndices );
-    
-    
+
     int headIndex = getHeadIndex( inObject, inAge );
     int bodyIndex = getBodyIndex( inObject, inAge );
     int backFootIndex = getBackFootIndex( inObject, inAge );
@@ -4260,10 +4258,10 @@ HoldingPos drawObject( ObjectRecord *inObject, int inDrawBehindSlots,
     
     int topBackArmIndex = -1;
     
-    if( backArmIndices.size() > 0 ) {
-        topBackArmIndex =
-            backArmIndices.getElementDirect( backArmIndices.size() - 1 );
-        }
+    if( backArmIndices.size() > 0 )
+	{
+        topBackArmIndex = backArmIndices.getElementDirect( backArmIndices.size() - 1 );
+	}
     
 
     int backHandIndex = getBackHandIndex( inObject, inAge );
@@ -4349,22 +4347,14 @@ HoldingPos drawObject( ObjectRecord *inObject, int inDrawBehindSlots,
 
 
         
-        if( inObject->person && 
-            ( i == headIndex ||
-              checkSpriteAncestor( inObject, i,
-                                   headIndex ) ) ) {
-            
-            spritePos = add( spritePos, getAgeHeadOffset( inAge, headPos,
-                                                          bodyPos,
-                                                          frontFootPos ) );
-            }
-        if( inObject->person && 
-            ( i == headIndex ||
-              checkSpriteAncestor( inObject, i,
-                                   bodyIndex ) ) ) {
-            
+        if( inObject->person && ( i == headIndex || checkSpriteAncestor( inObject, i, headIndex ) ) )
+		{
+            spritePos = add( spritePos, getAgeHeadOffset( inAge, headPos, bodyPos, frontFootPos ) );
+		}
+        if( inObject->person && ( i == headIndex || checkSpriteAncestor( inObject, i, bodyIndex ) ) )
+		{
             spritePos = add( spritePos, getAgeBodyOffset( inAge, bodyPos ) );
-            }
+		}
 
         if( i == headIndex ) {
             // this is the head
@@ -4572,16 +4562,16 @@ HoldingPos drawObject( ObjectRecord *inObject, int inDrawBehindSlots,
                 }
 
             SpriteHandle sh = getSprite( inObject->sprites[i] );
-            if( sh != NULL ) {
+            if( sh != NULL )
+			{
                 char f = inFlipH;
-                if( f && spriteNoFlip ) {    
+                if( f && spriteNoFlip )
+				{
                     f = false;
-                    }
-                
-                drawSprite( sh, pos, inScale,
-                            rot, 
-                            logicalXOR( f, inObject->spriteHFlip[i] ) );
-                }
+				}
+                //!draw non person sprite
+                drawSprite( sh, pos, inScale, rot, logicalXOR( f, inObject->spriteHFlip[i] ) );
+			}
             
             if( multiplicative ) {
                 toggleMultiplicativeBlend( false );
@@ -4623,10 +4613,11 @@ HoldingPos drawObject( ObjectRecord *inObject, int inDrawBehindSlots,
                         inFlipH, -1, 0, false, false, emptyClothing );
             }
 
-        }    
+	}
 
     
-    if( inClothing.hat != NULL ) {
+    if( inClothing.hat != NULL )
+	{
         // hat on top of everything
             
         // relative to head
@@ -4638,12 +4629,11 @@ HoldingPos drawObject( ObjectRecord *inObject, int inDrawBehindSlots,
             }
         cPos = add( cPos, inPos );
         
-        drawObject( inClothing.hat, 2, cPos, inRot, true,
-                    inFlipH, -1, 0, false, false, emptyClothing );
-        }
+        drawObject( inClothing.hat, 2, cPos, inRot, true, inFlipH, -1, 0, false, false, emptyClothing );
+	}
 
     return returnHoldingPos;
-    }
+}
 
 
 
@@ -4655,7 +4645,7 @@ HoldingPos drawObject( ObjectRecord *inObject, doublePair inPos, double inRot,
                        ClothingSet inClothing,
                        int inNumContained, int *inContainedIDs,
                        SimpleVector<int> *inSubContained ) {
-    
+
     drawObject( inObject, 0, inPos, inRot, inWorn, inFlipH, inAge, 
                 inHideClosestArm,
                 inHideAllLimbs,
@@ -5558,7 +5548,8 @@ double getClosestObjectPart( ObjectRecord *inObject,
         doublePair thisSpritePos = inObject->spritePos[i];
         
 
-        if( inObject->person  ) {
+        if( inObject->person  )
+		{
             
             if( ! isSpriteVisibleAtAge( inObject, i, inAge ) ) {
                     
@@ -5586,7 +5577,7 @@ double getClosestObjectPart( ObjectRecord *inObject,
                 }
 
             
-            }
+		}
         
         if( inFlip ) {
             thisSpritePos.x *= -1;

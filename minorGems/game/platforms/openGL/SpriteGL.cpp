@@ -392,6 +392,7 @@ void SpriteGL::prepareDraw( int inFrame,
                             char inMipMapFilter,
                             double inRotation, char inFlipH,
                             char inComputeCornerPos ) {
+	printf("\n=====>SpriteGL::prepareDraw (1)");
     /*
     printf( "Drawing sprite %d, r%f, (%f,%f), s%f, f%f\n",
             (int)(this), inRotation, inPosition->mX, inPosition->mY, inScale,
@@ -549,7 +550,7 @@ void SpriteGL::draw( int inFrame,
                      char inMipMapFilter,
                      double inRotation,
                      char inFlipH ) {
-    
+    printf("\n=====>sprite->draw(1)");
     
     prepareDraw( inFrame, inPosition, inScale, inLinearMagFilter, 
                  inMipMapFilter
@@ -580,7 +581,7 @@ void SpriteGL::draw( int inFrame,
                      char inMipMapFilter,
                      double inRotation,
                      char inFlipH ) {
-
+printf("\n=====>sprite->draw(2)");
     prepareDraw( inFrame, inPosition, inScale, inLinearMagFilter,
                  inMipMapFilter,
                  inRotation, inFlipH );
@@ -653,6 +654,7 @@ void SpriteGL::prepareDraw( int inFrame,
                             double inRotation,
                             char inFlipH,
                             char inComputeCornerPos ) {
+	printf("\n=====>SpriteGL::prepareDraw (2)");
     /*
     printf( "Drawing sprite %d, r%f, (%f,%f), s%f, f%f\n",
             (int)(this), inRotation, inPosition->mX, inPosition->mY, inScale,
@@ -663,8 +665,6 @@ void SpriteGL::prepareDraw( int inFrame,
     // this is expensive, and the game never needs it
     // (all frame references are specific and never auto-cycling)
     // inFrame = inFrame % mNumFrames;
-
-	printf("\nTest prepareDraw ...");
     
     if( inComputeCornerPos ) {
         
@@ -860,6 +860,7 @@ void SpriteGL::draw( int inFrame,
                      char inMipMapFilter,
                      double inRotation,
                      char inFlipH ) {
+	printf("\n=====>sprite->draw(3) => %i");
     // numPixelsDrawn += 
     //    ( mColoredRadiusRightX + mColoredRadiusLeftX ) * mWidth *
     //    ( mColoredRadiusTopY + mColoredRadiusBottomY ) * mHeight;
@@ -918,6 +919,7 @@ void SpriteGL::draw( int inFrame,
                      char inMipMapFilter,
                      double inRotation,
                      char inFlipH ) {
+	printf("\n=====>sprite->draw(4)");
 
     prepareDraw( inFrame, inPosition, inScale, inLinearMagFilter,
                  inMipMapFilter,
@@ -971,6 +973,7 @@ void SpriteGL::draw( int inFrame,
                      FloatColor inCornerColors[4],
                      char inLinearMagFilter,
                      char inMipMapFilter ) {
+	printf("\n=====>sprite->draw(5)");
 
     prepareDraw( inFrame, &dummyPosition, 1, inLinearMagFilter,
                  inMipMapFilter,
