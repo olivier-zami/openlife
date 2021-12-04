@@ -9,7 +9,7 @@ leak.out*
 core*
 
 #not part of the sources
-objects/
+object/
 
 #temporarly ignored
 test/
