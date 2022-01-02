@@ -524,8 +524,7 @@ void initTransBankFinish() {
         
         delete [] objects;
 
-        printf( "Auto-generated %d transitions based on categories\n", 
-                records.size() - numRecords );
+        //printf( "Auto-generated %d transitions based on categories\n", records.size() - numRecords );
         
         numRecords = records.size();
 
@@ -638,8 +637,7 @@ void initTransBankFinish() {
         
 
         
-        printf( "Auto-generated %d transitions based on pattern categories\n", 
-                records.size() - numRecords );
+        //printf( "Auto-generated %d transitions based on pattern categories\n", records.size() - numRecords );
         
         numRecords = records.size();
         }
@@ -1412,9 +1410,7 @@ void initTransBankFinish() {
             numGenerated++;
             }
 
-        printf( "Auto-generated %d transitions based on used objects, "
-                "%d removed in the process.\n", 
-                numGenerated, numRemoved );
+        //printf( "Auto-generated %d transitions based on used objects, %d removed in the process.\n", numGenerated, numRemoved );
         }
     
 
@@ -1579,8 +1575,7 @@ void initTransBankFinish() {
             numGenerated++;
             }
         
-        printf( "Auto-generated %d transitions based on variable objects.\n", 
-                numGenerated );
+        //printf( "Auto-generated %d transitions based on variable objects.\n", numGenerated );
         }
 
 

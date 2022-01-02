@@ -309,10 +309,8 @@ class LivingLifePage : public GamePage, public ActionListener {
         SimpleVector<int> mMapExtraMovingObjectsDestObjectIDs;
         SimpleVector<ExtraMapObject> mMapExtraMovingObjects;
 
-        
         int mMapOffsetX;
         int mMapOffsetY;
-
 
         char mEKeyEnabled;
         char mEKeyDown;

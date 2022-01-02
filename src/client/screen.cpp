@@ -1974,26 +1974,26 @@ void callbackKeyboard( unsigned char inKey, int inX, int inY ) {
     // all playback events are already mapped
     if( ! ( currentScreenGL->mPlaybackEvents && currentScreenGL->mRecordingOrPlaybackStarted ) && keyMapOn )
 	{
-		printf("\n=====>block 1");
+		//printf("\n=====>block 1");
         inKey = keyMap[inKey];
 	}
     
     if( currentScreenGL->mRecordingEvents && currentScreenGL->mRecordingOrPlaybackStarted )
 	{
-		printf("\n=====>block 2");
+		//printf("\n=====>block 2");
         unsigned char keyToRecord = inKey;
         if( currentScreenGL->mObscureRecordedNumericTyping && inKey >= '0' && inKey <= '9' )
 		{
-			printf("\n=======>sblock 1");
+			//printf("\n=======>sblock 1");
             keyToRecord = currentScreenGL->mCharToRecordInstead;
 		}
         char *eventString = autoSprintf( "kd %d %d %d", keyToRecord, inX, inY );
-		printf("\n=======>sblock 2 : %s", eventString);
+		//printf("\n=======>sblock 2 : %s", eventString);
         currentScreenGL->mUserEventBatch.push_back( eventString );
 	}
 
 
-	printf("\n=====>block 3");
+	//printf("\n=====>block 3");
 	char someFocused = currentScreenGL->isKeyboardHandlerFocused();
 
     int h;
@@ -2002,14 +2002,14 @@ void callbackKeyboard( unsigned char inKey, int inX, int inY ) {
     // and we don't want to fire to those that weren't present when
     // callback was called
 
-	printf("\n=====>block 4");
+	//printf("\n=====>block 4");
     for( h=0; h<currentScreenGL->mKeyboardHandlerVector->size(); h++ )
 	{
         KeyboardHandlerGL *handler = *( currentScreenGL->mKeyboardHandlerVector->getElement( h ) );
         handler->mHandlerFlagged = true;
 	}
 
-	printf("\n=====>block 5");
+	//printf("\n=====>block 5");
 	// fire to all handlers, stop if eaten
 	for( h=0; h<currentScreenGL->mKeyboardHandlerVector->size(); h++ )
 	{
@@ -2032,14 +2032,14 @@ void callbackKeyboard( unsigned char inKey, int inX, int inY ) {
 
     down_eaten:
 
-	printf("\n=====>block 6");
+	//printf("\n=====>block 6");
     // deflag for next time
     for( h=0; h<currentScreenGL->mKeyboardHandlerVector->size(); h++ ) {
         KeyboardHandlerGL *handler 
 			= *( currentScreenGL->mKeyboardHandlerVector->getElement( h ) );
         handler->mHandlerFlagged = false;
         }
-	printf("\n=====>fin de block");
+	//printf("\n=====>fin de block");
 }
 
 
