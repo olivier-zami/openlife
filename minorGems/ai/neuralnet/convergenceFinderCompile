@@ -1,1 +1,0 @@
-g++ -I../../../ -o convergenceFinder convergenceFinder.cpp *NeuralNet.cpp *Trainer*.cpp ../genetic/*.cpp
