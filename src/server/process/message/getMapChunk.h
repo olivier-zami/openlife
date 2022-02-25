@@ -11,7 +11,7 @@
 #include "minorGems/system/Time.h"
 #include "minorGems/util/SimpleVector.h"
 #include "OneLife/server/map.h"
-#include "OneLife/gameSource/objectBank.h"
+#include "OneLife/gameSource/components/banks/objectBank.h"
 #include "minorGems/formats/encodingUtils.h"
 
 void dbLookTimePut( int inX, int inY, timeSec_t inTime );

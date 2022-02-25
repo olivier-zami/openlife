@@ -44,7 +44,7 @@
 #include "minorGems/io/file/File.h"
 #include "OneLife/server/map.h"
 #include "OneLife/gameSource/transitionBank.h"
-#include "OneLife/gameSource/objectBank.h"
+#include "OneLife/gameSource/components/banks/objectBank.h"
 #include "OneLife/gameSource/objectMetadata.h"
 #include "OneLife/gameSource/animationBank.h"
 #include "OneLife/gameSource/categoryBank.h"
@@ -974,6 +974,7 @@ void openLife::Server::start()
 		double currentTime = Time::getCurrentTime();
 
 		for( int i=0; i<newConnections.size(); i++ ) {
+
 
 			FreshConnection *nextConnection = newConnections.getElement( i );
 
@@ -1972,7 +1973,7 @@ void openLife::Server::start()
 				AppLog::infoF( "Got client message from %d: %s",
 							   nextPlayer->id, message );
 
-				ClientMessage m = parseMessage( nextPlayer, message );
+				ClientMessage m = parseCurrentMessage( nextPlayer, message );
 
 				delete [] message;
 
@@ -17583,7 +17584,7 @@ void sendMessageToPlayer( LiveObject *inPlayer,
 
 // if extraPos present in result, destroyed by caller
 // inMessage may be modified by this call
-					ClientMessage parseMessage( LiveObject *inPlayer, char *inMessage )
+					ClientMessage parseCurrentMessage( LiveObject *inPlayer, char *inMessage )
 					{
 
 					char nameBuffer[100];

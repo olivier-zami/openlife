@@ -1,3 +1,0 @@
-g++ -o curseDBDump curseDBDump.cpp -I../.. lineardb3.cpp dbCommon.cpp
-
-g++ -o curseCountDBDump curseCountDBDump.cpp -I../.. lineardb3.cpp dbCommon.cpp

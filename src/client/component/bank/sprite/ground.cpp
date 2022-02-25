@@ -12,7 +12,7 @@
 #include "minorGems/game/gameGraphics.h"
 #include "minorGems/graphics/Image.h"
 #include "src/game.h"
-#include "OneLife/gameSource/objectBank.h"
+#include "OneLife/gameSource/components/banks/objectBank.h"
 #include "minorGems/util/SettingsManager.h"
 
 #define CELL_D 128
