@@ -6,10 +6,12 @@
 
 #include <fstream>
 
-nlohmann::json openLife::system::nlohmann::getJsonFromFile(const char *filename)
+using Json = nlohmann::json;
+
+nlohmann::json openLife::extension::nlohmann::getJsonObject(const char *filename)
 {
 	char *buffer;
-	::nlohmann::json json;
+	Json json;
 	std::ifstream fileReader (filename);
 	if(fileReader)
 	{
@@ -19,7 +21,7 @@ nlohmann::json openLife::system::nlohmann::getJsonFromFile(const char *filename)
 		buffer = new char [length];
 		fileReader.read (buffer,length);
 		fileReader.close();
-		json = ::nlohmann::json::parse(buffer);
+		json = Json::parse(buffer);
 		delete[] buffer;
 	}
 	return json;
