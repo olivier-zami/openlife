@@ -422,11 +422,13 @@ int LINEARDB3_open(
 
 			if(!valueToInt(inDB->recordBuffer) && !valueToInt(&(inDB->recordBuffer[sizeof(int)])))
 			{
+				/*
 				printf("\n==========>Record(%li) : (%i, %i) = %i",
 					   i,
 					   valueToInt(inDB->recordBuffer),
 					   valueToInt(&(inDB->recordBuffer[sizeof(int)])),
 					   valueToInt(&(inDB->recordBuffer[inDB->keySize])));
+					   */
 			}
 
 

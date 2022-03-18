@@ -11778,19 +11778,17 @@ void LivingLifePage::step() {
     char *message = getNextServerMessage();
 
 
-    while( message != NULL ) {
+    while( message != NULL )
+	{
         overheadServerBytesRead += 52;
-        
-        printf( "Got length %d message\n%s\n", 
-                (int)strlen( message ), message );
-
-        messageType type = getMessageType( message );
-        
-        if( mapPullMode && type != MAP_CHUNK ) {
+        //printf( "Got length %d message\n%s\n",(int)strlen( message ), message );
+        messageType type = OneLife::procedure::conversion::getMessageType( message )
+        if( mapPullMode && type != MAP_CHUNK )
+		{
             // ignore it---map is a frozen snapshot in time
             // or as close as we can get to it
             type = UNKNOWN;
-            }
+		}
         
         if( type == SHUTDOWN  || type == FORCED_SHUTDOWN ) {
             closeSocket( mServerSocket );
@@ -12822,7 +12820,7 @@ void LivingLifePage::step() {
             sscanf( message, "MC\n%d %d %d %d\n%d %d\n", 
                     &sizeX, &sizeY, &x, &y, &binarySize, &compressedSize );
             
-            printf( "Got map chunk with bin size %d, compressed size %d\n", 
+            printf( "Got map chunk with bin size %d, compressed size %d\n",
                     binarySize, compressedSize );
             
             if( ! mMapGlobalOffsetSet ) {
@@ -13978,8 +13976,7 @@ void LivingLifePage::step() {
                         if( old != mMap[mapI] && mMap[mapI] != 0 ) {
                             // new placement
                             
-                            printf( "New placement, responsible=%d\n",
-                                    responsiblePlayerID );
+                            //printf( "New placement, responsible=%d\n", responsiblePlayerID );
                             
                             if( mMapMoveSpeeds[mapI] == 0 ) {
                                 
@@ -16471,8 +16468,7 @@ void LivingLifePage::step() {
 
                 remapRandSource.reseed( ourID );
 
-                printf( "Got first PLAYER_UPDATE message, our ID = %d\n",
-                        ourID );
+                //printf( "Got first PLAYER_UPDATE message, our ID = %d\n", ourID );
 
                 ourObject->displayChar = 'A';
                 }

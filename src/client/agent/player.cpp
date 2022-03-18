@@ -223,8 +223,7 @@ void LivingLifePage::computePathToDest( LiveObject *inObject )
 
 	if( pathFound && inObject->pathToDest != NULL )
 	{
-		printf( "Path found in %f ms\n",
-				1000 * ( game_getCurrentTime() - startTime ) );
+		//printf( "Path found in %f ms\n", 1000 * ( game_getCurrentTime() - startTime ) );
 
 		// move into world coordinates
 		for( int i=0; i<inObject->pathLength; i++ ) {
@@ -272,8 +271,7 @@ void LivingLifePage::computePathToDest( LiveObject *inObject )
 	}
 	else
 	{
-		printf( "Path not found in %f ms\n",
-				1000 * ( game_getCurrentTime() - startTime ) );
+		//printf( "Path not found in %f ms\n", 1000 * ( game_getCurrentTime() - startTime ) );
 
 		if( !pathFound ) {
 

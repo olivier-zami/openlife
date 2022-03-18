@@ -171,7 +171,7 @@ static void setLoadingFailureFileName( char *inNewFileName ) {
 
 static void loadSpriteFromRawTGAData( int inSpriteID, unsigned char *inTGAData,
                                       int inDataLength ) {
-    
+
     RawRGBAImage *spriteImage = readTGAFileRawFromBuffer( inTGAData, 
                                                           inDataLength);
 
