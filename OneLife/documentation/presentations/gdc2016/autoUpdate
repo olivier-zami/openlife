@@ -1,3 +1,0 @@
-while inotifywait . ; do
-    make outline.dvi
-done

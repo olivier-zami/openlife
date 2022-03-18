@@ -1,1 +1,0 @@
-g++ -g -I../.. -o encodingUtilsTest encodingUtilsTest.cpp encodingUtils.cpp ../util/stringUtils.cpp ../util/StringBufferOutputStream.cpp

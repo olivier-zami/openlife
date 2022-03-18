@@ -1,1 +1,0 @@
-gdb -ex="set logging on debugOut.txt" -ex=r -ex=bt OneLife.exe

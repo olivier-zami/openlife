@@ -1,1 +1,0 @@
-g++ -o bitMemoryTest -lpthread -lSDL -I../../.. *.cpp ../../../minorGems/graphics/linux/ScreenGraphicsLinux.cpp
