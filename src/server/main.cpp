@@ -51,7 +51,7 @@
 #include "minorGems/io/file/File.h"
 #include "OneLife/server/map.h"
 #include "OneLife/gameSource/transitionBank.h"
-#include "OneLife/gameSource/objectBank.h"
+#include "OneLife/gameSource/components/banks/objectBank.h"
 #include "OneLife/gameSource/objectMetadata.h"
 #include "OneLife/gameSource/animationBank.h"
 #include "OneLife/gameSource/categoryBank.h"

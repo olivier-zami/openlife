@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "OneLife/gameSource/objectBank.h"
+#include "OneLife/gameSource/components/banks/objectBank.h"
 #include "minorGems/network/Socket.h"
 #include "OneLife/server/cravings.h"
 #include "OneLife/server/curses.h"

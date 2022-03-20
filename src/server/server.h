@@ -555,7 +555,7 @@ GridPos computePartialMoveSpot( LiveObject *inPlayer, int inOverrideC = -2  );
 doublePair computePartialMoveSpotPrecise( LiveObject *inPlayer );
 int computePartialMovePathStep( LiveObject *inPlayer );
 double computePartialMovePathStepPrecise( LiveObject *inPlayer );
-ClientMessage parseMessage( LiveObject *inPlayer, char *inMessage );
+ClientMessage parseCurrentMessage( LiveObject *inPlayer, char *inMessage );
 int stringToInt( char *inString );
 char *getNextClientMessage( SimpleVector<char> *inBuffer );
 char readSocketFull( Socket *inSock, SimpleVector<char> *inBuffer );
