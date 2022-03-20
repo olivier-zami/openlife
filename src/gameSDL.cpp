@@ -32,62 +32,62 @@ int main( int inArgCount, char **inArgs ) {
 
 
 
-#include "minorGems/graphics/openGL/ScreenGL.h"
-#include "minorGems/graphics/openGL/SceneHandlerGL.h"
-#include "minorGems/graphics/Color.h"
+#include "../../minorGems/graphics/openGL/ScreenGL.h"
+#include "../../minorGems/graphics/openGL/SceneHandlerGL.h"
+#include "../../minorGems/graphics/Color.h"
 
-#include "minorGems/graphics/openGL/gui/GUIComponentGL.h"
-#include "minorGems/network/web/WebRequest.h"
+#include "../../minorGems/graphics/openGL/gui/GUIComponentGL.h"
+#include "../../minorGems/network/web/WebRequest.h"
 
-#include "minorGems/graphics/openGL/glInclude.h"
+#include "../../minorGems/graphics/openGL/glInclude.h"
 
-#include "minorGems/graphics/openGL/SceneHandlerGL.h"
-#include "minorGems/graphics/openGL/MouseHandlerGL.h"
-#include "minorGems/graphics/openGL/KeyboardHandlerGL.h"
-#include "minorGems/ui/event/ActionListener.h"
-
-
-#include "minorGems/system/Time.h"
-#include "minorGems/system/Thread.h"
-
-#include "minorGems/io/file/File.h"
-
-#include "minorGems/network/HostAddress.h"
-#include "minorGems/network/Socket.h"
-#include "minorGems/network/SocketClient.h"
-
-#include "minorGems/network/upnp/portMapping.h"
+#include "../../minorGems/graphics/openGL/SceneHandlerGL.h"
+#include "../../minorGems/graphics/openGL/MouseHandlerGL.h"
+#include "../../minorGems/graphics/openGL/KeyboardHandlerGL.h"
+#include "../../minorGems/ui/event/ActionListener.h"
 
 
-#include "minorGems/util/SettingsManager.h"
-#include "minorGems/util/TranslationManager.h"
-#include "minorGems/util/stringUtils.h"
-#include "minorGems/util/SimpleVector.h"
+#include "../../minorGems/system/Time.h"
+#include "../../minorGems/system/Thread.h"
+
+#include "../../minorGems/io/file/File.h"
+
+#include "../../minorGems/network/HostAddress.h"
+#include "../../minorGems/network/Socket.h"
+#include "../../minorGems/network/SocketClient.h"
+
+#include "../../minorGems/network/upnp/portMapping.h"
 
 
-#include "minorGems/util/log/AppLog.h"
-#include "minorGems/util/log/FileLog.h"
-
-#include "minorGems/graphics/converters/TGAImageConverter.h"
-
-#include "minorGems/io/file/FileInputStream.h"
-#include "minorGems/util/ByteBufferInputStream.h"
+#include "../../minorGems/util/SettingsManager.h"
+#include "../../minorGems/util/TranslationManager.h"
+#include "../../minorGems/util/stringUtils.h"
+#include "../../minorGems/util/SimpleVector.h"
 
 
-#include "minorGems/sound/formats/aiff.h"
-#include "minorGems/sound/audioNoClip.h"
+#include "../../minorGems/util/log/AppLog.h"
+#include "../../minorGems/util/log/FileLog.h"
+
+#include "../../minorGems/graphics/converters/TGAImageConverter.h"
+
+#include "../../minorGems/io/file/FileInputStream.h"
+#include "../../minorGems/util/ByteBufferInputStream.h"
 
 
-
-#include "minorGems/game/game.h"
-#include "minorGems/game/gameGraphics.h"
-#include "minorGems/game/drawUtils.h"
-
-#include "minorGems/game/diffBundle/client/diffBundleClient.h"
+#include "../../minorGems/sound/formats/aiff.h"
+#include "../../minorGems/sound/audioNoClip.h"
 
 
 
-#include "minorGems/util/random/CustomRandomSource.h"
+#include "../../minorGems/game/game.h"
+#include "../../minorGems/game/gameGraphics.h"
+#include "../../minorGems/game/drawUtils.h"
+
+#include "../../minorGems/game/diffBundle/client/diffBundleClient.h"
+
+
+
+#include "../../minorGems/util/random/CustomRandomSource.h"
 
 // static seed
 static CustomRandomSource randSource( 34957197 );
@@ -95,7 +95,7 @@ static CustomRandomSource randSource( 34957197 );
 
 #ifdef RASPBIAN
 
-#include "minorGems/graphics/openGL/RaspbianGLSurface.cpp"
+#include "../../minorGems/graphics/openGL/RaspbianGLSurface.cpp"
 
 // demo code panel uses non-GLES code
 void showDemoCodePanel( ScreenGL *inScreen, const char *inFontTGAFileName,
@@ -115,7 +115,8 @@ void freeWriteFailedPanel() {
 
 #else
 
-#include "demoCodePanel.h"
+//#include "demoCodePanel.h"
+#include "../../minorGems/game/platforms/SDL/demoCodePanel.h"
 
 #endif
 
@@ -135,9 +136,9 @@ typedef struct AsyncFileRecord {
 
 
 
-#include "minorGems/system/StopSignalThread.h"
-#include "minorGems/system/MutexLock.h"
-#include "minorGems/system/BinarySemaphore.h"
+#include "../../minorGems/system/StopSignalThread.h"
+#include "../../minorGems/system/MutexLock.h"
+#include "../../minorGems/system/BinarySemaphore.h"
 
 static MutexLock asyncLock;
 static BinarySemaphore newFileToReadSem;
@@ -361,11 +362,11 @@ char mouseWorldCoordinates = true;
 
 
 #ifdef USE_JPEG
-#include "minorGems/graphics/converters/JPEGImageConverter.h"
+#include "../../minorGems/graphics/converters/JPEGImageConverter.h"
     static JPEGImageConverter screenShotConverter( 90 );
     static const char *screenShotExtension = "jpg";
 #elif defined(USE_PNG)
-#include "minorGems/graphics/converters/PNGImageConverter.h"
+#include "../../minorGems/graphics/converters/PNGImageConverter.h"
     static PNGImageConverter screenShotConverter;
     static const char *screenShotExtension = "png";
 #else
