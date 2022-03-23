@@ -9,13 +9,13 @@
 
 namespace openLife::system
 {
-	class Trace
+	class Console
 	{
 		public:
 			static void writeLine(const char* message, va_list args);
 			static void writeLine(const char* message, ...);
 
-		private:
+		protected:
 			static unsigned int bufferSize;
 	};
 }
