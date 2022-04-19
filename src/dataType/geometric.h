@@ -5,7 +5,7 @@
 #ifndef OPENLIFE_GEOMETRIC_H
 #define OPENLIFE_GEOMETRIC_H
 
-#include "../type.h"
+#include "../system/_base/type.h"
 
 namespace openLife::system::type::geometric
 {
