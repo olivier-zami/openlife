@@ -7,14 +7,6 @@
 
 #include "src/common/type/database/lineardb3.h"
 
-int DB_open_timeShrunk(
-		LINEARDB3 *db,
-		const char *path,
-		int mode,
-		unsigned long hash_table_size,
-		unsigned long key_size,
-		unsigned long value_size);
-
 /**
  * Set maximum table load for all subsequent callst to LINEARDB3_open.
  *
