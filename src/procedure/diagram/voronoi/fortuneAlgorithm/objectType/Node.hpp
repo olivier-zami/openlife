@@ -18,16 +18,15 @@
 #include <random>
 #include <cassert>
 
+#include "../dataType/HalfEdge.h"
 #include "../Math/Parabola.hpp"
-#include "DCEL.hpp"
-
 
 class Event;
 
 
-namespace beachline {
-    
-    using namespace DCEL;
+namespace beachline
+{
+
     
     class BLNode;
     typedef std::shared_ptr<BLNode> BLNodePtr;
@@ -157,21 +156,22 @@ namespace beachline {
     BLNodePtr remove(BLNodePtr leaf);;
     
     
-    /**
+    /*
      Returns breakpoints for a given arc
-     */
     std::pair<BLNodePtr, BLNodePtr> breakpoints(BLNodePtr leaf);
+    */
     
-    
+
+    /*
     BLNodePtr make_subtree(int index, int index_behind, double *sweepline,
                            const std::vector<Point2D> *points,
-                           std::vector<HalfEdgePtr> &edges);
+                           std::vector<HalfEdgePtr> &edges);*/
     
-    
+    /*
     BLNodePtr make_simple_subtree(int index, int index_behind, double *sweepline,
                                   const std::vector<Point2D> *points,
                                   std::vector<HalfEdgePtr> &edges);
-    
+    */
     
     bool _validate(BLNodePtr node);
     

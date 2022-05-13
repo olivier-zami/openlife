@@ -6,7 +6,7 @@
 //  Copyright © 2018 Dmytro Kotsur. All rights reserved.
 //
 
-#include "Beachline.hpp"
+#include "Node.hpp"
 
 namespace beachline {
 
@@ -20,7 +20,7 @@ namespace beachline {
                    int _height) : indices(_indices), left(_left), right(_right),
                                   parent(_parent), height(_height),
                                   sweepline(_sweepline), points(_points),
-                                  next(nullptr), prev(nullptr) {}
+                                  next(nullptr), prev(nullptr){}
 
 
     double BLNode::value() {
@@ -334,21 +334,19 @@ namespace beachline {
     }
 
 
-    /**
-     Returns breakpoints for a given arc
-     */
-    std::pair<BLNodePtr, BLNodePtr> breakpoints(BLNodePtr leaf) {
-        
+     /*
+    std::pair<BLNodePtr, BLNodePtr> breakpoints(BLNodePtr leaf)
+    {
         if (leaf == nullptr || leaf->next == nullptr || leaf->prev == nullptr)
             return std::make_pair<BLNodePtr>(nullptr, nullptr);
-        
+
         BLNodePtr parent = leaf->parent, gparent = leaf->parent;
         std::pair<int,int> bp1(leaf->prev->get_id(), leaf->get_id()); // left breakpoint
         std::pair<int,int> bp2(leaf->get_id(), leaf->next->get_id()); // right breakpoint
         std::pair<int,int> other_bp;
-        
+
         bool left_is_missing = true;
-        
+
         if (parent->has_indices(bp1)) {
             other_bp = bp2;
             left_is_missing = false;
@@ -356,7 +354,7 @@ namespace beachline {
             other_bp = bp1;
             left_is_missing = true;
         }
-        
+
         // Go up and rebalance the whole tree
         while (gparent != nullptr) {
             if (gparent->has_indices(other_bp)) {
@@ -364,13 +362,13 @@ namespace beachline {
             }
             gparent = gparent->parent;
         }
-        
+
         if (left_is_missing) {
             return std::make_pair(gparent, parent);
         } else {
             return std::make_pair(parent, gparent);
         }
-        
+
 //        // BUG doesn't take into account gparent WRONG!!!
 //        if (parent->parent != nullptr) {
 //            if (parent->parent->left == parent) {
@@ -382,66 +380,70 @@ namespace beachline {
 //
 //        return std::make_pair(parent, gparent);
     }
+	*/
 
-
+    /*
     BLNodePtr make_subtree(int index, int index_behind, double *sweepline,
                            const std::vector<Point2D> *points,
-                           std::vector<HalfEdgePtr> &edges) {
-        
+                           std::vector<HalfEdgePtr> &edges)
+   {
+    	printf("\n\tcreate subtree");
+
         // create nodes corresponding to branching points
         BLNodePtr node1 = std::make_shared<BLNode>(std::make_pair(index_behind, index), sweepline, points);
         BLNodePtr node2 = std::make_shared<BLNode>(std::make_pair(index, index_behind), sweepline, points);
-        
+
         // create leaf nodes
         BLNodePtr leaf1 = std::make_shared<BLNode>(std::make_pair(index_behind, index_behind), sweepline, points);
         BLNodePtr leaf2 = std::make_shared<BLNode>(std::make_pair(index, index), sweepline, points);
         BLNodePtr leaf3 = std::make_shared<BLNode>(std::make_pair(index_behind, index_behind), sweepline, points);
-        
+
         // adjust tree connections
         node1->right = node2;
         node2->parent = node1;
-        
+
         node1->left = leaf1;
         leaf1->parent = node1;
-        
+
         node2->left = leaf2;
         leaf2->parent = node2;
-        
+
         node2->right = leaf3;
         leaf3->parent = node2;
-        
+
         // add halfedges
         std::pair<HalfEdgePtr, HalfEdgePtr> twin_edges = make_twins(index_behind, index);
         node1->edge = twin_edges.first;//second;//first;
         node2->edge = twin_edges.second;//first;//second;
-        
+
         edges.push_back(twin_edges.first);
         edges.push_back(twin_edges.second);
-        
+
         // connect leaf nodes
         connect(leaf1, leaf2);
         connect(leaf2, leaf3);
-        
+
         // reset height of a node
         update_height(node2);
         update_height(node1);
-        
+
         // return the result
         return node1;
     }
+*/
 
-
+	/*
     BLNodePtr make_simple_subtree(int index, int index_behind, double *sweepline,
                                   const std::vector<Point2D> *points,
                                   std::vector<HalfEdgePtr> &edges) {
-        
+
         BLNodePtr node, leaf_l, leaf_r;
-        
+
         std::pair<HalfEdgePtr, HalfEdgePtr> twin_edges = make_twins(index_behind, index);
-        
+
         edges.push_back(twin_edges.first);
         edges.push_back(twin_edges.second);
-        
+
         if ((*points)[index].x < (*points)[index_behind].x) {
             // Depends on the point order
             node = std::make_shared<BLNode>(std::make_pair(index, index_behind), sweepline, points);
@@ -454,18 +456,19 @@ namespace beachline {
             leaf_r = std::make_shared<BLNode>(std::make_pair(index, index), sweepline, points);
             node->edge = twin_edges.first;//twin_edges.second;
         }
-        
+
         node->left = leaf_l;
         node->right = leaf_r;
-        
+
         leaf_l->parent = node;
         leaf_r->parent = node;
-        
+
         connect(leaf_l, leaf_r);
         update_height(node);
-        
+
         return node;
     }
+    */
 
 
     bool _validate(BLNodePtr node) {
