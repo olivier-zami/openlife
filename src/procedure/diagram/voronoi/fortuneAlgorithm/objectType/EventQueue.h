@@ -24,6 +24,7 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			EventPtr getNextEvent();
 
 			std::priority_queue<EventPtr, std::vector<EventPtr>, EventPtrComparator>* get();
+			bool isEmpty();
 
 		private:
 			std::priority_queue<EventPtr, std::vector<EventPtr>, EventPtrComparator>* pq;

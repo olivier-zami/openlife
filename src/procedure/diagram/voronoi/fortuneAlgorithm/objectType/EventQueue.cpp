@@ -44,3 +44,8 @@ std::priority_queue<EventPtr, std::vector<EventPtr>, EventPtrComparator> * openL
 {
 	return this->pq;
 }
+
+bool openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue::isEmpty()
+{
+	return this->pq->empty();
+}

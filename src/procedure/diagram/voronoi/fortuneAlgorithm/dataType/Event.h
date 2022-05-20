@@ -8,6 +8,25 @@
 #include "../objectType/Node.hpp"
 #include "../Types/Point2D.h"
 
+namespace beachline
+{
+	typedef enum {
+		NONE,
+		SITE,
+		CIRCLE
+	}EventType;
+}
+
+namespace beachline
+{
+	typedef struct{
+		EventType type;
+
+		//!data
+		std::pair<int, int> indices;
+	}EventNode;
+}
+
 class Event;
 
 struct Event {
@@ -47,5 +66,12 @@ struct EventPtrComparator {
 		return point_cmp(e1->point, e2->point);
 	}
 };
+
+EventPtr checkCircleEvent(
+		beachline::BLNodePtr n1,
+		beachline::BLNodePtr n2,
+		beachline::BLNodePtr n3,
+		const std::vector<Point2D> &points,
+		double sweepline);
 
 #endif //OPENLIFE_SRC_PROCEDURE_DIAGRAM_VORONOI_FORTUNEALGORITHM_DATYPE_EVENT_H

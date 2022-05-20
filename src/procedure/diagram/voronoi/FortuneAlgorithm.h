@@ -9,10 +9,10 @@
 
 #include <vector>
 #include "fortuneAlgorithm/Types/Point2D.h"
-#include "fortuneAlgorithm/dataType/Event.h"
+#include "fortuneAlgorithm/objectType/Node.hpp"
+#include "fortuneAlgorithm/objectType/NodeInquirer.h"
 
-#define BREAKPOINTS_EPSILON 1.0e-5
-#define CIRCLE_CENTER_EPSILON 1.0e-7
+using namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 
 namespace openLife::procedure::diagram::voronoi
 {
@@ -31,19 +31,24 @@ namespace openLife::procedure::diagram::voronoi
 			~FortuneAlgorithm();
 
 			void addSites(const std::vector<Point2D> &siteCoord);
-			bool isEveryElementsSweep();
+			void buildDiagram();
+			NodeInquirer* inquire(beachline::BLNodePtr node);
 			void setOutputDataStruct(VoronoiDiagram* diagram);
-			void sweepAll();
-			void sweepNextElement();
+			void setSurfaceDimension(double width, double height);
+
 
 		private:
 			static openLife::procedure::diagram::voronoi::FortuneAlgorithm* instance;
 
-			EventPtr currentEvent;
+			struct{
+				double width;
+				double height;
+			}dimension;
 			std::vector<beachline::HalfEdgePtr>* faces;
 			std::vector<beachline::HalfEdgePtr>* halfEdges;
+			NodeInquirer* nodeInquirer;
+			std::vector<Point2D>* sitePoint;
 			std::vector<beachline::VertexPtr>* vertices;
-			std::vector<Point2D>* voronoiSite;
 
 		public: //TODO: change to private afterward
 			double sweepLinePosition;

@@ -16,6 +16,10 @@ namespace openLife::procedure::diagram::voronoi
 	}Edge;
 
 	typedef struct{
+		struct{
+			double width;
+			double height;
+		}dimension;
 		std::vector<beachline::HalfEdgePtr> halfedges;
 		std::vector<beachline::HalfEdgePtr> faces;
 		std::vector<beachline::VertexPtr> vertices;

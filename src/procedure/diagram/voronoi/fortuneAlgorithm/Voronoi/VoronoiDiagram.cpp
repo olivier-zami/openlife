@@ -15,7 +15,6 @@
 
 #include <queue>
 
-#define BREAKPOINTS_EPSILON 1.0e-5
 #define _DEBUG_
 
 namespace bl = beachline;
