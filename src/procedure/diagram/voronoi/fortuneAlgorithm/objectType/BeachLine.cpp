@@ -123,6 +123,9 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 {
 	this->sweepLinePosition = newPoint.y;
 
+
+	return;
+
 	// get breakpoint nodes
 	std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints = this->breakpoints(arc);
 
