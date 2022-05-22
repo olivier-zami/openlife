@@ -113,16 +113,11 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::buildDiagram()
 		{
 			Point2D newPoint = currentEvent->point;
 
-			if(!this->beachLine->isEmpty())
+			this->beachLine->addArc(currentEvent->index, newPoint);
+			while(EventPtr newEvent = this->beachLine->getNewEvent())
 			{
-				this->beachLine->addArc(currentEvent->index, newPoint);
-				for(int i=0; i<this->beachLine->getNewEvent()->size(); i++)
-				{
-					this->eventQueue->get()->push(this->beachLine->getNewEvent()->at(i));
-				}
-				this->beachLine->flushEvents();
+				this->eventQueue->get()->push(newEvent);
 			}
-			else this->beachLine->addArc(currentEvent->index, newPoint);
 		}
 		else if (currentEvent->type == Event::CIRCLE)
 		{
@@ -132,45 +127,16 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::buildDiagram()
 			Point2D center = currentEvent->center;
 			this->beachLine->moveToEdgeEndPoint(currentEvent->point, arc, center);
 
-			/**********************************************************************************************************
-			//!store newly generated vertices
-			for(int i=0; i<this->beachLine->getVertices()->size(); i++)
-			{
-				this->vertices->push_back(this->beachLine->getVertices()->at(i));
-			}
 
+			/**********************************************************************************************************/
 
-			//!store newly generated halfEdges
-			for(int i=0; i<this->beachLine->getHalfEdges()->size(); i++)
-			{
-				this->halfEdges->push_back(this->beachLine->getHalfEdges()->at(i));
-			}
+			std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints;
+			breakpoints = this->beachLine->breakpoints;
 
+			if(!this->beachLine->isValidBreakPoints(breakpoints))continue;
 
-			printf("\n\t%lu events for insertion", this->beachLine->getNewEvent()->size());
-			for(int i=0; i<this->beachLine->getNewEvent()->size(); i++)
-			{
-				this->eventQueue->get()->push(this->beachLine->getNewEvent()->at(i));
-				printf("\n\t\tinsert Event ...");
-			}
-			this->beachLine->flushEvents();
+			/**********************************************************************************************************/
 
-			**************************************************************************************************************/
-			beachline::BLNodePtr prev_leaf, next_leaf;
-
-			// get breakpoint nodes
-			std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints = this->beachLine->breakpoints(arc);
-
-			// recheck if it's a false alarm 1
-			if (breakpoints.first == nullptr || breakpoints.second == nullptr) {
-				continue;
-			}
-
-			// recheck if it's a false alarm 2
-			double v1 = this->beachLine->getSweepLineEquidistantPointFromFoci(breakpoints.first);
-			double v2 = this->beachLine->getSweepLineEquidistantPointFromFoci(breakpoints.second);
-
-			if (fabs(v1 - v2) > BREAKPOINTS_EPSILON) continue;
 
 			// create a new vertex and insert into doubly-connected edge list
 			beachline::VertexPtr vertex = std::make_shared<beachline::Vertex>(currentEvent->center);
@@ -194,7 +160,8 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::buildDiagram()
 				circle_e->type = Event::SKIP; // ignore corresponding event
 			}
 
-			// store pointers to the next and previous leaves
+			//!store pointers to the next and previous leaves
+			beachline::BLNodePtr prev_leaf, next_leaf;
 			prev_leaf = arc->prev;
 			next_leaf = arc->next;
 
@@ -243,6 +210,24 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::buildDiagram()
 				if (circle_event != nullptr) {
 					this->eventQueue->get()->push(circle_event);
 				}
+			}
+			/**********************************************************************************************************
+			//!store newly generated vertices
+			for(int i=0; i<this->beachLine->getVertices()->size(); i++)
+			{
+				this->vertices->push_back(this->beachLine->getVertices()->at(i));
+			}
+
+
+			//!store newly generated halfEdges
+			for(int i=0; i<this->beachLine->getHalfEdges()->size(); i++)
+			{
+				this->halfEdges->push_back(this->beachLine->getHalfEdges()->at(i));
+			}
+
+			while(EventPtr newEvent = this->beachLine->getNewEvent())
+			{
+				this->eventQueue->get()->push(newEvent);
 			}
 			/**************************************************************************************************************/
 

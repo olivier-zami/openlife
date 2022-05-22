@@ -5,9 +5,9 @@
 #ifndef OPENLIFE_SRC_PROCEDURE_DIAGRAM_VORONOI_FORTUNEALGORITHM_OBJECTTYPE_BEACHLINE_H
 #define OPENLIFE_SRC_PROCEDURE_DIAGRAM_VORONOI_FORTUNEALGORITHM_OBJECTTYPE_BEACHLINE_H
 
-#include <vector>
+#include <queue>
 #include <stack>
-#include <deque>
+#include <vector>
 
 #include "../dataType/beachLine.h"
 #include "../dataType/Event.h"
@@ -39,7 +39,7 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			void setQueueEvent(openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue* eventQueue);
 
 		//private:
-			std::pair<BLNodePtr, BLNodePtr> breakpoints(BLNodePtr leaf);
+
 			BLNodePtr createNode(
 					int type,
 					int index,
@@ -55,21 +55,24 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 									  std::vector<HalfEdgePtr> &edges);
 
 			BLNodePtr find(BLNodePtr root, int idSite, Point2D point);
-			std::vector<EventPtr>* getNewEvent();
+			std::pair<BLNodePtr, BLNodePtr> getBreakpoints(BLNodePtr leaf);
+			beachline::VertexPtr getEdge();
+			EventPtr getNewEvent();
 			double getSweepLineEquidistantPointFromFoci(BLNodePtr node);//TODO:rename to getSomething getSweepLineEquidistantPointFromFoci();
 			std::vector<Point2D> getParabolasIntersections(const Point2D &focal1, const Point2D &focal2);
 			std::vector<beachline::HalfEdgePtr>* getHalfEdges();
-			std::vector<beachline::VertexPtr>* getVertices();
+			std::queue<beachline::VertexPtr>* getVertices();
 			NodeInquirer* inquire(beachline::BLNodePtr node);
 			bool isEmpty();
+			bool isValidBreakPoints(std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints);
 			BLNodePtr replace(BLNodePtr node, BLNodePtr new_node);
 
-			std::vector<EventPtr>* newEvent;
-			std::vector<beachline::HalfEdgePtr>* halfEdges;
-			NodeInquirer* nodeInquirer;
-			beachline::BLNodePtr firstArc;
+
 			std::vector<EventPtr>* circleEvent;
-			beachline::BLNodePtr currentNode;
+			beachline::BLNodePtr firstArc;
+			std::vector<beachline::HalfEdgePtr>* halfEdges;
+			std::queue<EventPtr>* newEvent;
+			NodeInquirer* nodeInquirer;
 			std::vector<Point2D>* sitePoint;
 			struct{
 				struct{
@@ -82,8 +85,10 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 				}y;
 			}sitePointLimit;
 			double sweepLinePosition;
-			std::vector<beachline::VertexPtr>* vertex;
+			std::queue<beachline::VertexPtr>* vertex;
 			openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue* eventQueue;
+
+			std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints;
 	};
 }
 
