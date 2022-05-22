@@ -31,7 +31,9 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			~BeachLine();
 
 			void addArc(int idSite, Point2D newPoint);
-			void flushEvents();
+			EventPtr checkCircleEvent(BLNodePtr n1, BLNodePtr n2, BLNodePtr n3,
+									  const std::vector<Point2D> &points, double sweepline);
+			bool findCircleCenter(const Point2D &p1, const Point2D &p2, const Point2D &p3, Point2D &center);
 			void moveToEdgeEndPoint(Point2D newPoint, beachline::BLNodePtr arc, Point2D center);
 			void setSitePointLimitValues(double xMin, double xMax, double yMin, double yMax);
 			void setPoints(std::vector<Point2D>* points);

@@ -8,11 +8,9 @@
 
 #include "fortuneAlgorithm/dataType/Event.h"
 #include "fortuneAlgorithm/Debug.h"
-#include "fortuneAlgorithm/Math/Circle.hpp"
 #include "fortuneAlgorithm/objectType/Node.hpp"
 #include "fortuneAlgorithm/objectType/BeachLine.h"
 #include "fortuneAlgorithm/objectType/EventQueue.h"
-#include "fortuneAlgorithm/Voronoi/VoronoiDiagram.hpp"
 
 namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 namespace nsSingleton = openLife::procedure::diagram::voronoi;

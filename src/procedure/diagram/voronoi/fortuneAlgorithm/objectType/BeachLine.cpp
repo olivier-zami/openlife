@@ -78,12 +78,12 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::addArc(
 			circle_e->type = Event::SKIP; // ignore corresponding event
 		}
 
-		EventPtr circle_event = checkCircleEvent(left_leaf->prev, left_leaf, left_leaf->next, *this->sitePoint, newPoint.y);
+		EventPtr circle_event = this->checkCircleEvent(left_leaf->prev, left_leaf, left_leaf->next, *this->sitePoint, newPoint.y);
 		if (circle_event != nullptr)
 		{
 			this->newEvent->push(circle_event);
 		}
-		circle_event = checkCircleEvent(right_leaf->prev, right_leaf, right_leaf->next, *this->sitePoint, newPoint.y);
+		circle_event = this->checkCircleEvent(right_leaf->prev, right_leaf, right_leaf->next, *this->sitePoint, newPoint.y);
 		if (circle_event != nullptr)
 		{
 			this->newEvent->push(circle_event);
@@ -99,6 +99,84 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::addArc(
 				idSite,
 				idSite);
 	}
+}
+
+EventPtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::checkCircleEvent(
+		beachline::BLNodePtr n1,
+		beachline::BLNodePtr n2,
+		beachline::BLNodePtr n3,
+		const std::vector <Point2D> &points,
+		double sweepline)
+{
+	if (n1 == nullptr || n2 == nullptr || n3 == nullptr)
+		return nullptr;
+
+	Point2D p1 = points[n1->get_id()];
+	Point2D p2 = points[n2->get_id()];
+	Point2D p3 = points[n3->get_id()];
+	Point2D center, bottom;
+
+	if (p2.y > p1.y && p2.y > p3.y)
+		return nullptr;
+
+	if (!this->findCircleCenter(p1, p2, p3, center))
+		return nullptr;
+
+	bottom = center;
+	bottom.y += (center - p2).norm();
+
+	// check circle event
+	if (fabs(bottom.y - sweepline) < POINT_EPSILON || sweepline < bottom.y) {
+		// create a circle event structure
+		EventPtr e = std::make_shared<Event>(-1, Event::CIRCLE, bottom);
+		// initialize attributes
+		e->center = center;
+		e->arc = n2;
+		// add reference in the corresponding node
+		n2->circle_event = e;
+		return e;
+	}
+
+	return nullptr;
+}
+
+/**
+ *
+ * @param p1
+ * @param p2
+ * @param p3
+ * @param center
+ * @return
+ * @note Find a center of a circle with given three points.
+ Returns false if points are collinear.
+ Otherwise returns true and updates x- and y-coordinates of the `center` of circle.
+ */
+bool openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::findCircleCenter(const Point2D &p1,
+																						  const Point2D &p2,
+																						  const Point2D &p3,
+																						  Point2D &center)
+{
+	// get normalized vectors
+	Point2D u1 = (p1 - p2).normalized(), u2 = (p3 - p2).normalized();
+
+	double cross = crossProduct(u1, u2);
+
+	// check if vectors are collinear
+	if (fabs(cross) < CIRCLE_CENTER_EPSILON) {
+		return false;
+	}
+
+	// get cental points
+	Point2D pc1 = 0.5 * (p1 + p2), pc2 = 0.5 * (p2 + p3);
+
+	// get free components
+	double b1 = dotProduct(u1, pc1), b2 = dotProduct(u2, pc2);
+
+	// calculate the center of a circle
+	center.x = (b1 * u2.y - b2 * u1.y) / cross;
+	center.y = (u1.x * b2 - u2.x * b1) / cross;
+
+	return true;
 }
 
 void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToEdgeEndPoint(Point2D newPoint, beachline::BLNodePtr arc, Point2D center)
@@ -173,11 +251,11 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 
 	// check new circle events
 	if (prev_leaf != nullptr && next_leaf != nullptr) {
-		EventPtr circle_event = checkCircleEvent(prev_leaf->prev, prev_leaf, next_leaf, *this->sitePoint, this->sweepLinePosition);
+		EventPtr circle_event = this->checkCircleEvent(prev_leaf->prev, prev_leaf, next_leaf, *this->sitePoint, this->sweepLinePosition);
 		if (circle_event != nullptr) {
 			this->newEvent->push(circle_event);
 		}
-		circle_event = checkCircleEvent(prev_leaf, next_leaf, next_leaf->next, *this->sitePoint, this->sweepLinePosition);
+		circle_event = this->checkCircleEvent(prev_leaf, next_leaf, next_leaf->next, *this->sitePoint, this->sweepLinePosition);
 		if (circle_event != nullptr) {
 			this->newEvent->push(circle_event);
 		}
