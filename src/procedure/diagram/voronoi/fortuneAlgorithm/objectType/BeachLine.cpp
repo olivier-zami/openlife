@@ -24,7 +24,7 @@ openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::BeachLine(No
 	this->newEvent = new std::queue<EventPtr>();
 	this->nodeInquirer = nodeInquirer;
 	this->sweepLinePosition = 0L;
-	this->vertex = new std::queue<beachline::VertexPtr>();
+	//this->vertex = new std::queue<beachline::VertexPtr>();
 }
 
 openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::~BeachLine() {}
@@ -108,39 +108,27 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 	//!get breakpoint nodes
 	std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints = this->getBreakpoints(arc);
 
-	//if(!this->isValidBreakPoints(breakpoints))return;
+	if(!this->isValidBreakPoints(breakpoints))return;
 
-	this->breakpoints = breakpoints;
-
-	return;
-	/******************************************************************************************************************
-
-
-	//this->vertex->clear();
-	//!create vertex
-	// create a new vertex and insert into doubly-connected edge list
+	//!create a new vertex and insert into doubly-connected edge list
 	beachline::VertexPtr vertex = std::make_shared<beachline::Vertex>(center);//center from function parameters
 	printf("\n\tcreate vertex {id:? coord(%f, %f)}",vertex->point.x, vertex->point.y);
 
-	// store vertex of Voronoi diagram
-	this->vertex->push(vertex);
-	/******************************************************************************************************************
 
-	// remove circle event corresponding to next leaf
-	if (arc->prev != nullptr && arc->prev->circle_event != nullptr)
-	{
+	//!remove circle event corresponding to next & prev leaf
+	if (arc->prev != nullptr && arc->prev->circle_event != nullptr) {
 		EventPtr circle_e = arc->prev->circle_event;
 		circle_e->type = Event::SKIP; // ignore corresponding event
 	}
-
-	// remove circle event corresponding to prev leaf
-	if (arc->next != nullptr && arc->next->circle_event != nullptr)
-	{
+	if (arc->next != nullptr && arc->next->circle_event != nullptr) {
 		EventPtr circle_e = arc->next->circle_event;
 		circle_e->type = Event::SKIP; // ignore corresponding event
 	}
 
-	// store pointers to the next and previous leaves
+	this->breakpoints = breakpoints;
+	this->vertex = vertex;
+
+	//!store pointers to the next and previous leaves
 	beachline::BLNodePtr prev_leaf, next_leaf;
 	prev_leaf = arc->prev;
 	next_leaf = arc->next;
@@ -148,6 +136,9 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 	// They should not be null
 	assert(prev_leaf != nullptr);
 	assert(next_leaf != nullptr);
+
+	beachline::HalfEdgePtr h_first = breakpoints.first->edge;
+	beachline::HalfEdgePtr h_second = breakpoints.second->edge;
 
 	// get node associated with a new edge
 	beachline::BLNodePtr new_edge_node;
@@ -163,12 +154,6 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 	std::pair<beachline::HalfEdgePtr, beachline::HalfEdgePtr> twin_nodes = beachline::make_twins(prev_leaf->get_id(), next_leaf->get_id());
 	new_edge_node->edge = twin_nodes.first;
 	//1/ new_edge_node->edge = twin_nodes.first;
-	/******************************************************************************************************************
-
-	//!Create halfEdges
-	//this->halfEdges->clear();
-	beachline::HalfEdgePtr h_first = breakpoints.first->edge;
-	beachline::HalfEdgePtr h_second = breakpoints.second->edge;
 
 	// connect halfedges
 	beachline::connect_halfedges(h_second, h_first->twin);
@@ -185,25 +170,18 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 
 	this->halfEdges->push_back(twin_nodes.first);
 	this->halfEdges->push_back(twin_nodes.second);
-	/******************************************************************************************************************
 
-	//!generate new circleEvent id any
-	printf("\n\teventStackSize: %i", this->newEvent->size());
 	// check new circle events
-	if (prev_leaf != nullptr && next_leaf != nullptr)
-	{
+	if (prev_leaf != nullptr && next_leaf != nullptr) {
 		EventPtr circle_event = checkCircleEvent(prev_leaf->prev, prev_leaf, next_leaf, *this->sitePoint, this->sweepLinePosition);
-		if (circle_event != nullptr)
-		{
+		if (circle_event != nullptr) {
 			this->newEvent->push(circle_event);
 		}
 		circle_event = checkCircleEvent(prev_leaf, next_leaf, next_leaf->next, *this->sitePoint, this->sweepLinePosition);
-		if (circle_event != nullptr)
-		{
+		if (circle_event != nullptr) {
 			this->newEvent->push(circle_event);
 		}
 	}
-	/******************************************************************************************************************/
 	printf(" => %i", this->newEvent->size());
 }
 
@@ -606,14 +584,6 @@ std::vector<Point2D> openLife::procedure::diagram::voronoi::fortuneAlgorithm::Be
 	return result;
 }
 
-/**
- *
- * @return
- */
-std::queue<beachline::VertexPtr>* openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::getVertices()
-{
-	return this->vertex;
-}
 
 std::vector<beachline::HalfEdgePtr> * openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::getHalfEdges()
 {

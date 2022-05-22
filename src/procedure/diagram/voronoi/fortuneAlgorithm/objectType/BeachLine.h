@@ -61,7 +61,6 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			double getSweepLineEquidistantPointFromFoci(BLNodePtr node);//TODO:rename to getSomething getSweepLineEquidistantPointFromFoci();
 			std::vector<Point2D> getParabolasIntersections(const Point2D &focal1, const Point2D &focal2);
 			std::vector<beachline::HalfEdgePtr>* getHalfEdges();
-			std::queue<beachline::VertexPtr>* getVertices();
 			NodeInquirer* inquire(beachline::BLNodePtr node);
 			bool isEmpty();
 			bool isValidBreakPoints(std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints);
@@ -85,10 +84,14 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 				}y;
 			}sitePointLimit;
 			double sweepLinePosition;
-			std::queue<beachline::VertexPtr>* vertex;
+			//std::queue<beachline::VertexPtr>* vertex;
 			openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue* eventQueue;
 
 			std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints;
+			beachline::VertexPtr vertex;
+			beachline::BLNodePtr prev_leaf, next_leaf;
+		std::pair<beachline::HalfEdgePtr, beachline::HalfEdgePtr> twinNodes;
+		beachline::HalfEdgePtr h_first, h_second;
 	};
 }
 
