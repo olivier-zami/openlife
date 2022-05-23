@@ -18,9 +18,6 @@ using namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 
 openLife::procedure::diagram::voronoi::FortuneAlgorithm* openLife::procedure::diagram::voronoi::FortuneAlgorithm::instance = nullptr;
 
-EventPtr checkCircleEvent(beachline::BLNodePtr n1, beachline::BLNodePtr n2, beachline::BLNodePtr n3,
-						  const std::vector<Point2D> &points, double sweepline);
-
 
 /**
  *
@@ -49,7 +46,8 @@ openLife::procedure::diagram::voronoi::FortuneAlgorithm::FortuneAlgorithm()
 	this->eventQueue = new openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue();
 	this->faces = new std::vector<beachline::HalfEdgePtr>();
 	this->halfEdges = new std::vector<beachline::HalfEdgePtr>();
-	this->vertices = nullptr;
+	this->nbrSite = 0;
+	this->vertices = new std::vector<beachline::VertexPtr>();
 	this->sitePoint = new std::vector<Point2D>();
 	this->sweepLinePosition = 0L;//!current position of the sweep line
 
@@ -75,25 +73,15 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::addSites(const std
 		Point2D site;
 		site.x = siteCoord[i].x;
 		site.y = siteCoord[i].y;
+
 		this->sitePoint->push_back(site);
+		this->eventQueue->addSiteEvent(i, site);
+		this->nbrSite++;
 	}
 }
 
 void openLife::procedure::diagram::voronoi::FortuneAlgorithm::buildDiagram()
 {
-	//!create event from sites
-	if(!this->sitePoint || !this->sitePoint->size()) return;
-	this->eventQueue->addSiteEvent(*(this->sitePoint));
-
-	//!
-	if(!this->vertices)
-	{
-		this->vertices = new std::vector<beachline::VertexPtr>();
-	}
-
-	//! initialize vector of halfedges for faces
-	this->faces->resize(this->sitePoint->size(), nullptr);
-
 	//!beachLine last settings
 	this->beachLine->setSitePointLimitValues(
 			0, this->dimension.width,
@@ -111,7 +99,7 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::buildDiagram()
 		{
 			Point2D newPoint = currentEvent->point;
 
-			this->beachLine->addArc(currentEvent->index, newPoint);
+			this->beachLine->moveToSitePoint(currentEvent->index, newPoint);
 			while(EventPtr newEvent = this->beachLine->getNewEvent())
 			{
 				this->eventQueue->get()->push(newEvent);
@@ -131,6 +119,9 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::buildDiagram()
 		}
 		printf("\n\t=====>number Events left: %lu", this->eventQueue->get()->size());
 	}
+
+	//!initialize vector of halfedges for faces
+	this->faces->resize(this->nbrSite, nullptr);
 
 	// Fill edges corresponding to faces
 	for (size_t i = 0; i < this->halfEdges->size(); ++i) {

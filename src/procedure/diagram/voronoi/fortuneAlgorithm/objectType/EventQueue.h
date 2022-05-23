@@ -20,7 +20,7 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			EventQueue();
 			~EventQueue();
 
-			void addSiteEvent(std::vector<Point2D> randomPoint);
+			void addSiteEvent(unsigned int index, Point2D randomPoint);
 			EventPtr getNextEvent();
 
 			std::priority_queue<EventPtr, std::vector<EventPtr>, EventPtrComparator>* get();

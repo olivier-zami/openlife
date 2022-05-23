@@ -12,21 +12,13 @@ namespace beachline {
 
     
     BLNode::BLNode(const std::pair<int,int>& _indices,
-				   int index,
-				   Point2D focal,
-                   //double* _sweepline ,
-                   //const std::vector<Point2D>* _points,
                    BLNodePtr _left,
                    BLNodePtr _right,
                    BLNodePtr _parent,
-                   int _height) : indices(_indices), focal({index, focal}), left(_left), right(_right),
+                   int _height) : indices(_indices), left(_left), right(_right),
                                   parent(_parent), height(_height),
-                                  /*sweepline(_sweepline), points(_points),*/
                                   next(nullptr), prev(nullptr)
 				  {
-                                  	this->focal.index = index;
-                                  	this->focal.point.x = focal.x;
-                                  	this->focal.point.y = focal.y;
 				  }
 
     /**

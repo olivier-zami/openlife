@@ -47,6 +47,7 @@ namespace openLife::procedure::diagram::voronoi
 			std::vector<beachline::HalfEdgePtr>* faces;
 			std::vector<beachline::HalfEdgePtr>* halfEdges;
 			NodeInquirer* nodeInquirer;
+			size_t nbrSite;
 			std::vector<Point2D>* sitePoint;
 			std::vector<beachline::VertexPtr>* vertices;
 

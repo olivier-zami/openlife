@@ -12,7 +12,7 @@
 #include "Node.hpp"
 
 using namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm;
-namespace dataType = openLife::procedure::diagram::voronoi::fortuneAlgorithm::dataType;
+namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 
 /**
  * @note// create a beachline tree
@@ -20,165 +20,26 @@ namespace dataType = openLife::procedure::diagram::voronoi::fortuneAlgorithm::da
 openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::BeachLine(NodeInquirer* nodeInquirer)
 {
 	this->firstArc = nullptr;
+	this->idxSitePoint = 1;
 	this->halfEdges = new std::vector<beachline::HalfEdgePtr>();
 	this->newEvent = new std::queue<EventPtr>();
 	this->nodeInquirer = nodeInquirer;
+	this->sitePoint1 = new std::vector<FA::dataType::beachLine::Site>();
 	this->sweepLinePosition = 0L;
 	//this->vertex = new std::queue<beachline::VertexPtr>();
 }
 
 openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::~BeachLine() {}
 
+/**********************************************************************************************************************/
+//!PUBLIC
+
 /**
  *
- * @param idSite
  * @param newPoint
- */
-void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::addArc(int idSite, Point2D newPoint)
-{
-	//!
-	if(this->firstArc)
-	{
-		//!
-		this->sweepLinePosition = newPoint.y;
-
-		beachline::BLNodePtr arc = this->find(this->firstArc, idSite, newPoint);//!getClosestNode ?
-
-		// check number of intersection points
-		int isp_num = intersectionPointsNum(this->sitePoint->at(arc->get_id()), newPoint, newPoint.y);
-
-		// different subtrees depending on the number of intersection points
-		beachline::BLNodePtr subtree, left_leaf, right_leaf;
-		if (isp_num == 1)
-		{
-			subtree = this->createSimpleTree(idSite, arc->get_id(), &(newPoint.y), this->sitePoint, *(this->halfEdges));
-			left_leaf = subtree->left;
-			right_leaf = subtree->right;
-		}
-		else if (isp_num == 2)
-		{
-			subtree = this->createTree(idSite, arc->get_id(), &(newPoint.y), this->sitePoint, *(this->halfEdges));
-			left_leaf = subtree->left;
-			right_leaf = subtree->right->right;
-		}
-		else return;
-
-		if (arc->prev != nullptr) beachline::connect(arc->prev, left_leaf);
-		if (arc->next != nullptr) beachline::connect(right_leaf, arc->next);
-
-		this->firstArc = this->replace(arc, subtree);// Replace old leaf with a subtree and rebalance it
-
-
-		//!create detect CircleEvent
-		// Check circle events //TODO: createCircleEvent cheeck in arc builder
-		if (arc->circle_event != nullptr)//TODO: bind circleEvent to node <=> arc->circle_event.get() != nullptr
-		{
-			printf("\n\tbind circle event to arcNode id:%i",arc->get_id());
-			EventPtr circle_e = arc->circle_event;
-			circle_e->type = Event::SKIP; // ignore corresponding event
-		}
-
-		EventPtr circle_event = this->checkCircleEvent(left_leaf->prev, left_leaf, left_leaf->next, *this->sitePoint, newPoint.y);
-		if (circle_event != nullptr)
-		{
-			this->newEvent->push(circle_event);
-		}
-		circle_event = this->checkCircleEvent(right_leaf->prev, right_leaf, right_leaf->next, *this->sitePoint, newPoint.y);
-		if (circle_event != nullptr)
-		{
-			this->newEvent->push(circle_event);
-		}
-	}
-	else
-	{
-		//!init empty beach line tree
-		this->firstArc = this->createNode(
-				-1,
-				idSite,
-				newPoint,
-				idSite,
-				idSite);
-	}
-}
-
-EventPtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::checkCircleEvent(
-		beachline::BLNodePtr n1,
-		beachline::BLNodePtr n2,
-		beachline::BLNodePtr n3,
-		const std::vector <Point2D> &points,
-		double sweepline)
-{
-	if (n1 == nullptr || n2 == nullptr || n3 == nullptr)
-		return nullptr;
-
-	Point2D p1 = points[n1->get_id()];
-	Point2D p2 = points[n2->get_id()];
-	Point2D p3 = points[n3->get_id()];
-	Point2D center, bottom;
-
-	if (p2.y > p1.y && p2.y > p3.y)
-		return nullptr;
-
-	if (!this->findCircleCenter(p1, p2, p3, center))
-		return nullptr;
-
-	bottom = center;
-	bottom.y += (center - p2).norm();
-
-	// check circle event
-	if (fabs(bottom.y - sweepline) < POINT_EPSILON || sweepline < bottom.y) {
-		// create a circle event structure
-		EventPtr e = std::make_shared<Event>(-1, Event::CIRCLE, bottom);
-		// initialize attributes
-		e->center = center;
-		e->arc = n2;
-		// add reference in the corresponding node
-		n2->circle_event = e;
-		return e;
-	}
-
-	return nullptr;
-}
-
-/**
- *
- * @param p1
- * @param p2
- * @param p3
+ * @param arc
  * @param center
- * @return
- * @note Find a center of a circle with given three points.
- Returns false if points are collinear.
- Otherwise returns true and updates x- and y-coordinates of the `center` of circle.
  */
-bool openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::findCircleCenter(const Point2D &p1,
-																						  const Point2D &p2,
-																						  const Point2D &p3,
-																						  Point2D &center)
-{
-	// get normalized vectors
-	Point2D u1 = (p1 - p2).normalized(), u2 = (p3 - p2).normalized();
-
-	double cross = crossProduct(u1, u2);
-
-	// check if vectors are collinear
-	if (fabs(cross) < CIRCLE_CENTER_EPSILON) {
-		return false;
-	}
-
-	// get cental points
-	Point2D pc1 = 0.5 * (p1 + p2), pc2 = 0.5 * (p2 + p3);
-
-	// get free components
-	double b1 = dotProduct(u1, pc1), b2 = dotProduct(u2, pc2);
-
-	// calculate the center of a circle
-	center.x = (b1 * u2.y - b2 * u1.y) / cross;
-	center.y = (u1.x * b2 - u2.x * b1) / cross;
-
-	return true;
-}
-
 void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToEdgeEndPoint(Point2D newPoint, beachline::BLNodePtr arc, Point2D center)
 {
 	this->sweepLinePosition = newPoint.y;
@@ -203,7 +64,6 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 		circle_e->type = Event::SKIP; // ignore corresponding event
 	}
 
-	this->breakpoints = breakpoints;
 	this->vertex = vertex;
 
 	//!store pointers to the next and previous leaves
@@ -251,16 +111,327 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 
 	// check new circle events
 	if (prev_leaf != nullptr && next_leaf != nullptr) {
-		EventPtr circle_event = this->checkCircleEvent(prev_leaf->prev, prev_leaf, next_leaf, *this->sitePoint, this->sweepLinePosition);
+		EventPtr circle_event = this->checkCircleEvent(prev_leaf->prev, prev_leaf, next_leaf, *this->sitePoint);
 		if (circle_event != nullptr) {
 			this->newEvent->push(circle_event);
 		}
-		circle_event = this->checkCircleEvent(prev_leaf, next_leaf, next_leaf->next, *this->sitePoint, this->sweepLinePosition);
+		circle_event = this->checkCircleEvent(prev_leaf, next_leaf, next_leaf->next, *this->sitePoint);
 		if (circle_event != nullptr) {
 			this->newEvent->push(circle_event);
 		}
 	}
-	printf(" => %i", this->newEvent->size());
+}
+
+/**
+ *
+ * @param idSite
+ * @param newPoint
+ */
+void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToSitePoint(int idSite, Point2D newPoint)
+{
+	//!
+	FA::dataType::beachLine::Site currentSite = this->createSitePoint(newPoint);
+
+	//!
+	if(this->firstArc)
+	{
+		//!
+		this->sweepLinePosition = newPoint.y;
+
+		beachline::BLNodePtr arc = this->find(this->firstArc, idSite, newPoint);//!getClosestNode ?
+
+		// check number of intersection points
+		int isp_num = intersectionPointsNum(this->sitePoint->at(arc->get_id()), newPoint, newPoint.y);
+
+		// different subtrees depending on the number of intersection points
+		beachline::BLNodePtr subtree, left_leaf, right_leaf;
+		if (isp_num == 1)
+		{
+			subtree = this->createSimpleTree(idSite, arc->get_id(), &(newPoint.y), this->sitePoint, *(this->halfEdges));
+			left_leaf = subtree->left;
+			right_leaf = subtree->right;
+		}
+		else if (isp_num == 2)
+		{
+			subtree = this->createTree(idSite, arc->get_id(), &(newPoint.y), this->sitePoint, *(this->halfEdges));
+			left_leaf = subtree->left;
+			right_leaf = subtree->right->right;
+		}
+		else return;
+
+		if (arc->prev != nullptr) beachline::connect(arc->prev, left_leaf);
+		if (arc->next != nullptr) beachline::connect(right_leaf, arc->next);
+
+		this->firstArc = this->replace(arc, subtree);// Replace old leaf with a subtree and rebalance it
+
+
+		//!create detect CircleEvent
+		// Check circle events //TODO: createCircleEvent cheeck in arc builder
+		if (arc->circle_event != nullptr)//TODO: bind circleEvent to node <=> arc->circle_event.get() != nullptr
+		{
+			printf("\n\tbind circle event to arcNode id:%i",arc->get_id());
+			EventPtr circle_e = arc->circle_event;
+			circle_e->type = Event::SKIP; // ignore corresponding event
+		}
+
+		EventPtr circle_event = this->checkCircleEvent(left_leaf->prev, left_leaf, left_leaf->next, *this->sitePoint);
+		if (circle_event != nullptr)
+		{
+			this->newEvent->push(circle_event);
+		}
+		circle_event = this->checkCircleEvent(right_leaf->prev, right_leaf, right_leaf->next, *this->sitePoint);
+		if (circle_event != nullptr)
+		{
+			this->newEvent->push(circle_event);
+		}
+	}
+	else
+	{
+		//!init empty beach line tree
+		this->firstArc = this->createNode(
+				FA::dataType::beachLine::ARC,
+				currentSite,
+				idSite,
+				idSite);
+	}
+}
+
+/**********************************************************************************************************************/
+//!PRIVATE
+
+EventPtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::checkCircleEvent(
+		beachline::BLNodePtr n1,
+		beachline::BLNodePtr n2,
+		beachline::BLNodePtr n3,
+		const std::vector <Point2D> &points)
+{
+	if (n1 == nullptr || n2 == nullptr || n3 == nullptr)
+		return nullptr;
+
+	Point2D p1 = points[n1->get_id()];
+	Point2D p2 = points[n2->get_id()];
+	Point2D p3 = points[n3->get_id()];
+	Point2D center, bottom;
+
+	if (p2.y > p1.y && p2.y > p3.y)
+		return nullptr;
+
+	if (!this->findCircleCenter(p1, p2, p3, center))
+		return nullptr;
+
+	bottom = center;
+	bottom.y += (center - p2).norm();
+
+	// check circle event
+	if (fabs(bottom.y - this->sweepLinePosition) < POINT_EPSILON || this->sweepLinePosition < bottom.y) {
+		// create a circle event structure
+		EventPtr e = std::make_shared<Event>(-1, Event::CIRCLE, bottom);
+		// initialize attributes
+		e->center = center;
+		e->arc = n2;
+		// add reference in the corresponding node
+		n2->circle_event = e;
+		return e;
+	}
+
+	return nullptr;
+}
+
+BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::createSimpleTree(
+		int index,
+		int index_behind,
+		double *sweepline,
+		const std::vector<Point2D> *points,
+		std::vector<HalfEdgePtr> &edges)
+{
+	printf("\n\t=====>createSimpleTree");
+	BLNodePtr node, leaf_l, leaf_r;
+
+	std::pair<HalfEdgePtr, HalfEdgePtr> twin_edges = make_twins(index_behind, index);
+
+	edges.push_back(twin_edges.first);
+	edges.push_back(twin_edges.second);
+
+	if ((*points)[index].x < (*points)[index_behind].x)
+	{
+		// Depends on the point order
+		node = this->createNode(
+				FA::dataType::beachLine::NodeType::UNDEFINED,
+				{0, {0, 0}},
+				index,
+				index_behind);
+
+		leaf_l = this->createNode(
+				FA::dataType::beachLine::NodeType::UNDEFINED,
+				{0, {0, 0}},
+				index,
+				index);
+
+		leaf_r = this->createNode(
+				FA::dataType::beachLine::NodeType::UNDEFINED,
+				{0, {0, 0}},
+				index_behind,
+				index_behind);
+
+		node->edge = twin_edges.second;//twin_edges.first;
+	}
+	else
+	{
+		node = this->createNode(
+				FA::dataType::beachLine::NodeType::UNDEFINED,
+				{0, {0, 0}},
+				index_behind,
+				index);
+
+		leaf_l = this->createNode(
+				FA::dataType::beachLine::NodeType::UNDEFINED,
+				{0, {0, 0}},
+				index_behind,
+				index_behind);
+
+		leaf_r = this->createNode(
+				FA::dataType::beachLine::NodeType::UNDEFINED,
+				{0, {0, 0}},
+				index,
+				index);
+
+		node->edge = twin_edges.first;//twin_edges.second;
+	}
+
+	node->left = leaf_l;
+	node->right = leaf_r;
+
+	leaf_l->parent = node;
+	leaf_r->parent = node;
+
+	connect(leaf_l, leaf_r);
+	update_height(node);
+
+	return node;
+}
+
+FA::dataType::beachLine::Site openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::createSitePoint(
+		Point2D point)
+{
+	FA::dataType::beachLine::Site site = {
+			this->sitePoint1->size(),
+			point
+	};
+	this->sitePoint1->push_back(site);
+	return site;
+}
+
+BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::createTree(
+		int index,
+		int index_behind,
+		double *sweepline,
+		const std::vector <Point2D> *points,
+		std::vector <HalfEdgePtr> &edges)
+{
+	printf("\n\t=====>createTree");
+	// create nodes corresponding to branching points
+	BLNodePtr node1 = this->createNode(
+			FA::dataType::beachLine::NodeType::UNDEFINED,
+			{0, {0, 0}},
+			index_behind,
+			index);
+
+	BLNodePtr node2 = this->createNode(
+			FA::dataType::beachLine::NodeType::UNDEFINED,
+			{0, {0, 0}},
+			index,
+			index_behind);
+
+
+	// create leaf nodes
+	BLNodePtr leaf1 = this->createNode(
+			FA::dataType::beachLine::NodeType::UNDEFINED,
+			{0, {0, 0}},
+			index_behind,
+			index_behind);
+
+	BLNodePtr leaf2 = this->createNode(
+			FA::dataType::beachLine::NodeType::UNDEFINED,
+			{0, {0, 0}},
+			index,
+			index);
+
+	BLNodePtr leaf3 = this->createNode(
+			FA::dataType::beachLine::NodeType::UNDEFINED,
+			{0, {0, 0}},
+			index_behind,
+			index_behind);
+
+	// adjust tree connections
+	node1->right = node2;
+	node1->left = leaf1;
+
+	node2->parent = node1;
+	node2->left = leaf2;
+	node2->right = leaf3;
+
+	leaf1->parent = node1;
+	leaf2->parent = node2;
+	leaf3->parent = node2;
+
+	// add halfedges
+	std::pair<HalfEdgePtr, HalfEdgePtr> twin_edges = make_twins(index_behind, index);
+	node1->edge = twin_edges.first;//second;//first;
+	node2->edge = twin_edges.second;//first;//second;
+
+	edges.push_back(twin_edges.first);
+	edges.push_back(twin_edges.second);
+
+	// connect leaf nodes
+	connect(leaf1, leaf2);
+	connect(leaf2, leaf3);
+
+	// reset height of a node
+	update_height(node2);
+	update_height(node1);
+
+	// return the result
+	return node1;
+}
+
+
+/**
+ *
+ * @param p1
+ * @param p2
+ * @param p3
+ * @param center
+ * @return
+ * @note Find a center of a circle with given three points.
+ Returns false if points are collinear.
+ Otherwise returns true and updates x- and y-coordinates of the `center` of circle.
+ */
+bool openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::findCircleCenter(const Point2D &p1,
+																						  const Point2D &p2,
+																						  const Point2D &p3,
+																						  Point2D &center)
+{
+	// get normalized vectors
+	Point2D u1 = (p1 - p2).normalized(), u2 = (p3 - p2).normalized();
+
+	double cross = crossProduct(u1, u2);
+
+	// check if vectors are collinear
+	if (fabs(cross) < CIRCLE_CENTER_EPSILON) {
+		return false;
+	}
+
+	// get cental points
+	Point2D pc1 = 0.5 * (p1 + p2), pc2 = 0.5 * (p2 + p3);
+
+	// get free components
+	double b1 = dotProduct(u1, pc1), b2 = dotProduct(u2, pc2);
+
+	// calculate the center of a circle
+	center.x = (b1 * u2.y - b2 * u1.y) / cross;
+	center.y = (u1.x * b2 - u2.x * b1) / cross;
+
+	return true;
 }
 
 /**
@@ -315,17 +486,21 @@ std::pair<BLNodePtr, BLNodePtr> openLife::procedure::diagram::voronoi::fortuneAl
 
 beachline::VertexPtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::getEdge() {}
 
+/**
+ *
+ * @param nodeType
+ * @param currentSite
+ * @param ind1
+ * @param ind2
+ * @return
+ */
 BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::createNode(
-		int type,
-		int index,
-		Point2D point,
+		FA::dataType::beachLine::NodeType nodeType,
+		FA::dataType::beachLine::Site currentSite,
 		int ind1,
 		int ind2)
 {
-	BLNodePtr newNode = std::make_shared<BLNode>(std::make_pair(ind1, ind2), index, point);
-	newNode->focal.index = index;
-	newNode->focal.point = point;
-
+	BLNodePtr newNode = std::make_shared<BLNode>(std::make_pair(ind1, ind2));
 	return newNode;
 }
 
@@ -352,158 +527,6 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::setSite
 	this->sitePointLimit.y.max = yMax;
 }
 
-BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::createTree(int index, int index_behind,
-																					double *sweepline,
-																					const std::vector <Point2D> *points,
-																					std::vector <HalfEdgePtr> &edges)
-{
-	printf("\n\t=====>createTree");
-	// create nodes corresponding to branching points
-	BLNodePtr node1 = this->createNode(
-			-1,
-			-1,
-			{0, 0},
-			index_behind,
-			index);
-
-	BLNodePtr node2 = this->createNode(
-			-1,
-			-1,
-			{0, 0},
-			index,
-			index_behind);
-
-
-	// create leaf nodes
-	BLNodePtr leaf1 = this->createNode(
-			-1,
-			-1,
-			{0, 0},
-			index_behind,
-			index_behind);
-
-	BLNodePtr leaf2 = this->createNode(
-			-1,
-			-1,
-			{0, 0},
-			index,
-			index);
-
-	BLNodePtr leaf3 = this->createNode(
-			-1,
-			-1,
-			{0, 0},
-			index_behind,
-			index_behind);
-
-	// adjust tree connections
-	node1->right = node2;
-	node1->left = leaf1;
-
-	node2->parent = node1;
-	node2->left = leaf2;
-	node2->right = leaf3;
-
-	leaf1->parent = node1;
-	leaf2->parent = node2;
-	leaf3->parent = node2;
-
-	// add halfedges
-	std::pair<HalfEdgePtr, HalfEdgePtr> twin_edges = make_twins(index_behind, index);
-	node1->edge = twin_edges.first;//second;//first;
-	node2->edge = twin_edges.second;//first;//second;
-
-	edges.push_back(twin_edges.first);
-	edges.push_back(twin_edges.second);
-
-	// connect leaf nodes
-	connect(leaf1, leaf2);
-	connect(leaf2, leaf3);
-
-	// reset height of a node
-	update_height(node2);
-	update_height(node1);
-
-	// return the result
-	return node1;
-}
-
-BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::createSimpleTree(int index, int index_behind, double *sweepline,
-						   const std::vector<Point2D> *points,
-						   std::vector<HalfEdgePtr> &edges)
-{
-	printf("\n\t=====>createSimpleTree");
-	BLNodePtr node, leaf_l, leaf_r;
-
-	std::pair<HalfEdgePtr, HalfEdgePtr> twin_edges = make_twins(index_behind, index);
-
-	edges.push_back(twin_edges.first);
-	edges.push_back(twin_edges.second);
-
-	if ((*points)[index].x < (*points)[index_behind].x)
-	{
-		// Depends on the point order
-		node = this->createNode(
-				-1,
-				-1,
-				{0, 0},
-				index,
-				index_behind);
-
-		leaf_l = this->createNode(
-				-1,
-				-1,
-				{0, 0},
-				index,
-				index);
-
-		leaf_r = this->createNode(
-				-1,
-				-1,
-				{0, 0},
-				index_behind,
-				index_behind);
-
-		node->edge = twin_edges.second;//twin_edges.first;
-	}
-	else
-	{
-		node = this->createNode(
-				-1,
-				-1,
-				{0, 0},
-				index_behind,
-				index);
-
-		leaf_l = this->createNode(
-				-1,
-				-1,
-				{0, 0},
-				index_behind,
-				index_behind);
-
-		leaf_r = this->createNode(
-				-1,
-				-1,
-				{0, 0},
-				index,
-				index);
-
-		node->edge = twin_edges.first;//twin_edges.second;
-	}
-
-	node->left = leaf_l;
-	node->right = leaf_r;
-
-	leaf_l->parent = node;
-	leaf_r->parent = node;
-
-	connect(leaf_l, leaf_r);
-	update_height(node);
-
-	return node;
-}
-
 /**
  *
  *
@@ -525,10 +548,10 @@ BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::fi
 		int nodeValue = this->getSweepLineEquidistantPointFromFoci(node);
 		if (nodeValue < x)
 		{
-			printf(" test node [%i]{}: [%i].x=%.1f < [middle].x=%i < [%i].x=%.1f  ===> right",
+			printf(" test node [%i]{}: [#i].x=#.1f < [middle].x=%i < [%i].x=%.1f  ===> right",
 		  			node->get_id(),
-				   	node->focal.index,
-		  			node->focal.point.x,
+				   	//node->focal.index,
+		  			//node->focal.point.x,
 		  			nodeValue,
 		  			idSite,
 		  			x);

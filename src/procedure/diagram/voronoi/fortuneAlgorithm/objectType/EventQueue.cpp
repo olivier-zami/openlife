@@ -20,12 +20,9 @@ openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue::~EventQueue
  * @param randomPoint
  * @note initialize it with all site events
  */
-void openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue::addSiteEvent(std::vector <Point2D> randomPoint)
+void openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue::addSiteEvent(unsigned int index, Point2D randomPoint)
 {
-	for (size_t i = 0; i < randomPoint.size(); ++i)
-	{
-		this->pq->push(std::make_shared<Event>(static_cast<int>(i), Event::SITE, randomPoint[i]));
-	}
+	this->pq->push(std::make_shared<Event>(static_cast<int>(index), Event::SITE, randomPoint));
 }
 
 /**

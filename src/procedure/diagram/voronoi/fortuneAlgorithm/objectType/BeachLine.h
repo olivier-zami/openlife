@@ -20,7 +20,7 @@
 #define CIRCLE_CENTER_EPSILON 1.0e-7
 
 using namespace beachline;
-namespace dataType = openLife::procedure::diagram::voronoi::fortuneAlgorithm::dataType;
+namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 
 namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 {
@@ -30,22 +30,22 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			BeachLine(NodeInquirer* nodeInquirer);
 			~BeachLine();
 
-			void addArc(int idSite, Point2D newPoint);
-			EventPtr checkCircleEvent(BLNodePtr n1, BLNodePtr n2, BLNodePtr n3,
-									  const std::vector<Point2D> &points, double sweepline);
-			bool findCircleCenter(const Point2D &p1, const Point2D &p2, const Point2D &p3, Point2D &center);
+			EventPtr getNewEvent();
 			void moveToEdgeEndPoint(Point2D newPoint, beachline::BLNodePtr arc, Point2D center);
+			void moveToSitePoint(int idSite, Point2D newPoint);
 			void setSitePointLimitValues(double xMin, double xMax, double yMin, double yMax);
 			void setPoints(std::vector<Point2D>* points);
 			void setHalfEdges(std::vector<beachline::HalfEdgePtr>* halfEdges);
 			void setQueueEvent(openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue* eventQueue);
 
-		//private:
+			beachline::VertexPtr vertex;
 
+		private:
+			EventPtr checkCircleEvent(BLNodePtr n1, BLNodePtr n2, BLNodePtr n3,
+									  const std::vector<Point2D> &points);
 			BLNodePtr createNode(
-					int type,
-					int index,
-					Point2D point,
+					FA::dataType::beachLine::NodeType type,
+					FA::dataType::beachLine::Site currentSite,
 					int ind1,
 					int ind2);
 			BLNodePtr createTree(int index, int index_behind, double *sweepline,
@@ -55,11 +55,12 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			BLNodePtr createSimpleTree(int index, int index_behind, double *sweepline,
 									  const std::vector<Point2D> *points,
 									  std::vector<HalfEdgePtr> &edges);
-
+			FA::dataType::beachLine::Site createSitePoint(Point2D point);
 			BLNodePtr find(BLNodePtr root, int idSite, Point2D point);
+			bool findCircleCenter(const Point2D &p1, const Point2D &p2, const Point2D &p3, Point2D &center);
 			std::pair<BLNodePtr, BLNodePtr> getBreakpoints(BLNodePtr leaf);
 			beachline::VertexPtr getEdge();
-			EventPtr getNewEvent();
+
 			double getSweepLineEquidistantPointFromFoci(BLNodePtr node);//TODO:rename to getSomething getSweepLineEquidistantPointFromFoci();
 			std::vector<Point2D> getParabolasIntersections(const Point2D &focal1, const Point2D &focal2);
 			std::vector<beachline::HalfEdgePtr>* getHalfEdges();
@@ -72,9 +73,11 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			std::vector<EventPtr>* circleEvent;
 			beachline::BLNodePtr firstArc;
 			std::vector<beachline::HalfEdgePtr>* halfEdges;
+			unsigned int idxSitePoint;
 			std::queue<EventPtr>* newEvent;
 			NodeInquirer* nodeInquirer;
 			std::vector<Point2D>* sitePoint;
+			std::vector<FA::dataType::beachLine::Site>* sitePoint1;
 			struct{
 				struct{
 					double min;
@@ -88,12 +91,6 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			double sweepLinePosition;
 			//std::queue<beachline::VertexPtr>* vertex;
 			openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue* eventQueue;
-
-			std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints;
-			beachline::VertexPtr vertex;
-			beachline::BLNodePtr prev_leaf, next_leaf;
-		std::pair<beachline::HalfEdgePtr, beachline::HalfEdgePtr> twinNodes;
-		beachline::HalfEdgePtr h_first, h_second;
 	};
 }
 

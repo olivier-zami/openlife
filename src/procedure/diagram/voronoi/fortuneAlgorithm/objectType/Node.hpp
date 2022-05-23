@@ -22,6 +22,8 @@
 #include "../dataType/HalfEdge.h"
 #include "../Math/Parabola.hpp"
 
+namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
+
 class Event;
 
 
@@ -38,6 +40,8 @@ namespace beachline
     		int index;
 			Point2D point;
     	}focal;
+
+    	void* reference;
         
         // Height of the tree
         int height;
@@ -60,10 +64,6 @@ namespace beachline
         
         // Constructor
         BLNode(const std::pair<int,int>& _indices,
-               int index,
-               Point2D focal,
-               //double* _sweepline = nullptr,
-               //const std::vector<Point2D>* _points = nullptr,
                BLNodePtr _left = nullptr,
                BLNodePtr _right = nullptr,
                BLNodePtr _parent = nullptr,
