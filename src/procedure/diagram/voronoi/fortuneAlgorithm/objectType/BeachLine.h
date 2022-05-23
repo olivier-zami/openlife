@@ -45,7 +45,6 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 									  const std::vector<Point2D> &points);
 			BLNodePtr createNode(
 					FA::dataType::beachLine::NodeType type,
-					FA::dataType::beachLine::Site currentSite,
 					int ind1,
 					int ind2);
 			BLNodePtr createTree(int index, int index_behind, double *sweepline,

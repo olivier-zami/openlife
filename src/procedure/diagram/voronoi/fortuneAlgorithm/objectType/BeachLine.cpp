@@ -136,24 +136,24 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToS
 	if(this->firstArc)
 	{
 		//!
-		this->sweepLinePosition = newPoint.y;
+		this->sweepLinePosition = currentSite.point.y;
 
-		beachline::BLNodePtr arc = this->find(this->firstArc, idSite, newPoint);//!getClosestNode ?
+		beachline::BLNodePtr arc = this->find(this->firstArc, currentSite.id, currentSite.point);//!getClosestNode ?
 
 		// check number of intersection points
-		int isp_num = intersectionPointsNum(this->sitePoint->at(arc->get_id()), newPoint, newPoint.y);
+		int isp_num = intersectionPointsNum(this->sitePoint1->at(arc->get_id()).point, currentSite.point, currentSite.point.y);//TODO node.point site.point, edge.centerPoint, edgeEnd.point
 
 		// different subtrees depending on the number of intersection points
 		beachline::BLNodePtr subtree, left_leaf, right_leaf;
 		if (isp_num == 1)
 		{
-			subtree = this->createSimpleTree(idSite, arc->get_id(), &(newPoint.y), this->sitePoint, *(this->halfEdges));
+			subtree = this->createSimpleTree(currentSite.id, arc->get_id(), &(currentSite.point.y), this->sitePoint, *(this->halfEdges));
 			left_leaf = subtree->left;
 			right_leaf = subtree->right;
 		}
 		else if (isp_num == 2)
 		{
-			subtree = this->createTree(idSite, arc->get_id(), &(newPoint.y), this->sitePoint, *(this->halfEdges));
+			subtree = this->createTree(currentSite.id, arc->get_id(), &(currentSite.point.y), this->sitePoint, *(this->halfEdges));
 			left_leaf = subtree->left;
 			right_leaf = subtree->right->right;
 		}
@@ -190,9 +190,8 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToS
 		//!init empty beach line tree
 		this->firstArc = this->createNode(
 				FA::dataType::beachLine::ARC,
-				currentSite,
-				idSite,
-				idSite);
+				currentSite.id,//currentSite.id
+				currentSite.id);
 	}
 }
 
@@ -208,9 +207,9 @@ EventPtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::che
 	if (n1 == nullptr || n2 == nullptr || n3 == nullptr)
 		return nullptr;
 
-	Point2D p1 = points[n1->get_id()];
-	Point2D p2 = points[n2->get_id()];
-	Point2D p3 = points[n3->get_id()];
+	Point2D p1 = this->sitePoint1->at(n1->get_id()).point;//points[n1->get_id()];
+	Point2D p2 = this->sitePoint1->at(n2->get_id()).point;//points[n2->get_id()];
+	Point2D p3 = this->sitePoint1->at(n3->get_id()).point;//points[n3->get_id()];
 	Point2D center, bottom;
 
 	if (p2.y > p1.y && p2.y > p3.y)
@@ -252,24 +251,22 @@ BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::cr
 	edges.push_back(twin_edges.first);
 	edges.push_back(twin_edges.second);
 
-	if ((*points)[index].x < (*points)[index_behind].x)
+	//if ((*points)[index].x < (*points)[index_behind].x)
+	if (this->sitePoint1->at(index).point.x < this->sitePoint1->at(index_behind).point.x)
 	{
 		// Depends on the point order
 		node = this->createNode(
 				FA::dataType::beachLine::NodeType::UNDEFINED,
-				{0, {0, 0}},
 				index,
 				index_behind);
 
 		leaf_l = this->createNode(
 				FA::dataType::beachLine::NodeType::UNDEFINED,
-				{0, {0, 0}},
 				index,
 				index);
 
 		leaf_r = this->createNode(
 				FA::dataType::beachLine::NodeType::UNDEFINED,
-				{0, {0, 0}},
 				index_behind,
 				index_behind);
 
@@ -279,19 +276,16 @@ BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::cr
 	{
 		node = this->createNode(
 				FA::dataType::beachLine::NodeType::UNDEFINED,
-				{0, {0, 0}},
 				index_behind,
 				index);
 
 		leaf_l = this->createNode(
 				FA::dataType::beachLine::NodeType::UNDEFINED,
-				{0, {0, 0}},
 				index_behind,
 				index_behind);
 
 		leaf_r = this->createNode(
 				FA::dataType::beachLine::NodeType::UNDEFINED,
-				{0, {0, 0}},
 				index,
 				index);
 
@@ -332,13 +326,11 @@ BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::cr
 	// create nodes corresponding to branching points
 	BLNodePtr node1 = this->createNode(
 			FA::dataType::beachLine::NodeType::UNDEFINED,
-			{0, {0, 0}},
 			index_behind,
 			index);
 
 	BLNodePtr node2 = this->createNode(
 			FA::dataType::beachLine::NodeType::UNDEFINED,
-			{0, {0, 0}},
 			index,
 			index_behind);
 
@@ -346,19 +338,16 @@ BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::cr
 	// create leaf nodes
 	BLNodePtr leaf1 = this->createNode(
 			FA::dataType::beachLine::NodeType::UNDEFINED,
-			{0, {0, 0}},
 			index_behind,
 			index_behind);
 
 	BLNodePtr leaf2 = this->createNode(
 			FA::dataType::beachLine::NodeType::UNDEFINED,
-			{0, {0, 0}},
 			index,
 			index);
 
 	BLNodePtr leaf3 = this->createNode(
 			FA::dataType::beachLine::NodeType::UNDEFINED,
-			{0, {0, 0}},
 			index_behind,
 			index_behind);
 
@@ -496,7 +485,6 @@ beachline::VertexPtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::Be
  */
 BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::createNode(
 		FA::dataType::beachLine::NodeType nodeType,
-		FA::dataType::beachLine::Site currentSite,
 		int ind1,
 		int ind2)
 {
@@ -586,19 +574,19 @@ BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::fi
  */
 double openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::getSweepLineEquidistantPointFromFoci(BLNodePtr node)
 {
-	if (this->sitePoint == nullptr)// || !this->sitePoint.size()
+	if (this->sitePoint1 == nullptr)// || !this->sitePoint1.size()
 	{
 		return std::numeric_limits<double>::infinity();
 	}
 	if (node->is_leaf())
 	{
 		//return (*points)[indices.first].x;
-		return this->sitePoint->at(node->indices.first).x;
+		return this->sitePoint1->at(node->indices.first).point.x;
 	}
 	else
 	{
-		Point2D p1 = this->sitePoint->at(node->indices.first);//!self idx
-		Point2D p2 = this->sitePoint->at(node->indices.second);//!neighbor idx
+		Point2D p1 = this->sitePoint1->at(node->indices.first).point;//!self idx
+		Point2D p2 = this->sitePoint1->at(node->indices.second).point;//!neighbor idx
 
 		//!get points on sweepLine at the same distance from p1 and p2 order by x coord
 		std::vector<Point2D> ips = this->getParabolasIntersections(p1, p2);
