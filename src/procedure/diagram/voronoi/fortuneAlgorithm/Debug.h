@@ -7,6 +7,9 @@
 
 #include "dataType/Event.h"
 #include "objectType/EventInquirer.h"
+#include "objectType/inquirer/EdgeDebug.h"
+#include "objectType/Node.hpp"
+#include "objectType/NodeInquirer.h"
 
 namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 
@@ -16,9 +19,13 @@ namespace openLife::procedure::diagram::voronoi
 	{
 		public:
 			static FA::EventInquirer* inquire(EventPtr event);
+			static FA::inquirer::EdgeDebug* inquire(FA::dataType::Edge* edge);
+			static FA::NodeInquirer* inquire(beachline::BLNodePtr node);
 
 		private:
+			static FA::inquirer::EdgeDebug* edgeDebugInquirer;
 			static FA::EventInquirer* eventInquirer;
+			static FA::NodeInquirer* nodeInquirer;
 	};
 }
 

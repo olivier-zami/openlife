@@ -13,7 +13,7 @@
 
 namespace beachline
 {
-	Vertex::Vertex(const Point2D &pos, HalfEdgePtr incident_edge) : point(pos), edge(incident_edge)  { printf("\nprepare vertex"); }
+	Vertex::Vertex(const Point2D &pos, HalfEdgePtr incident_edge) : point(pos), edge(incident_edge)  {}
 
 
 	HalfEdge::HalfEdge(int _l_index, int _r_index, VertexPtr _vertex) :

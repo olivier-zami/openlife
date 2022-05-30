@@ -34,6 +34,7 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::generateDiagram(Vo
 	nsSingleton::FortuneAlgorithm::instance->addSites(points);
 	nsSingleton::FortuneAlgorithm::instance->setOutputDataStruct(diagram);
 	nsSingleton::FortuneAlgorithm::instance->buildDiagram();
+	diagram->edge = nsSingleton::FortuneAlgorithm::instance->getEdges();
 }
 
 /**
@@ -58,9 +59,7 @@ openLife::procedure::diagram::voronoi::FortuneAlgorithm::FortuneAlgorithm()
 
 	//!
 	this->beachLine = new openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine(this->nodeInquirer);
-	this->beachLine->setPoints(this->sitePoint);
 	//this->beachLine->setHalfEdges(this->halfEdges);
-	this->beachLine->setQueueEvent(this->eventQueue);
 }
 
 openLife::procedure::diagram::voronoi::FortuneAlgorithm::~FortuneAlgorithm() {}
@@ -93,13 +92,13 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::buildDiagram()
 		EventPtr currentEvent = this->eventQueue->getNextEvent();
 		this->sweepLinePosition = currentEvent->point.y;// set position of a sweepline
 		printf("\n\n-------------------------------------------------------------------------------------------");
-		printf("\n\nmove sweepLine to [%i](%.1f, %.1f):", currentEvent->index, currentEvent->point.x, currentEvent->point.y);
+		printf("\n\nmove sweepLine to point[%i](%.1f, %.1f):", currentEvent->index, currentEvent->point.x, currentEvent->point.y);
 
 		if (currentEvent->type == Event::SITE)// handle site event
 		{
 			Point2D newPoint = currentEvent->point;
 
-			this->beachLine->moveToSitePoint(currentEvent->index, newPoint);
+			this->beachLine->moveToSitePoint(newPoint);
 			while(EventPtr newEvent = this->beachLine->getNewEvent())
 			{
 				this->eventQueue->get()->push(newEvent);
@@ -117,7 +116,6 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::buildDiagram()
 				this->eventQueue->get()->push(newEvent);
 			}
 		}
-		printf("\n\t=====>number Events left: %lu", this->eventQueue->get()->size());
 	}
 
 	//!initialize vector of halfedges for faces
@@ -131,6 +129,11 @@ void openLife::procedure::diagram::voronoi::FortuneAlgorithm::buildDiagram()
 			this->faces->at(he->l_index) = he;
 		}
 	}
+}
+
+std::vector<FA::dataType::EdgePtr>* openLife::procedure::diagram::voronoi::FortuneAlgorithm::getEdges()
+{
+	return this->beachLine->getEdges();
 }
 
 NodeInquirer* openLife::procedure::diagram::voronoi::FortuneAlgorithm::inquire(beachline::BLNodePtr node)

@@ -32,6 +32,7 @@ namespace openLife::procedure::diagram::voronoi
 
 			void addSites(const std::vector<Point2D> &siteCoord);
 			void buildDiagram();
+			std::vector<FA::dataType::EdgePtr>* getEdges();
 			NodeInquirer* inquire(beachline::BLNodePtr node);
 			void setOutputDataStruct(VoronoiDiagram* diagram);
 			void setSurfaceDimension(double width, double height);

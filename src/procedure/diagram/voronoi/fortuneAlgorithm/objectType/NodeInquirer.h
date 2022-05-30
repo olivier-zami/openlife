@@ -10,7 +10,7 @@
 #include "../dataType/beachLine.h"
 #include "Node.hpp"
 
-namespace dataType = openLife::procedure::diagram::voronoi::fortuneAlgorithm::dataType;
+namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 
 namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 {
@@ -21,12 +21,15 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			~NodeInquirer();
 
 			Point2D getPoint();
+			FA::dataType::beachLine::Site* getSite();
 			void setSitePointsReference(std::vector<Point2D>* sitePoint);
 			void setSubject(beachline::BLNodePtr node);
 			void setSweepLineReference(double* sweepLine);
 
 			bool isRootNode();
 			void printNodeInfo(const char* label = nullptr);
+			void printNodeTreeInfo(const char* label = nullptr);
+			void printSiteNodeInfo(const char* label = nullptr);
 
 		private:
 			std::vector<Point2D>* sitePoint;

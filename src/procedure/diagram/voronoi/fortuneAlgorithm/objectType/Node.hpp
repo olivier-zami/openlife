@@ -20,7 +20,6 @@
 
 #include "../dataType/beachLine.h"
 #include "../dataType/HalfEdge.h"
-#include "../Math/Parabola.hpp"
 
 namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 
@@ -36,11 +35,13 @@ namespace beachline
 
     class BLNode {
     public:
-    	struct {
-    		int index;
-			Point2D point;
-    	}focal;
+		// Indices of the points
+		std::pair<int, int> indices;
 
+		// Pointers to left, right children and parent node
+		BLNodePtr left, right, parent;
+
+    	FA::dataType::beachLine::NodeType type;
     	void* reference;
         
         // Height of the tree
@@ -51,12 +52,6 @@ namespace beachline
         
         // Pointer to a vector of input points
         const std::vector<Point2D> *points;
-        
-        // Indices of the points
-        std::pair<int, int> indices;
-        
-        // Pointers to left, right children and parent node
-        BLNodePtr left, right, parent;
         
         // Pointer to a circle event for a leaf node or halfedge for an internal node
         std::shared_ptr<Event> circle_event;

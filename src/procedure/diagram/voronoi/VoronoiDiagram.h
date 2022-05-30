@@ -7,6 +7,9 @@
 
 #include "fortuneAlgorithm/objectType/Node.hpp"
 #include "fortuneAlgorithm/Datastruct/DCEL.hpp"
+#include "fortuneAlgorithm/dataType/Edge.h"
+
+namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 
 namespace openLife::procedure::diagram::voronoi
 {
@@ -23,6 +26,7 @@ namespace openLife::procedure::diagram::voronoi
 		std::vector<beachline::HalfEdgePtr> halfedges;
 		std::vector<beachline::HalfEdgePtr> faces;
 		std::vector<beachline::VertexPtr> vertices;
+		std::vector<FA::dataType::EdgePtr>* edge;
 	}VoronoiDiagram;
 }
 

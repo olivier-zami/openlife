@@ -289,7 +289,7 @@ namespace beachline {
         
         size /= 2;
         for (int i = 0; i < root->height; ++i) {
-            for (int j = 0; j < layers[i].size(); ++j) {
+            for (size_t j = 0; j < layers[i].size(); ++j) {
                 if (layers[i][j] != nullptr)
                     std::cout << std::setw(width * size) << "<" << layers[i][j]->indices.first << ", " << layers[i][j]->indices.second << ">";
                 else

@@ -30,53 +30,55 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			BeachLine(NodeInquirer* nodeInquirer);
 			~BeachLine();
 
+			std::vector<FA::dataType::EdgePtr>* getEdges();
 			EventPtr getNewEvent();
 			void moveToEdgeEndPoint(Point2D newPoint, beachline::BLNodePtr arc, Point2D center);
-			void moveToSitePoint(int idSite, Point2D newPoint);
+			void moveToSitePoint(Point2D newPoint);
 			void setSitePointLimitValues(double xMin, double xMax, double yMin, double yMax);
-			void setPoints(std::vector<Point2D>* points);
 			void setHalfEdges(std::vector<beachline::HalfEdgePtr>* halfEdges);
-			void setQueueEvent(openLife::procedure::diagram::voronoi::fortuneAlgorithm::EventQueue* eventQueue);
 
 			beachline::VertexPtr vertex;
 
 		private:
-			EventPtr checkCircleEvent(BLNodePtr n1, BLNodePtr n2, BLNodePtr n3,
-									  const std::vector<Point2D> &points);
+			EventPtr checkCircleEvent(BLNodePtr n1, BLNodePtr n2, BLNodePtr n3);
+			FA::dataType::EdgePtr createEdge(
+					FA::dataType::beachLine::Site site1,
+					FA::dataType::beachLine::Site site2);
+			FA::dataType::EdgeEndPtr createEdgeEnd(Point2D point);
 			BLNodePtr createNode(
 					FA::dataType::beachLine::NodeType type,
 					int ind1,
 					int ind2);
-			BLNodePtr createTree(int index, int index_behind, double *sweepline,
-							const std::vector<Point2D> *points,
-							std::vector<HalfEdgePtr> &edges);
-
-			BLNodePtr createSimpleTree(int index, int index_behind, double *sweepline,
-									  const std::vector<Point2D> *points,
-									  std::vector<HalfEdgePtr> &edges);
-			FA::dataType::beachLine::Site createSitePoint(Point2D point);
-			BLNodePtr find(BLNodePtr root, int idSite, Point2D point);
+			FA::dataType::beachLine::SitePtr createSitePoint(Point2D point);
+			BLNodePtr createTree(int index, int index_behind, std::vector<HalfEdgePtr> &edges);
+			BLNodePtr createSimpleTree(int index, int index_behind, std::vector<HalfEdgePtr> &edges);
 			bool findCircleCenter(const Point2D &p1, const Point2D &p2, const Point2D &p3, Point2D &center);
 			std::pair<BLNodePtr, BLNodePtr> getBreakpoints(BLNodePtr leaf);
-			beachline::VertexPtr getEdge();
-
-			double getSweepLineEquidistantPointFromFoci(BLNodePtr node);//TODO:rename to getSomething getSweepLineEquidistantPointFromFoci();
-			std::vector<Point2D> getParabolasIntersections(const Point2D &focal1, const Point2D &focal2);
+			FA::dataType::Edge* getEdge(FA::dataType::beachLine::Site site1, FA::dataType::beachLine::Site site2);
+			FA::dataType::EdgeEndPtr getEdgeEnd(Point2D point);
+			Point2D getEdgeOrigin(FA::dataType::beachLine::SitePtr site1, FA::dataType::beachLine::SitePtr site2);
+			BLNodePtr getFirstNeighborSiteNode(FA::dataType::beachLine::SitePtr localSite);
 			std::vector<beachline::HalfEdgePtr>* getHalfEdges();
-			NodeInquirer* inquire(beachline::BLNodePtr node);
+			FA::dataType::Edge* getOrCreateEdge(
+					FA::dataType::beachLine::Site site1,
+					FA::dataType::beachLine::Site site2);
+			FA::dataType::EdgeEndPtr getOrCreateEdgeEnd(Point2D point);
+			unsigned int getParabolasIntersectionNumber(const Point2D &focal1, const Point2D &focal2);
+			std::vector<Point2D> getParabolasIntersections(const Point2D &focal1, const Point2D &focal2);
+			double getSweepLineEquidistantPointFromFoci(BLNodePtr node);//TODO:rename to getSomething getSweepLineEquidistantPointFromFoci();
+			FA::NodeInquirer* inquire(BLNodePtr node);
 			bool isEmpty();
 			bool isValidBreakPoints(std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints);
-			BLNodePtr replace(BLNodePtr node, BLNodePtr new_node);
+			void replace(BLNodePtr node, BLNodePtr new_node);
 
-
+			std::vector<FA::dataType::EdgePtr>* cellEdge;
+			std::vector<FA::dataType::EdgeEndPtr>* cellEdgeEnd;
+			std::vector<FA::dataType::beachLine::SitePtr>* cellSite;
 			std::vector<EventPtr>* circleEvent;
 			beachline::BLNodePtr firstArc;
 			std::vector<beachline::HalfEdgePtr>* halfEdges;
-			unsigned int idxSitePoint;
 			std::queue<EventPtr>* newEvent;
 			NodeInquirer* nodeInquirer;
-			std::vector<Point2D>* sitePoint;
-			std::vector<FA::dataType::beachLine::Site>* sitePoint1;
 			struct{
 				struct{
 					double min;

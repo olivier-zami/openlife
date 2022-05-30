@@ -33,14 +33,15 @@ struct Event {
 
 	enum { SITE = 0, CIRCLE = 1, SKIP = 2, };
 
-
-	int type;
-	Point2D point;
-
 	/*
 	 Site event attributes:
 	 */
 	int index;
+
+	int type;
+	Point2D point;
+
+
 
 	/*
 	 Circle event attributes:
