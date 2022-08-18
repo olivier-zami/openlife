@@ -7,6 +7,7 @@
 
 #include <memory>
 #include "EdgeEnd.h"
+#include "Site.h"
 
 namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 
@@ -14,10 +15,10 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm::dataType
 {
 	typedef struct{
 		unsigned int id;
-		unsigned int idSite[2];
+		FA::dataType::Site* site[2];
 		FA::dataType::EdgeEnd* end[2];
 
-		void setEdgeEnd(FA::dataType::EdgeEnd* edgeEnd)
+		void setEdgeEnd(FA::dataType::EdgeEnd* edgeEnd)//TODO test edge setting outside
 		{
 			if(!end[0])
 			{

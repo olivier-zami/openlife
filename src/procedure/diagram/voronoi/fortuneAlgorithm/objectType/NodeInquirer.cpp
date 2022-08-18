@@ -18,16 +18,16 @@ Point2D openLife::procedure::diagram::voronoi::fortuneAlgorithm::NodeInquirer::g
 	return this->sitePoint->at(this->subject->get_id());
 }
 
-FA::dataType::beachLine::Site* openLife::procedure::diagram::voronoi::fortuneAlgorithm::NodeInquirer::getSite()
+FA::dataType::Site* openLife::procedure::diagram::voronoi::fortuneAlgorithm::NodeInquirer::getSite()
 {
 	/*
 	std::shared_ptr<disk_node>* u_poi
 			= static_cast< std::shared_ptr<disk_node>* >(RayCallback.m_collisionObject->getUserPointer());*/
 
-	//FA::dataType::beachLine::SitePtr site = std::shared_ptr<FA::dataType::beachLine::Site>((FA::dataType::beachLine::Site *)this->subject->reference);
-	//FA::dataType::beachLine::SitePtr site = std::make_shared<FA::dataType::beachLine::Site>();
-	//FA::dataType::beachLine::SitePtr site = static_cast<FA::dataType::beachLine::SitePtr>(this->subject->reference);
-	return ((FA::dataType::beachLine::Site*)this->subject->reference);
+	//FA::dataType::SitePtr site = std::shared_ptr<FA::dataType::Site>((FA::dataType::Site *)this->subject->reference);
+	//FA::dataType::SitePtr site = std::make_shared<FA::dataType::Site>();
+	//FA::dataType::SitePtr site = static_cast<FA::dataType::SitePtr>(this->subject->reference);
+	return ((FA::dataType::Site*)this->subject->reference);
 	//return site;
 }
 
@@ -84,6 +84,6 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::NodeInquirer::prin
 		   label ? label : "",
 		   "SITE",
 		   this->subject->get_id(),
-		   ((FA::dataType::beachLine::Site*)(this->subject->reference))->point.x,
-		   ((FA::dataType::beachLine::Site*)(this->subject->reference))->point.y);
+		   ((FA::dataType::Site*)(this->subject->reference))->point.x,
+		   ((FA::dataType::Site*)(this->subject->reference))->point.y);
 }

@@ -26,7 +26,7 @@ openLife::system::type::entity::Biome openLife::server::process::newBiome_v0(
 			for(unsigned int x=0; x<image.width; x++)
 			{
 				int groundType = -1;
-				ColorRGB pixel = imageHandler->select((openLife::system::type::geometric::Point2D_32){(int)x, (int)(image.width-(y+1))})->getPixel();
+				ColorRGB pixel = imageHandler->select((openLife::dataType::geometric::Point2D_32){(int)x, (int)(image.width-(y+1))})->getPixel();
 				if(pixel.r==0&&pixel.g==127&&pixel.b==127)groundType = 0;//swamp 0
 				if(pixel.r==0&&pixel.g==255&&pixel.b==0)groundType = 1;//grassland 1
 				if(pixel.r==255&&pixel.g==127&&pixel.b==0)groundType = 2;//savanah 2

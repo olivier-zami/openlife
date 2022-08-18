@@ -24,7 +24,7 @@ openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::BeachLine(No
 	this->firstArc = nullptr;
 	this->cellEdge = new std::vector<FA::dataType::EdgePtr>();
 	this->cellEdgeEnd = new std::vector<FA::dataType::EdgeEndPtr>();
-	this->cellSite = new std::vector<FA::dataType::beachLine::SitePtr>();
+	this->cellSite = new std::vector<FA::dataType::SitePtr>();
 	this->halfEdges = new std::vector<beachline::HalfEdgePtr>();
 	this->newEvent = new std::queue<EventPtr>();
 	this->nodeInquirer = nodeInquirer;
@@ -54,9 +54,9 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 
 	//!get breakpoint nodes
 	std::pair<beachline::BLNodePtr, beachline::BLNodePtr> breakpoints = this->getBreakpoints(arc);
-	NS::Debug::inquire(arc)->printNodeInfo("\n\t\tleaf 1:");
-	NS::Debug::inquire(arc->next)->printNodeInfo("\n\t\tleaf 2:");
-	NS::Debug::inquire(arc->prev)->printNodeInfo("\n\t\tleaf 3:");
+	//NS::Debug::inquire(arc)->printNodeInfo("\n\t\tleaf 1:");
+	//NS::Debug::inquire(arc->next)->printNodeInfo("\n\t\tleaf 2:");
+	//NS::Debug::inquire(arc->prev)->printNodeInfo("\n\t\tleaf 3:");
 
 
 	if(!this->isValidBreakPoints(breakpoints))return;
@@ -90,13 +90,13 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 
 	//!
 	FA::dataType::Edge* edge;
-	edge = this->getOrCreateEdge(*this->inquire(prev_leaf)->getSite(), *this->inquire(arc)->getSite());
+	edge = this->getOrCreateEdge(this->inquire(prev_leaf)->getSite(), this->inquire(arc)->getSite());
 	edge->setEdgeEnd(this->getOrCreateEdgeEnd(center).get());
 
-	edge = this->getOrCreateEdge(*this->inquire(arc)->getSite(), *this->inquire(next_leaf)->getSite());
+	edge = this->getOrCreateEdge(this->inquire(arc)->getSite(), this->inquire(next_leaf)->getSite());
 	edge->setEdgeEnd(this->getOrCreateEdgeEnd(center).get());
 
-	edge = this->getOrCreateEdge(*this->inquire(next_leaf)->getSite(), *this->inquire(prev_leaf)->getSite());
+	edge = this->getOrCreateEdge(this->inquire(next_leaf)->getSite(), this->inquire(prev_leaf)->getSite());
 	edge->setEdgeEnd(this->getOrCreateEdgeEnd(center).get());
 
 
@@ -151,13 +151,12 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToE
 
 /**
  *
- * @param idSite
  * @param newPoint
  */
 void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToSitePoint(Point2D newPoint)
 {
 	//!
-	FA::dataType::beachLine::SitePtr currentSite = this->createSitePoint(newPoint);
+	FA::dataType::SitePtr currentSite = this->createSitePoint(newPoint);
 
 	//!
 	if(this->firstArc)
@@ -165,8 +164,8 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::moveToS
 		//!
 		this->sweepLinePosition = currentSite->point.y;
 		beachline::BLNodePtr neighborSiteNode = this->getFirstNeighborSiteNode(currentSite);
-		NS::Debug::inquire(neighborSiteNode)->printNodeInfo("\n\tfound neighbor:");//!debug
-		this->createEdge(*(currentSite.get()), *(this->inquire(neighborSiteNode)->getSite()));
+		//NS::Debug::inquire(neighborSiteNode)->printNodeInfo("\n\tfound neighbor:");//!debug
+		this->createEdge(currentSite.get(), this->inquire(neighborSiteNode)->getSite());
 
 		//!create edge node structure
 		//check number of intersection points
@@ -274,17 +273,17 @@ EventPtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::che
  * @return
  */
 FA::dataType::EdgePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::createEdge(
-		FA::dataType::beachLine::Site site1,
-		FA::dataType::beachLine::Site site2)
+		FA::dataType::Site* site1,
+		FA::dataType::Site* site2)
 {
 	FA::dataType::EdgePtr edge = std::make_shared<FA::dataType::Edge>();
 	edge->id = this->cellEdge->size();
-	edge->idSite[0] = site1.id;
-	edge->idSite[1] = site2.id;
+	edge->site[0] = site1;
+	edge->site[1] = site2;
 	edge->end[0] = nullptr;
 	edge->end[1] = nullptr;
 	this->cellEdge->push_back(edge);
-	NS::Debug::inquire(edge.get())->printInfo("\n\tcreateEdge:");
+	//NS::Debug::inquire(edge.get())->printInfo("\n\tcreateEdge:");
 	return edge;
 }
 
@@ -301,7 +300,7 @@ FA::dataType::EdgeEndPtr openLife::procedure::diagram::voronoi::fortuneAlgorithm
 	edgeEnd->point.x = point.x;
 	edgeEnd->point.y = point.y;
 	this->cellEdgeEnd->push_back(edgeEnd);
-	printf("\n\tcreateEdgeEnd: [%i](%.1f, %.1f)", edgeEnd->id, edgeEnd->point.x, edgeEnd->point.y);
+	//printf("\n\tcreateEdgeEnd: [%i](%.1f, %.1f)", edgeEnd->id, edgeEnd->point.x, edgeEnd->point.y);
 	return edgeEnd;
 }
 
@@ -330,7 +329,7 @@ BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::cr
 			newNode->reference = (void*)this->cellSite->at(ind1).get();
 			break;
 	}
-	NS::Debug::inquire(newNode)->printNodeInfo("\n\tcreate node:");
+	//NS::Debug::inquire(newNode)->printNodeInfo("\n\tcreate node:");
 	return newNode;
 }
 
@@ -339,7 +338,7 @@ BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::cr
 		int index_behind,
 		std::vector<HalfEdgePtr> &edges)
 {
-	printf("\n\t=====>createSimpleTree");
+	//printf("\n\t=====>createSimpleTree");
 	BLNodePtr node, leaf_l, leaf_r;
 
 	std::pair<HalfEdgePtr, HalfEdgePtr> twin_edges = make_twins(index_behind, index);
@@ -399,10 +398,10 @@ BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::cr
 	return node;
 }
 
-FA::dataType::beachLine::SitePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::createSitePoint(
+FA::dataType::SitePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::createSitePoint(
 		Point2D point)
 {
-	FA::dataType::beachLine::SitePtr site = std::make_shared<FA::dataType::beachLine::Site>();
+	FA::dataType::SitePtr site = std::make_shared<FA::dataType::Site>();
 	site->id = this->cellSite->size();
 	site->point = point;
 	this->cellSite->push_back(site);
@@ -576,14 +575,14 @@ std::pair<BLNodePtr, BLNodePtr> openLife::procedure::diagram::voronoi::fortuneAl
  * @return
  */
 FA::dataType::Edge* openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::getEdge(
-		FA::dataType::beachLine::Site site1,
-		FA::dataType::beachLine::Site site2)
+		FA::dataType::Site site1,
+		FA::dataType::Site site2)
 {
 	FA::dataType::Edge* edge = nullptr;
 	for(unsigned int i=0; i<this->cellEdge->size(); i++)
 	{
-		if((this->cellEdge->at(i)->idSite[0]==site1.id && this->cellEdge->at(i)->idSite[1]==site2.id)
-		|| (this->cellEdge->at(i)->idSite[0]==site2.id && this->cellEdge->at(i)->idSite[1]==site1.id))
+		if((this->cellEdge->at(i)->site[0]->id==site1.id && this->cellEdge->at(i)->site[1]->id==site2.id)
+		|| (this->cellEdge->at(i)->site[0]->id==site2.id && this->cellEdge->at(i)->site[1]->id==site1.id))
 		{
 			edge = this->cellEdge->at(i).get();
 			break;
@@ -606,34 +605,13 @@ FA::dataType::EdgeEndPtr openLife::procedure::diagram::voronoi::fortuneAlgorithm
 	return FA::dataType::EdgeEndPtr(nullptr);
 }
 
-Point2D openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::getEdgeOrigin(
-		FA::dataType::beachLine::SitePtr site1,
-		FA::dataType::beachLine::SitePtr site2)
-{
-	Point2D origin;
-	Point2D middlePoint;
-	middlePoint.x = site1->point.x + ((site1->point.x - site2->point.x)/2);
-	middlePoint.y = site1->point.y + ((site1->point.y - site2->point.y)/2);
-	printf("\n\tcenter ([%i](%.1f, %.1f),[%i](%.1f, %.1f)) = (%.1f, %.1f)",
-		site1->id,
-		site1->point.x,
-		site1->point.y,
-		site2->id,
-		site2->point.x,
-		site2->point.y,
-		middlePoint.x,
-		middlePoint.y);
-	origin = middlePoint;
-	return origin;
-}
-
 /**
  *
  *
  * @note Find a leaf in a tree such that x is under the parabolic arc, which corresponds to this leaf.
  */
 BLNodePtr openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::getFirstNeighborSiteNode(
-		FA::dataType::beachLine::SitePtr localSite)
+		FA::dataType::SitePtr localSite)
 {
 	double x = localSite->point.x;
 	BLNodePtr node = this->firstArc;
@@ -659,11 +637,11 @@ std::vector<beachline::HalfEdgePtr>* openLife::procedure::diagram::voronoi::fort
 }
 
 FA::dataType::Edge* openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::getOrCreateEdge(
-		FA::dataType::beachLine::Site site1,
-		FA::dataType::beachLine::Site site2)
+		FA::dataType::Site* site1,
+		FA::dataType::Site* site2)
 {
 	FA::dataType::Edge* edge;
-	edge = this->getEdge(site1, site2);
+	edge = this->getEdge(*site1, *site2);
 	if(edge == nullptr)
 	{
 		edge = this->createEdge(site1, site2).get();
@@ -927,16 +905,4 @@ void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::setHalf
 		std::vector <beachline::HalfEdgePtr> *halfEdges)
 {
 	this->halfEdges = halfEdges;
-}
-
-void openLife::procedure::diagram::voronoi::fortuneAlgorithm::BeachLine::setSitePointLimitValues(
-		double xMin,
-		double xMax,
-		double yMin,
-		double yMax)
-{
-	this->sitePointLimit.x.min = xMin;
-	this->sitePointLimit.x.max = xMax;
-	this->sitePointLimit.y.min = yMin;
-	this->sitePointLimit.y.max = yMax;
 }

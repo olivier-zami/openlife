@@ -20,13 +20,6 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm::dataType::bea
 		SITE,
 		EDGE
 	}NodeType;
-
-	typedef struct{
-		unsigned int id;
-		Point2D point;
-	}Site;
-
-	typedef std::shared_ptr<Site> SitePtr;
 }
 
 #endif //OPENLIFE_SRC_PROCEDURE_DIAGRAM_VORONOI_FORTUNEALGORITHM_DATYPE_BEACHLINE_H

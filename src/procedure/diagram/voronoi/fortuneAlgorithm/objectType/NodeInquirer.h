@@ -8,6 +8,7 @@
 #include <vector>
 #include "../Types/Point2D.h"
 #include "../dataType/beachLine.h"
+#include "../dataType/Site.h"
 #include "Node.hpp"
 
 namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
@@ -21,7 +22,7 @@ namespace openLife::procedure::diagram::voronoi::fortuneAlgorithm
 			~NodeInquirer();
 
 			Point2D getPoint();
-			FA::dataType::beachLine::Site* getSite();
+			FA::dataType::Site* getSite();
 			void setSitePointsReference(std::vector<Point2D>* sitePoint);
 			void setSubject(beachline::BLNodePtr node);
 			void setSweepLineReference(double* sweepLine);

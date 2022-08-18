@@ -46,8 +46,8 @@ void FA::inquirer::EdgeDebug::printInfo(const char *label)
 	printf("%s [%i] site[%i, %i] (%s, %s)",
 		   label ? label : "",
 		   this->subject->id,
-		   this->subject->idSite[0],
-		   this->subject->idSite[1],
+		   this->subject->site[0]->id,
+		   this->subject->site[1]->id,
 		   coordPoint1,
 		   coordPoint2);
 }

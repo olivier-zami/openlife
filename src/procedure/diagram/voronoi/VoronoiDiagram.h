@@ -27,6 +27,10 @@ namespace openLife::procedure::diagram::voronoi
 		std::vector<beachline::HalfEdgePtr> faces;
 		std::vector<beachline::VertexPtr> vertices;
 		std::vector<FA::dataType::EdgePtr>* edge;
+		struct{
+			std::vector<Point2D> point;
+			std::vector<Point2D> point1;
+		}debug;
 	}VoronoiDiagram;
 }
 

@@ -32,7 +32,11 @@ namespace openLife::procedure::diagram::voronoi
 
 			void addSites(const std::vector<Point2D> &siteCoord);
 			void buildDiagram();
+			void clipEdge(FA::dataType::Edge* edge);
+			void completeEdge(FA::dataType::Edge* edge);
+			void createEdgeEnd(Point2D point);
 			std::vector<FA::dataType::EdgePtr>* getEdges();
+			FA::dataType::EdgeEnd* getEdgeEnd(Point2D point);
 			NodeInquirer* inquire(beachline::BLNodePtr node);
 			void setOutputDataStruct(VoronoiDiagram* diagram);
 			void setSurfaceDimension(double width, double height);
@@ -47,10 +51,13 @@ namespace openLife::procedure::diagram::voronoi
 			}dimension;
 			std::vector<beachline::HalfEdgePtr>* faces;
 			std::vector<beachline::HalfEdgePtr>* halfEdges;
+			unsigned int lastCreatedEdgeEndId;
 			NodeInquirer* nodeInquirer;
 			size_t nbrSite;
 			std::vector<Point2D>* sitePoint;
 			std::vector<beachline::VertexPtr>* vertices;
+			std::vector<Point2D>* _debugPoint;
+			std::vector<Point2D>* _debugPoint1;
 
 		public: //TODO: change to private afterward
 			double sweepLinePosition;
