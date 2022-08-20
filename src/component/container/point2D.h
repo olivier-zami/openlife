@@ -12,7 +12,7 @@
 namespace openLife::system::process::container::point2D
 {
 	typedef struct{
-		openLife::system::type::geometric::Point2D_32 center;
+		openLife::dataType::geometric::Point2D_32 center;
 		struct{
 			unsigned int number;
 		}initialPoint;
@@ -20,7 +20,7 @@ namespace openLife::system::process::container::point2D
 			unsigned int iteration;
 		}process;
 	}coastalShapeSettings;
-	std::vector<openLife::system::type::geometric::Point2D_32> getCoastalShape(coastalShapeSettings settings);
+	std::vector<openLife::dataType::geometric::Point2D_32> getCoastalShape(coastalShapeSettings settings);
 }
 
 #endif //OPENLIFE_GETCOASTLINESHAPE_H

@@ -41,17 +41,17 @@ namespace openLife::system::object::process::handler
 			void save(const char* filename);
 			::Image getImageInfo();
 
-			openLife::system::object::process::handler::Image* select(openLife::system::type::geometric::Point2D_32 point);
-			openLife::system::object::process::handler::Image* select(openLife::system::type::geometric::Line2D_32 line);
-			openLife::system::object::process::handler::Image* select(openLife::system::type::geometric::Circle2D_32 circle);
+			openLife::system::object::process::handler::Image* select(openLife::dataType::geometric::Point2D_32 point);
+			openLife::system::object::process::handler::Image* select(openLife::dataType::geometric::Line2D_32 line);
+			openLife::system::object::process::handler::Image* select(openLife::dataType::geometric::Circle2D_32 circle);
 			void setPixel(ColorRGB color);
 			ColorRGB getPixel();
 			void clean();
 
 		private:
 			void initImageInfo();
-			void drawCircle(openLife::system::type::geometric::Circle2D_32 circle, ColorRGB color);
-			void drawLine(openLife::system::type::geometric::Line2D_32 line, ColorRGB color);
+			void drawCircle(openLife::dataType::geometric::Circle2D_32 circle, ColorRGB color);
+			void drawLine(openLife::dataType::geometric::Line2D_32 line, ColorRGB color);
 			void drawPixel(unsigned int idx, ColorRGB color);
 			SDL_Surface* surface = nullptr;//TODO: separation SDL/ImageHandler => put in extension SDL
 			::Image imageInfo;
@@ -59,10 +59,10 @@ namespace openLife::system::object::process::handler
 			unsigned int idxMax;
 			unsigned int request;
 			struct{
-				openLife::system::type::geometric::Point2D_32 point;
+				openLife::dataType::geometric::Point2D_32 point;
 				unsigned int pixelIdx;
-				openLife::system::type::geometric::Line2D_32 line;
-				openLife::system::type::geometric::Circle2D_32 circle;
+				openLife::dataType::geometric::Line2D_32 line;
+				openLife::dataType::geometric::Circle2D_32 circle;
 			}query;
 	};
 }

@@ -18,37 +18,40 @@
 #include <random>
 #include <cassert>
 
-#include "../Math/Parabola.hpp"
-#include "DCEL.hpp"
+#include "../dataType/beachLine.h"
+#include "../dataType/HalfEdge.h"
 
+namespace FA = openLife::procedure::diagram::voronoi::fortuneAlgorithm;
 
 class Event;
 
 
-namespace beachline {
-    
-    using namespace DCEL;
+namespace beachline
+{
+
     
     class BLNode;
     typedef std::shared_ptr<BLNode> BLNodePtr;
 
     class BLNode {
     public:
+		// Indices of the points
+		std::pair<int, int> indices;
+
+		// Pointers to left, right children and parent node
+		BLNodePtr left, right, parent;
+
+    	FA::dataType::beachLine::NodeType type;
+    	void* reference;
         
         // Height of the tree
         int height;
         
         // Pointer to a position of a sweepline
-        double *sweepline;
+        //double *sweepline;
         
         // Pointer to a vector of input points
         const std::vector<Point2D> *points;
-        
-        // Indices of the points
-        std::pair<int, int> indices;
-        
-        // Pointers to left, right children and parent node
-        BLNodePtr left, right, parent;
         
         // Pointer to a circle event for a leaf node or halfedge for an internal node
         std::shared_ptr<Event> circle_event;
@@ -56,8 +59,6 @@ namespace beachline {
         
         // Constructor
         BLNode(const std::pair<int,int>& _indices,
-               double* _sweepline = nullptr,
-               const std::vector<Point2D>* _points = nullptr,
                BLNodePtr _left = nullptr,
                BLNodePtr _right = nullptr,
                BLNodePtr _parent = nullptr,
@@ -85,11 +86,6 @@ namespace beachline {
         inline bool has_indices(const std::pair<int,int> &p) {
             return indices.first == p.first && indices.second == p.second;
         }
-        
-        // Return x-coordinate of:
-        //  - in case of leaf node - corresponding focus of parabola;
-        //  - in case of internal node - breakpoint;
-        double value();
         
     };
     
@@ -135,49 +131,14 @@ namespace beachline {
      */
     BLNodePtr rotate_right(BLNodePtr node);
 
-
-    /**
-     Find a leaf in a tree such that x is under the parabolic arc,
-     which corresponds to this leaf.
-     */
-    BLNodePtr find(BLNodePtr root, double x);
-    
-
-    /**
-     Replace a leaf `node` with a new subtree, which has root `new_node`.
-     The function rebalances the tree and returns the pointer to a new root node.
-     */
-    BLNodePtr replace(BLNodePtr node, BLNodePtr new_node);
-    
-    
     /**
      Remove a disappearing arc related to a circle event.
      The function rebalances the tree and returns the pointer to a new root node.
      */
-    BLNodePtr remove(BLNodePtr leaf);;
-    
-    
-    /**
-     Returns breakpoints for a given arc
-     */
-    std::pair<BLNodePtr, BLNodePtr> breakpoints(BLNodePtr leaf);
-    
-    
-    BLNodePtr make_subtree(int index, int index_behind, double *sweepline,
-                           const std::vector<Point2D> *points,
-                           std::vector<HalfEdgePtr> &edges);
-    
-    
-    BLNodePtr make_simple_subtree(int index, int index_behind, double *sweepline,
-                                  const std::vector<Point2D> *points,
-                                  std::vector<HalfEdgePtr> &edges);
-    
-    
-    bool _validate(BLNodePtr node);
-    
-    
-    bool _check_balance(BLNodePtr node);
+    BLNodePtr remove(BLNodePtr leaf);
 
+    bool _validate(BLNodePtr node);
+    bool _check_balance(BLNodePtr node);
 
     /**
      Print tree

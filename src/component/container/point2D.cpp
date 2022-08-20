@@ -8,7 +8,7 @@
 #include <vector>
 #include <cmath>
 
-std::vector<openLife::system::type::geometric::Point2D_32> openLife::system::process::container::point2D::getCoastalShape(
+std::vector<openLife::dataType::geometric::Point2D_32> openLife::system::process::container::point2D::getCoastalShape(
 		openLife::system::process::container::point2D::coastalShapeSettings settings)
 {
 	std::cout << "\nSet landMass center : ("<<settings.center.x<<", "<<settings.center.y<<")";
@@ -18,7 +18,7 @@ std::vector<openLife::system::type::geometric::Point2D_32> openLife::system::pro
 	unsigned int step = (1 << settings.process.iteration);
 	unsigned int nbrPoint = settings.initialPoint.number * step;
 
-	std::vector<openLife::system::type::geometric::Point2D_32> coastalPoint(nbrPoint);
+	std::vector<openLife::dataType::geometric::Point2D_32> coastalPoint(nbrPoint);
 	unsigned int ptr = step -1;
 	for(float i = 0; i< 2*3.14159; i+=(2*3.14159/settings.initialPoint.number))
 	{
@@ -43,7 +43,7 @@ std::vector<openLife::system::type::geometric::Point2D_32> openLife::system::pro
 			float dx = (float)coastalPoint[i].x - (float)coastalPoint[idxPreviousPoint].x;
 			float dy = (float)coastalPoint[i].y - (float)coastalPoint[idxPreviousPoint].y;
 			float length = sqrt((dx*dx)+(dy*dy));
-			openLife::system::type::geometric::Point2D_32 middlePoint = {
+			openLife::dataType::geometric::Point2D_32 middlePoint = {
 					(int32_t)((float)coastalPoint[idxPreviousPoint].x+(float)(dx/2)),
 					(int32_t)((float)coastalPoint[idxPreviousPoint].y+(float)(dy/2))};
 			float sin = dx/length;

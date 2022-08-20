@@ -51,7 +51,7 @@ Image openLife::system::object::process::handler::Image::getImageInfo()
 	return this->imageInfo;
 }
 
-openLife::system::object::process::handler::Image* openLife::system::object::process::handler::Image::select(openLife::system::type::geometric::Point2D_32 point)
+openLife::system::object::process::handler::Image* openLife::system::object::process::handler::Image::select(openLife::dataType::geometric::Point2D_32 point)
 {
 	if(point.x>=(int)this->imageInfo.width || point.y>=(int)this->imageInfo.height) this->request = 0;//TODO: system level => throw Exception
 	else
@@ -62,14 +62,14 @@ openLife::system::object::process::handler::Image* openLife::system::object::pro
 	return this;
 }
 
-openLife::system::object::process::handler::Image *openLife::system::object::process::handler::Image::select(openLife::system::type::geometric::Circle2D_32 circle)
+openLife::system::object::process::handler::Image *openLife::system::object::process::handler::Image::select(openLife::dataType::geometric::Circle2D_32 circle)
 {
 	this->request = 3;
 	this->query.circle = circle;
 	return this;
 }
 
-openLife::system::object::process::handler::Image *openLife::system::object::process::handler::Image::select(openLife::system::type::geometric::Line2D_32 line)
+openLife::system::object::process::handler::Image *openLife::system::object::process::handler::Image::select(openLife::dataType::geometric::Line2D_32 line)
 {
 	this->request = 2;//TODO: class const for line request...
 	this->query.line = line;
@@ -127,7 +127,7 @@ void openLife::system::object::process::handler::Image::initImageInfo()
 	this->bytePtr = (unsigned char*)this->surface->pixels;
 }
 
-void openLife::system::object::process::handler::Image::drawLine(openLife::system::type::geometric::Line2D_32  line, ColorRGB color)//Bresenham line
+void openLife::system::object::process::handler::Image::drawLine(openLife::dataType::geometric::Line2D_32  line, ColorRGB color)//Bresenham line
 {
 	int dx = line.point[1].x - line.point[0].x;
 	int dy = line.point[1].y - line.point[0].y;
@@ -137,7 +137,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 	{
 		for(int y=line.point[0].y; y<line.point[1].y; y++)
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){line.point[0].x, y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){line.point[0].x, y})->setPixel(color);
 		}
 	}
 
@@ -152,7 +152,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 		int x = line.point[0].x;
 		for(int y=line.point[0].y; y<line.point[1].y; y++)// déplacements verticaux
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){x, y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){x, y})->setPixel(color);
 			e -= dx;
 			if(e < 0){x++; e += dy;}// déplacement diagonal
 		}
@@ -167,7 +167,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 		int y = line.point[0].y;
 		for(int x=line.point[0].x; x<line.point[1].x; x++)
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){x, y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){x, y})->setPixel(color);
 			e -= dy;
 			if(e<0){y++; e+= dx;}// déplacement diagonal
 		}
@@ -178,7 +178,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 	{
 		for(int x=line.point[0].x; x<line.point[1].x; x++)
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){x, line.point[0].y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){x, line.point[0].y})->setPixel(color);
 		}
 	}
 
@@ -193,7 +193,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 		int y = line.point[0].y;
 		for(int x=line.point[0].x; x<line.point[1].x; x++)// déplacements horizontaux
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){x, y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){x, y})->setPixel(color);
 			e += dy;
 			if(e<0){y--; e+=dx;}// déplacement diagonal
 		}
@@ -208,7 +208,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 		int x = line.point[0].x;
 		for(int y=line.point[0].y; y>line.point[1].y; y--)// déplacements verticaux
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){x, y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){x, y})->setPixel(color);
 			e += dx;
 			if(e>0){x++;e+=dy;}// déplacement diagonal
 		}
@@ -219,7 +219,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 	{
 		for(int y=line.point[0].y; y>line.point[1].y; y--)
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){line.point[0].x, y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){line.point[0].x, y})->setPixel(color);
 		}
 	}
 
@@ -234,7 +234,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 		int x = line.point[0].x;
 		for(int y = line.point[0].y; y>line.point[1].y; y--)// déplacements verticaux
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){x, y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){x, y})->setPixel(color);
 			e -= dx;
 			if(e >= 0){x--; e+=dy;}
 		}
@@ -251,7 +251,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 		int y = line.point[0].y;
 		for(int x = line.point[0].x; x>line.point[1].x; x--)// déplacements horizontaux
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){x, y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){x, y})->setPixel(color);
 			e -= dy;
 			if(e >=0){y--; e+= dx;}// déplacement diagonal
 		}
@@ -262,7 +262,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 	{
 		for(int x=line.point[0].x; x>line.point[1].x; x--)// vecteur horizontal vers la gauche
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){x, line.point[0].y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){x, line.point[0].y})->setPixel(color);
 		}
 	}
 
@@ -277,7 +277,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 		int y = line.point[0].y;
 		for(int x=line.point[0].x; x>line.point[1].x; x--)// déplacements horizontaux
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){x, y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){x, y})->setPixel(color);
 			e += dy;
 			if(e >= 0){y++; e+=dx;} // déplacement diagonal
 		}
@@ -294,7 +294,7 @@ void openLife::system::object::process::handler::Image::drawLine(openLife::syste
 		int x = line.point[0].x;
 		for(int y=line.point[0].y; y<line.point[1].y; y++)// déplacements verticaux
 		{
-			this->select((openLife::system::type::geometric::Point2D_32){x, y})->setPixel(color);
+			this->select((openLife::dataType::geometric::Point2D_32){x, y})->setPixel(color);
 			e += dx;
 			if(e<=0){x--; e+=dy;}// déplacement diagonal
 		}
@@ -309,21 +309,21 @@ void openLife::system::object::process::handler::Image::drawPixel(unsigned int i
 	this->bytePtr[idx+2] = (unsigned char)color.r;
 }
 
-void openLife::system::object::process::handler::Image::drawCircle(openLife::system::type::geometric::Circle2D_32 circle, ColorRGB color)
+void openLife::system::object::process::handler::Image::drawCircle(openLife::dataType::geometric::Circle2D_32 circle, ColorRGB color)
 {
 	int x = 0;
 	int y = circle.radius;
 	int d = 3 - 2 * circle.radius;
 
-	this->select((openLife::system::type::geometric::Point2D_32){circle.center.x+x, circle.center.y+y})->setPixel(color);
-	this->select((openLife::system::type::geometric::Point2D_32){circle.center.x+x, circle.center.y+y})->setPixel(color);
-	this->select((openLife::system::type::geometric::Point2D_32){circle.center.x-x, circle.center.y+y})->setPixel(color);
-	this->select((openLife::system::type::geometric::Point2D_32){circle.center.x+x, circle.center.y-y})->setPixel(color);
-	this->select((openLife::system::type::geometric::Point2D_32){circle.center.x-x, circle.center.y-y})->setPixel(color);
-	this->select((openLife::system::type::geometric::Point2D_32){circle.center.x+y, circle.center.y+x})->setPixel(color);
-	this->select((openLife::system::type::geometric::Point2D_32){circle.center.x-y, circle.center.y+x})->setPixel(color);
-	this->select((openLife::system::type::geometric::Point2D_32){circle.center.x+y, circle.center.y-x})->setPixel(color);
-	this->select((openLife::system::type::geometric::Point2D_32){circle.center.x-y, circle.center.y-x})->setPixel(color);
+	this->select((openLife::dataType::geometric::Point2D_32){circle.center.x+x, circle.center.y+y})->setPixel(color);
+	this->select((openLife::dataType::geometric::Point2D_32){circle.center.x+x, circle.center.y+y})->setPixel(color);
+	this->select((openLife::dataType::geometric::Point2D_32){circle.center.x-x, circle.center.y+y})->setPixel(color);
+	this->select((openLife::dataType::geometric::Point2D_32){circle.center.x+x, circle.center.y-y})->setPixel(color);
+	this->select((openLife::dataType::geometric::Point2D_32){circle.center.x-x, circle.center.y-y})->setPixel(color);
+	this->select((openLife::dataType::geometric::Point2D_32){circle.center.x+y, circle.center.y+x})->setPixel(color);
+	this->select((openLife::dataType::geometric::Point2D_32){circle.center.x-y, circle.center.y+x})->setPixel(color);
+	this->select((openLife::dataType::geometric::Point2D_32){circle.center.x+y, circle.center.y-x})->setPixel(color);
+	this->select((openLife::dataType::geometric::Point2D_32){circle.center.x-y, circle.center.y-x})->setPixel(color);
 
 	while (y >= x)
 	{
@@ -336,15 +336,15 @@ void openLife::system::object::process::handler::Image::drawCircle(openLife::sys
 		else
 			d = d + 4 * x + 6;
 
-		this->select((openLife::system::type::geometric::Point2D_32){circle.center.x+x, circle.center.y+y})->setPixel(color);
-		this->select((openLife::system::type::geometric::Point2D_32){circle.center.x+x, circle.center.y+y})->setPixel(color);
-		this->select((openLife::system::type::geometric::Point2D_32){circle.center.x-x, circle.center.y+y})->setPixel(color);
-		this->select((openLife::system::type::geometric::Point2D_32){circle.center.x+x, circle.center.y-y})->setPixel(color);
-		this->select((openLife::system::type::geometric::Point2D_32){circle.center.x-x, circle.center.y-y})->setPixel(color);
-		this->select((openLife::system::type::geometric::Point2D_32){circle.center.x+y, circle.center.y+x})->setPixel(color);
-		this->select((openLife::system::type::geometric::Point2D_32){circle.center.x-y, circle.center.y+x})->setPixel(color);
-		this->select((openLife::system::type::geometric::Point2D_32){circle.center.x+y, circle.center.y-x})->setPixel(color);
-		this->select((openLife::system::type::geometric::Point2D_32){circle.center.x-y, circle.center.y-x})->setPixel(color);
+		this->select((openLife::dataType::geometric::Point2D_32){circle.center.x+x, circle.center.y+y})->setPixel(color);
+		this->select((openLife::dataType::geometric::Point2D_32){circle.center.x+x, circle.center.y+y})->setPixel(color);
+		this->select((openLife::dataType::geometric::Point2D_32){circle.center.x-x, circle.center.y+y})->setPixel(color);
+		this->select((openLife::dataType::geometric::Point2D_32){circle.center.x+x, circle.center.y-y})->setPixel(color);
+		this->select((openLife::dataType::geometric::Point2D_32){circle.center.x-x, circle.center.y-y})->setPixel(color);
+		this->select((openLife::dataType::geometric::Point2D_32){circle.center.x+y, circle.center.y+x})->setPixel(color);
+		this->select((openLife::dataType::geometric::Point2D_32){circle.center.x-y, circle.center.y+x})->setPixel(color);
+		this->select((openLife::dataType::geometric::Point2D_32){circle.center.x+y, circle.center.y-x})->setPixel(color);
+		this->select((openLife::dataType::geometric::Point2D_32){circle.center.x-y, circle.center.y-x})->setPixel(color);
 	}
 }
 
