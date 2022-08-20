@@ -935,6 +935,7 @@ void obscureRecordedNumericTyping( char inObscure,
 	screen->obscureRecordedNumericTyping( inObscure, inCharToRecordInstead );
 }
 
+
 static Image *readTGAFile( File *inFile ) {
 
 	if( !inFile->exists() ) {
@@ -1047,8 +1048,7 @@ RawRGBAImage *readTGAFileRawBase( const char *inTGAFileName ) {
 	return readTGAFileRaw( &tgaFile );
 }
 
-RawRGBAImage *readTGAFileRawFromBuffer( unsigned char *inBuffer,
-										int inLength ) {
+RawRGBAImage *readTGAFileRawFromBuffer( unsigned char *inBuffer, int inLength ) {
 
 	ByteBufferInputStream tgaStream( inBuffer, inLength );
 
