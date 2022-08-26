@@ -15,7 +15,7 @@ void openLife::system::Console::writeLine(const char* message, va_list args)
 	memset(buffer, 0, sizeof(buffer));
 	vsnprintf (buffer, openLife::system::Console::bufferSize, message, args);
 	va_end(args);
-	printf("\n%s", buffer);
+	printf("%s", buffer);
 }
 
 void openLife::system::Console::writeLine(const char* message, ...)
