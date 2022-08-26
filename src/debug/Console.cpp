@@ -15,7 +15,7 @@ void openLife::debug::Console::write(const char* message, ...)
 	va_start (args, message);
 	char buffer[512];
 	memset(buffer, 0, sizeof(buffer));
-	sprintf(buffer, "##DEBUG## %s", message);
+	sprintf(buffer, "%s", message);
 	//TODO: write if context allow openLife::debug::dataValue::Context::NONE
 	openLife::system::Console::writeLine(buffer, args);
 }
@@ -26,7 +26,7 @@ void openLife::debug::Console::write(openLife::debug::dataValue::Context context
 	va_start (args, message);
 	char buffer[512];
 	memset(buffer, 0, sizeof(buffer));
-	sprintf(buffer, "##DEBUG## %s", message);
+	sprintf(buffer, "%s", message);
 	//TODO: write if context allow context
 	openLife::system::Console::writeLine(buffer, args);
 }
